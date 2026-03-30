@@ -1,0 +1,73 @@
+.loginBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 20px;
+  background: #fff;
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  color: #333;
+}
+
+.loginBtn:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  border-color: #bbb;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.email {
+  font-size: 12px;
+  color: #888;
+}
+
+.logoutBtn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #ddd;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #555;
+}
+
+.logoutBtn:hover {
+  background: #f5f5f5;
+}
+
+.loading {
+  font-size: 14px;
+  color: #888;
+}
+
+.error {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #e03131;
+}
