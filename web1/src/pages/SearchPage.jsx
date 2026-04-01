@@ -90,8 +90,9 @@ export default function SearchPage({
       />
 
       <main className="search-page__main">
-
+         
         {/* 검색 헤더 */}
+        {/*
         <div className="search-page__header">
           <div className="search-page__header-inner">
             <div className="search-page__search-bar">
@@ -106,6 +107,7 @@ export default function SearchPage({
             </div>
           </div>
         </div>
+        */}
 
         <div className="search-page__body">
 

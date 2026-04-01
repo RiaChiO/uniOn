@@ -3,11 +3,17 @@ export default function Navbar({ searchQuery, onSearchChange, isLoggedIn, user, 
     <header className="navbar">
       <div className="navbar__inner">
         <div className="navbar__logo">
-          <div className="navbar__logo-badge">경</div>
-          <div className="navbar__logo-text">
-            <span className="navbar__logo-title">경상대 소모임</span>
-            <span className="navbar__logo-sub">GNU Club Matching</span>
-          </div>
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+            <img 
+              src="/favicon-32x32.png" 
+              alt="경상대 소모임 로고" 
+              style={{ width: "40px", height: "40px", borderRadius: "8px" }}
+            />
+            <div className="navbar__logo-text">
+              <span className="navbar__logo-title">경상대 소모임</span>
+              <span className="navbar__logo-sub">GNU Club Matching</span>
+            </div>
+          </a>
         </div>
         <div className="navbar__search">
           <span className="navbar__search-icon">🔍</span>
