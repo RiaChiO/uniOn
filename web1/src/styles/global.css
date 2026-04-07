@@ -57,7 +57,7 @@ img    { max-width: 100%; display: block; }
 .navbar__nav-link { font-size: 14px; font-weight: 500; color: var(--color-text-sub); transition: color .2s; }
 .navbar__nav-link:hover { color: var(--color-primary); }
 .navbar__btn { padding: 8px 18px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; transition: all .2s; }
-.navbar__btn--login { background: var(--color-primary); color: #fff; }
+.navbar__btn--login { background: var(--color-primary); color: #ffffff; }
 .navbar__btn--login:hover { background: var(--color-primary-dark); }
 .navbar__btn--profile { background: var(--color-primary-light); color: var(--color-primary); }
 
@@ -473,3 +473,104 @@ img    { max-width: 100%; display: block; }
 /* 상세 페이지 모임 관리 버튼 */
 .club-detail__manage-btn { width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1.5px solid var(--color-border); background: var(--color-bg-sub); color: var(--color-text-sub); font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; margin-top: 4px; }
 .club-detail__manage-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+
+/* ===========================
+   Dark Theme
+=========================== */
+[data-theme="dark"] {
+  --color-bg:           #121212;
+  --color-bg-sub:       #1e1e1e;
+  --color-text:         #eeeeee;
+  --color-text-sub:     #9ca3af;
+  --color-border:       #374151;
+  --color-badge-bg:     #2563eb;
+  --color-tag-bg:       #1e3a5f;
+  --color-tag-text:     #93c5fd;
+  --color-primary-light:#1e3a5f;
+  --shadow-sm:          0 1px 3px rgba(0,0,0,.3);
+  --shadow-md:          0 4px 12px rgba(0,0,0,.4);
+  --shadow-lg:          0 8px 24px rgba(0,0,0,.5);
+}
+
+/* 다크모드 - 직접 색상이 지정된 요소들 덮어쓰기 */
+[data-theme="dark"] body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background: var(--color-bg-sub);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .btn--secondary {
+  background: var(--color-bg-sub);
+  color: var(--color-primary);
+}
+
+[data-theme="dark"] .navbar__btn--login { 
+   background: var(#545353); color: #ffffff; 
+}
+[data-theme="dark"] .navbar__btn--login:hover { 
+   background: var(--color-primary-dark); 
+}
+[data-theme="dark"] .navbar__btn--profile { 
+   background: var(--color-primary-light); color: var(--color-primary); 
+}
+
+[data-theme="dark"] .hero {
+  background: linear-gradient(135deg, #1e3a5f, #1e293b);
+}
+
+[data-theme="dark"] .search-results__sort {
+  background: var(--color-bg-sub);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .create-box__type-btn {
+  background: var(--color-bg-sub);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .mypage__profile-btn {
+  background: var(--color-bg-sub);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .manage-btn {
+  color: var(--color-text-sub);
+}
+
+[data-theme="dark"] .footer {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .filter-card {
+  background: var(--color-bg-sub);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .filter-card__label,
+[data-theme="dark"] .filter-card__desc {
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .filter-card__desc {
+  color: var(--color-text-sub);
+}
+
+[data-theme="dark"] .category-chip {
+  background: var(--color-bg-sub);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .category-chip--active {
+  background: var(--color-primary);
+  color: #fff;
+}

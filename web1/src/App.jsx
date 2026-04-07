@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
@@ -12,6 +12,10 @@ import GoogleLoginPage from "./pages/GoogleLoginPage";
 import ClubDetailPage from "./pages/ClubDetailPage";
 import ClubManagePage from "./pages/ClubManagePage";
 import "./styles/global.css";
+
+import { useState, useEffect } from "react";
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from "./lib/firebase";
+
 
 // 메인 페이지
 function MainPage({ searchQuery, onSearchChange, isLoggedIn, user, onLoginClick }) {
@@ -65,6 +69,42 @@ export default function App() {
     onLoginClick: () => window.location.href = "/login",
   };
 
+  // 로그인 상태 자동 감지
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setIsLoggedIn(true);
+        setUser({ name: firebaseUser.displayName, email: firebaseUser.email });
+      } else {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // 구글 로그인
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      setIsLoggedIn(true);
+      setUser({ name: result.user.displayName, email: result.user.email });
+      window.location.href = "/";
+    } catch (err) {
+      console.error("로그인 실패", err);
+    }
+  };
+
+
+  // 로그아웃
+  const handleLogout = async () => {
+    await signOut(auth);
+    setIsLoggedIn(false);
+    setUser(null);
+    window.location.href = "/";
+  };
+
+
   return (
     <Routes>
 
@@ -78,7 +118,8 @@ export default function App() {
           <GoogleLoginPage
             {...commonProps}
             // 🔧 [기능] 구글 로그인 API 연결 후 setIsLoggedIn(true), setUser(data) 호출
-            onGoogleLogin={() => console.log("TODO: 구글 로그인 API 연결")}
+            // onGoogleLogin={() => console.log("TODO: 구글 로그인 API 연결")}
+            onGoogleLogin={handleGoogleLogin}
           />
         }
       />
@@ -132,13 +173,25 @@ export default function App() {
         }
       />
 
-      {/* 마이페이지 */}
+      {/* 마이페이지 */}{/*
       <Route
         path="/mypage"
         element={
           <MyPage
             {...commonProps}
             onLogout={() => console.log("TODO: 로그아웃 연결")}
+            onEditProfile={() => console.log("TODO: 프로필 수정")}
+            onClubClick={(id) => window.location.href = `/clubs/${id}`}
+          />
+        }  
+      />*/}
+
+      <Route
+        path="/mypage"
+        element={
+          <MyPage
+            {...commonProps}
+            onLogout={handleLogout}
             onEditProfile={() => console.log("TODO: 프로필 수정")}
             onClubClick={(id) => window.location.href = `/clubs/${id}`}
           />
