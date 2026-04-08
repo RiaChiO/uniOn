@@ -8,10 +8,10 @@
 //   - onRelatedClick  : 관련 모임 클릭 → 해당 소모임 상세 페이지 이동
 
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-// 🔧 [기능] 더미 데이터 → useParams()로 id 받아서 API로 교체
 const MOCK_CLUB = {
   id: 1,
   name: "GNU 코딩 스터디",
@@ -31,25 +31,89 @@ const MOCK_CLUB = {
   ],
   // 🔧 [기능] 최근 활동 목록 → API로 교체
   recentActivities: [
-    { id: 1, title: "알고리즘 스터디 Week 12", date: "2024.03.20", type: "정기모임" },
-    { id: 2, title: "해커톤 참가",             date: "2024.03.15", type: "특별활동" },
-    { id: 3, title: "신입생 환영회",            date: "2024.03.10", type: "행사" },
-    { id: 4, title: "코드 리뷰 세션",           date: "2024.03.05", type: "정기모임" },
+    {
+      id: 1,
+      title: "알고리즘 스터디 Week 12",
+      date: "2024.03.20",
+      type: "정기모임",
+    },
+    { id: 2, title: "해커톤 참가", date: "2024.03.15", type: "특별활동" },
+    { id: 3, title: "신입생 환영회", date: "2024.03.10", type: "행사" },
+    { id: 4, title: "코드 리뷰 세션", date: "2024.03.05", type: "정기모임" },
   ],
   // 🔧 [기능] 멤버 목록 → API로 교체
   members: [
-    { id: 1, name: "김철수", initial: "김", department: "컴퓨터과학과",   role: "리더" },
-    { id: 2, name: "이영희", initial: "이", department: "소프트웨어공학과", role: "멤버" },
-    { id: 3, name: "박민수", initial: "박", department: "정보통신공학과",  role: "멤버" },
-    { id: 4, name: "정지원", initial: "정", department: "컴퓨터과학과",   role: "멤버" },
-    { id: 5, name: "최은지", initial: "최", department: "경영학과",       role: "멤버" },
-    { id: 6, name: "강민호", initial: "강", department: "산업공학과",     role: "멤버" },
+    {
+      id: 1,
+      name: "김철수",
+      initial: "김",
+      department: "컴퓨터과학과",
+      role: "리더",
+    },
+    {
+      id: 2,
+      name: "이영희",
+      initial: "이",
+      department: "소프트웨어공학과",
+      role: "멤버",
+    },
+    {
+      id: 3,
+      name: "박민수",
+      initial: "박",
+      department: "정보통신공학과",
+      role: "멤버",
+    },
+    {
+      id: 4,
+      name: "정지원",
+      initial: "정",
+      department: "컴퓨터과학과",
+      role: "멤버",
+    },
+    {
+      id: 5,
+      name: "최은지",
+      initial: "최",
+      department: "경영학과",
+      role: "멤버",
+    },
+    {
+      id: 6,
+      name: "강민호",
+      initial: "강",
+      department: "산업공학과",
+      role: "멤버",
+    },
   ],
   // 🔧 [기능] 후기 목록 → API로 교체
   reviews: [
-    { id: 1, name: "김민준", initial: "김", rating: 5, date: "2024.03.15", content: "정말 유익한 스터디였습니다! 알고리즘 실력이 많이 늘었어요." },
-    { id: 2, name: "박서현", initial: "박", rating: 5, date: "2024.03.10", content: "분위기가 너무 좋고 선배들이 친절하게 가르쳐주셔서 초보자도 쉽게 배울 수 있어요." },
-    { id: 3, name: "이준호", initial: "이", rating: 4, date: "2024.03.05", content: "프로젝트 경험을 쌓을 수 있어서 좋았습니다. 포트폴리오에 큰 도움이 되었어요." },
+    {
+      id: 1,
+      name: "김민준",
+      initial: "김",
+      rating: 5,
+      date: "2024.03.15",
+      content: "정말 유익한 스터디였습니다! 알고리즘 실력이 많이 늘었어요.",
+    },
+    {
+      id: 2,
+      name: "박서현",
+      initial: "박",
+      rating: 5,
+      date: "2024.03.10",
+      content:
+        "분위기가 너무 좋고 선배들이 친절하게 가르쳐주셔서 초보자도 쉽게 배울 수 있어요.",
+    },
+    {
+      id: 3,
+      name: "이준호",
+      initial: "이",
+      rating: 4,
+      date: "2024.03.05",
+      content:
+        "프로젝트 경험을 쌓을 수 있어서 좋았습니다. 포트폴리오에 큰 도움이 되었어요.",
+    },
   ],
   memberCount: 24,
   maxMembers: 30,
@@ -60,10 +124,15 @@ const MOCK_CLUB = {
   tags: ["#Python", "#JavaScript", "#웹개발", "#알고리즘", "#스터디"],
   joinCondition: "승인 필요",
   activePeriod: "상시 활동",
-  leader: { name: "김철수", initial: "김", department: "컴퓨터과학과", grade: "21학번" },
+  leader: {
+    name: "김철수",
+    initial: "김",
+    department: "컴퓨터과학과",
+    grade: "21학번",
+  },
   relatedClubs: [
     { id: 2, name: "알고리즘 스터디", category: "IT/개발", isRecruiting: true },
-    { id: 3, name: "웹 개발 동아리",  category: "IT/개발", isRecruiting: true },
+    { id: 3, name: "웹 개발 동아리", category: "IT/개발", isRecruiting: true },
   ],
 };
 
@@ -72,9 +141,9 @@ const TABS = ["소개", "활동", "멤버", "후기"];
 // 활동 탭 컴포넌트
 function ActivityTab({ activities }) {
   const TYPE_COLORS = {
-    정기모임:  { bg: "#eff6ff", color: "#1d4ed8" },
-    특별활동:  { bg: "#fef3c7", color: "#92400e" },
-    행사:      { bg: "#d1fae5", color: "#065f46" },
+    정기모임: { bg: "#eff6ff", color: "#1d4ed8" },
+    특별활동: { bg: "#fef3c7", color: "#92400e" },
+    행사: { bg: "#d1fae5", color: "#065f46" },
   };
 
   return (
@@ -82,7 +151,10 @@ function ActivityTab({ activities }) {
       <h2 className="cd-tab__title">최근 활동</h2>
       <div className="cd-activity-list">
         {activities.map((act) => {
-          const color = TYPE_COLORS[act.type] || { bg: "#f3f4f6", color: "#374151" };
+          const color = TYPE_COLORS[act.type] || {
+            bg: "#f3f4f6",
+            color: "#374151",
+          };
           return (
             <div key={act.id} className="cd-activity-item">
               <div className="cd-activity-thumb" />
@@ -118,7 +190,9 @@ function MemberTab({ members }) {
             <div className="cd-member-avatar">{member.initial}</div>
             <div className="cd-member-name">{member.name}</div>
             <div className="cd-member-dept">{member.department}</div>
-            <span className={`cd-member-role ${member.role === "리더" ? "cd-member-role--leader" : ""}`}>
+            <span
+              className={`cd-member-role ${member.role === "리더" ? "cd-member-role--leader" : ""}`}
+            >
               {member.role}
             </span>
           </div>
@@ -170,7 +244,9 @@ function IntroTab({ club }) {
       <div className="cd-section">
         <h2 className="cd-tab__title">모임 소개</h2>
         {club.intro.map((text, i) => (
-          <p key={i} className="cd-section-text">{text}</p>
+          <p key={i} className="cd-section-text">
+            {text}
+          </p>
         ))}
       </div>
       <div className="cd-section">
@@ -203,6 +279,9 @@ export default function ClubDetailPage({
   isLoggedIn,
   user,
   onLoginClick,
+  clubs = [],
+  loading = false,
+  error = "",
   onJoin,
   onWishlist,
   onShare,
@@ -210,10 +289,40 @@ export default function ClubDetailPage({
   onRelatedClick,
   onManageClick,
 }) {
+  const { id } = useParams();
   const [activeTab, setActiveTab] = useState("소개");
+  const matchedClub = clubs.find((item) => String(item.id) === String(id));
 
   // 🔧 [기능] useParams()로 id 받아서 API 호출로 교체
-  const club = MOCK_CLUB;
+  const club = matchedClub
+    ? {
+        ...MOCK_CLUB,
+        ...matchedClub,
+        intro: [matchedClub.description],
+        activities: matchedClub.tags,
+        relatedClubs: clubs
+          .filter((item) => item.id !== matchedClub.id)
+          .slice(0, 2)
+          .map((item) => ({
+            id: item.id,
+            name: item.name,
+            category: item.categoryLabel,
+            isRecruiting: item.isRecruiting,
+          })),
+      }
+    : null;
+
+  if (loading) {
+    return <div>불러오는 중...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!club) {
+    return <div>해당 모임을 찾을 수 없습니다.</div>;
+  }
 
   return (
     <div className="club-detail-page">
@@ -227,20 +336,24 @@ export default function ClubDetailPage({
 
       <main className="club-detail-page__main">
         <div className="club-detail-page__layout">
-
           {/* 왼쪽 - 메인 콘텐츠 */}
           <div className="club-detail-page__content">
-
             {/* 헤더 이미지 + 기본 정보 */}
             <div className="club-detail__hero">
               <div className="club-detail__hero-img" />
               <div className="club-detail__hero-info">
                 <div className="club-detail__badges">
-                  <span className="club-detail__badge">{club.type}</span>
+                  <span className="club-detail__badge">
+                    {club.typeLabel ?? club.type}
+                  </span>
                   {club.isRecruiting && (
-                    <span className="club-detail__badge club-detail__badge--recruiting">모집중</span>
+                    <span className="club-detail__badge club-detail__badge--recruiting">
+                      모집중
+                    </span>
                   )}
-                  <span className="club-detail__badge club-detail__badge--category">{club.categoryLabel}</span>
+                  <span className="club-detail__badge club-detail__badge--category">
+                    {club.categoryLabel}
+                  </span>
                 </div>
                 <h1 className="club-detail__name">{club.name}</h1>
                 <p className="club-detail__desc">{club.description}</p>
@@ -256,12 +369,16 @@ export default function ClubDetailPage({
             <div className="club-detail__info-grid">
               <div className="club-detail__info-item">
                 <span className="club-detail__info-icon">👥</span>
-                <span className="club-detail__info-value">{club.memberCount}</span>
+                <span className="club-detail__info-value">
+                  {club.memberCount}
+                </span>
                 <span className="club-detail__info-label">멤버</span>
               </div>
               <div className="club-detail__info-item">
                 <span className="club-detail__info-icon">📅</span>
-                <span className="club-detail__info-value">{club.meetingDay}</span>
+                <span className="club-detail__info-value">
+                  {club.meetingDay}
+                </span>
                 <span className="club-detail__info-label">정기모임</span>
               </div>
               <div className="club-detail__info-item">
@@ -271,7 +388,9 @@ export default function ClubDetailPage({
               </div>
               <div className="club-detail__info-item">
                 <span className="club-detail__info-icon">⏰</span>
-                <span className="club-detail__info-value">{club.startTime}</span>
+                <span className="club-detail__info-value">
+                  {club.startTime}
+                </span>
                 <span className="club-detail__info-label">시작시간</span>
               </div>
             </div>
@@ -279,7 +398,9 @@ export default function ClubDetailPage({
             {/* 태그 */}
             <div className="club-detail__tags">
               {club.tags.map((tag) => (
-                <span key={tag} className="club-card__tag">{tag}</span>
+                <span key={tag} className="club-card__tag">
+                  {tag}
+                </span>
               ))}
             </div>
 
@@ -299,16 +420,18 @@ export default function ClubDetailPage({
             {/* 탭 콘텐츠 */}
             <div className="club-detail__tab-content">
               {activeTab === "소개" && <IntroTab club={club} />}
-              {activeTab === "활동" && <ActivityTab activities={club.recentActivities} />}
+              {activeTab === "활동" && (
+                <ActivityTab activities={club.recentActivities} />
+              )}
               {activeTab === "멤버" && <MemberTab members={club.members} />}
-              {activeTab === "후기" && <ReviewTab reviews={club.reviews} rating={club.rating} />}
+              {activeTab === "후기" && (
+                <ReviewTab reviews={club.reviews} rating={club.rating} />
+              )}
             </div>
-
           </div>
 
           {/* 오른쪽 - 사이드바 */}
           <aside className="club-detail-page__sidebar">
-
             {/* 액션 버튼 */}
             <div className="club-detail__actions">
               <button
@@ -348,19 +471,31 @@ export default function ClubDetailPage({
               <h3 className="club-detail__sidebar-title">📋 모집 정보</h3>
               <ul className="club-detail__info-list">
                 <li className="club-detail__info-list-item">
-                  <span className="club-detail__info-list-label">모집 상태</span>
-                  <span className="club-detail__badge club-detail__badge--recruiting">모집중</span>
+                  <span className="club-detail__info-list-label">
+                    모집 상태
+                  </span>
+                  <span className="club-detail__badge club-detail__badge--recruiting">
+                    모집중
+                  </span>
                 </li>
                 <li className="club-detail__info-list-item">
-                  <span className="club-detail__info-list-label">현재 인원</span>
-                  <span>{club.memberCount} / {club.maxMembers}명</span>
+                  <span className="club-detail__info-list-label">
+                    현재 인원
+                  </span>
+                  <span>
+                    {club.memberCount} / {club.maxMembers}명
+                  </span>
                 </li>
                 <li className="club-detail__info-list-item">
-                  <span className="club-detail__info-list-label">가입 조건</span>
+                  <span className="club-detail__info-list-label">
+                    가입 조건
+                  </span>
                   <span>{club.joinCondition}</span>
                 </li>
                 <li className="club-detail__info-list-item">
-                  <span className="club-detail__info-list-label">활동 기간</span>
+                  <span className="club-detail__info-list-label">
+                    활동 기간
+                  </span>
                   <span>{club.activePeriod}</span>
                 </li>
               </ul>
@@ -370,9 +505,13 @@ export default function ClubDetailPage({
             <div className="club-detail__sidebar-card">
               <h3 className="club-detail__sidebar-title">👑 리더 정보</h3>
               <div className="club-detail__leader">
-                <div className="club-detail__leader-avatar">{club.leader.initial}</div>
+                <div className="club-detail__leader-avatar">
+                  {club.leader.initial}
+                </div>
                 <div>
-                  <div className="club-detail__leader-name">{club.leader.name}</div>
+                  <div className="club-detail__leader-name">
+                    {club.leader.name}
+                  </div>
                   <div className="club-detail__leader-info">
                     {club.leader.department} {club.leader.grade}
                   </div>
@@ -400,17 +539,22 @@ export default function ClubDetailPage({
                   >
                     <div className="club-detail__related-thumb" />
                     <div>
-                      <div className="club-detail__related-name">{related.name}</div>
-                      <div className="club-detail__related-category">{related.category}</div>
+                      <div className="club-detail__related-name">
+                        {related.name}
+                      </div>
+                      <div className="club-detail__related-category">
+                        {related.category}
+                      </div>
                       {related.isRecruiting && (
-                        <span className="club-detail__badge club-detail__badge--recruiting">모집중</span>
+                        <span className="club-detail__badge club-detail__badge--recruiting">
+                          모집중
+                        </span>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-
           </aside>
         </div>
       </main>

@@ -17,7 +17,9 @@ export default function ClubCard({ club, onDetailClick }) {
         </ul>
         <div className="club-card__tags">
           {club.tags.map((tag) => (
-            <span key={tag} className="club-card__tag">{tag}</span>
+            <span key={tag} className="club-card__tag">
+              {tag}
+            </span>
           ))}
         </div>
         <button

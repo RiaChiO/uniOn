@@ -1,20 +1,32 @@
 import { useMemo } from "react";
-import { CLUBS } from "../data/mockData";
 import ClubCard from "./ClubCard";
 
-export default function ClubListSection({ searchQuery, selectedType, selectedCategory, onViewAll }) {
+export default function ClubListSection({
+  clubs = [],
+  loading = false,
+  error = "",
+  searchQuery,
+  selectedType,
+  selectedCategory,
+  onViewAll,
+  onDetailClick,
+}) {
   const filteredClubs = useMemo(() => {
-    return CLUBS.filter((club) => {
+    return clubs.filter((club) => {
       const matchesSearch =
         !searchQuery ||
         club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         club.description.includes(searchQuery) ||
         club.tags.some((tag) => tag.includes(searchQuery));
-      const matchesType     = !selectedType     || club.type     === selectedType;
-      const matchesCategory = !selectedCategory || club.category === selectedCategory;
+
+      const matchesType = !selectedType || club.type === selectedType;
+
+      const matchesCategory =
+        !selectedCategory || club.categoryLabel === selectedCategory;
+
       return matchesSearch && matchesType && matchesCategory;
     });
-  }, [searchQuery, selectedType, selectedCategory]);
+  }, [clubs, searchQuery, selectedType, selectedCategory]);
 
   return (
     <section className="club-list-section">
@@ -22,11 +34,23 @@ export default function ClubListSection({ searchQuery, selectedType, selectedCat
         <div className="club-list-section__header">
           <div>
             <h2 className="club-list-section__title">인기 소모임</h2>
-            <p className="club-list-section__subtitle">지금 가장 활발하게 활동 중인 소모임들이에요</p>
+            <p className="club-list-section__subtitle">
+              지금 가장 활발하게 활동 중인 소모임들이에요
+            </p>
           </div>
-          <button className="btn btn--text" onClick={onViewAll}>전체보기 →</button>
+          <button className="btn btn--text" onClick={onViewAll}>
+            전체보기 →
+          </button>
         </div>
-        {filteredClubs.length === 0 ? (
+        {loading ? (
+          <div className="club-list-section__empty">
+            <p>모임 목록을 불러오는 중입니다.</p>
+          </div>
+        ) : error ? (
+          <div className="club-list-section__empty">
+            <p>{error}</p>
+          </div>
+        ) : filteredClubs.length === 0 ? (
           <div className="club-list-section__empty">
             <p>조건에 맞는 소모임이 없습니다.</p>
           </div>
@@ -36,7 +60,7 @@ export default function ClubListSection({ searchQuery, selectedType, selectedCat
               <ClubCard
                 key={club.id}
                 club={club}
-                onDetailClick={(id) => console.log(`TODO: 소모임 ${id} 상세 페이지 이동`)}
+                onDetailClick={(id) => onDetailClick && onDetailClick(id)}
               />
             ))}
           </div>

@@ -10,21 +10,20 @@ import { useState, useMemo } from "react";
 import Navbar from "../components/Navbar";
 import ClubCard from "../components/ClubCard";
 import Footer from "../components/Footer";
-import { CLUBS, CLUB_TYPES, CATEGORIES } from "../data/mockData";
+import { CLUB_TYPES, CATEGORIES } from "../data/mockData";
 
 // 🔧 [기능] 정렬 옵션 - 필요 시 추가/수정
 const SORT_OPTIONS = [
-  { id: "popular", label: "인기순" },
-  { id: "newest",  label: "최신순" },
-  { id: "member",  label: "멤버 많은순" },
+  { id: "newest", label: "최신순" },
+  { id: "member", label: "멤버 많은순" },
 ];
 
 // 🔧 [기능] 인원 필터 옵션
 const MEMBER_OPTIONS = [
-  { id: "all",    label: "전체" },
-  { id: "small",  label: "10명 이하" },
+  { id: "all", label: "전체" },
+  { id: "small", label: "10명 이하" },
   { id: "medium", label: "10-30명" },
-  { id: "large",  label: "30명 이상" },
+  { id: "large", label: "30명 이상" },
 ];
 
 export default function SearchPage({
@@ -33,51 +32,81 @@ export default function SearchPage({
   isLoggedIn,
   user,
   onLoginClick,
+  clubs = [],
+  loading = false,
+  error = "",
   onDetailClick,
 }) {
   // 🔧 [기능] 필터 상태
-  const [selectedTypes,      setSelectedTypes]      = useState([]);
+  const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedMember,     setSelectedMember]     = useState("all");
-  const [sortBy,             setSortBy]             = useState("popular");
+  const [selectedMember, setSelectedMember] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
   // 타입 토글
   const toggleType = (id) => {
     setSelectedTypes((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
     );
   };
 
   // 카테고리 토글
   const toggleCategory = (id) => {
     setSelectedCategories((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
     );
   };
 
-  // 🔧 [기능] 클라이언트 필터링 → API 연동 시 useEffect + fetch로 교체
   const filteredClubs = useMemo(() => {
-    return CLUBS.filter((club) => {
+    const filtered = clubs.filter((club) => {
       const matchesSearch =
         !searchQuery ||
         club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        club.description.includes(searchQuery) ||
         club.tags.some((tag) => tag.includes(searchQuery));
 
       const matchesType =
         selectedTypes.length === 0 || selectedTypes.includes(club.type);
 
       const matchesCategory =
-        selectedCategories.length === 0 || selectedCategories.includes(club.category);
+        selectedCategories.length === 0 ||
+        selectedCategories.includes(club.category);
 
       const matchesMember =
         selectedMember === "all" ||
-        (selectedMember === "small"  && club.memberCount <= 10) ||
-        (selectedMember === "medium" && club.memberCount > 10 && club.memberCount <= 30) ||
-        (selectedMember === "large"  && club.memberCount > 30);
+        (selectedMember === "small" && club.memberCount <= 10) ||
+        (selectedMember === "medium" &&
+          club.memberCount > 10 &&
+          club.memberCount <= 30) ||
+        (selectedMember === "large" && club.memberCount > 30);
 
       return matchesSearch && matchesType && matchesCategory && matchesMember;
     });
-  }, [searchQuery, selectedTypes, selectedCategories, selectedMember]);
+
+    const extractNumericId = (id) => {
+      const matched = String(id).match(/\d+/);
+      return matched ? Number(matched[0]) : 0;
+    };
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "newest") {
+        return extractNumericId(b.id) - extractNumericId(a.id);
+      }
+
+      if (sortBy === "member") {
+        return b.memberCount - a.memberCount;
+      }
+
+      return 0;
+    });
+  }, [
+    clubs,
+    searchQuery,
+    selectedTypes,
+    selectedCategories,
+    selectedMember,
+    sortBy,
+  ]);
 
   return (
     <div className="search-page">
@@ -90,7 +119,6 @@ export default function SearchPage({
       />
 
       <main className="search-page__main">
-         
         {/* 검색 헤더 */}
         {/*
         <div className="search-page__header">
@@ -110,10 +138,8 @@ export default function SearchPage({
         */}
 
         <div className="search-page__body">
-
           {/* 사이드바 필터 */}
           <aside className="search-filter">
-
             <div className="search-filter__header">
               <span className="search-filter__title">🔧 필터</span>
               <button
@@ -182,7 +208,6 @@ export default function SearchPage({
             >
               필터 적용
             </button>
-
           </aside>
 
           {/* 검색 결과 */}
@@ -190,7 +215,9 @@ export default function SearchPage({
             <div className="search-results__header">
               <div>
                 <h2 className="search-results__title">검색 결과</h2>
-                <p className="search-results__count">총 {filteredClubs.length}개의 모임</p>
+                <p className="search-results__count">
+                  총 {filteredClubs.length}개의 모임
+                </p>
               </div>
               <select
                 className="search-results__sort"
@@ -199,12 +226,22 @@ export default function SearchPage({
                 onChange={(e) => setSortBy(e.target.value)}
               >
                 {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.id} value={opt.id}>{opt.label}</option>
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
                 ))}
               </select>
             </div>
 
-            {filteredClubs.length === 0 ? (
+            {loading ? (
+              <div className="search-results__empty">
+                <p>모임 목록을 불러오는 중입니다.</p>
+              </div>
+            ) : error ? (
+              <div className="search-results__empty">
+                <p>{error}</p>
+              </div>
+            ) : filteredClubs.length === 0 ? (
               <div className="search-results__empty">
                 <p>검색 결과가 없습니다.</p>
               </div>
@@ -221,7 +258,6 @@ export default function SearchPage({
               </div>
             )}
           </div>
-
         </div>
       </main>
 
