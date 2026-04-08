@@ -2,6 +2,7 @@
 node_modules/
 web1/node_modules/
 uniOn/web1/node_modules/
+web1/
 
 # Build outputs
 dist/
