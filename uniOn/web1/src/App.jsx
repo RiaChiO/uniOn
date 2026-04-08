@@ -12,6 +12,13 @@ import GoogleLoginPage from "./pages/GoogleLoginPage";
 import ClubDetailPage from "./pages/ClubDetailPage";
 import ClubManagePage from "./pages/ClubManagePage";
 import "./styles/global.css";
+import {
+  auth,
+  onAuthStateChanged,
+  provider,
+  signInWithPopup,
+  signOut,
+} from "./lib/firebase";
 
 const CATEGORY_TO_TAG_ID = {
   academic: "study",
@@ -149,6 +156,20 @@ export default function App() {
     loadMeetings();
   }, []);
 
+  // 로그인 상태 자동 감지
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setIsLoggedIn(true);
+        setUser({ name: firebaseUser.displayName, email: firebaseUser.email });
+      } else {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   async function handleCreateMeeting(formData) {
     const title = String(formData?.name ?? "").trim();
     const meetingType = String(formData?.type ?? "").trim();
@@ -192,6 +213,26 @@ export default function App() {
     }
   }
 
+  // 구글 로그인
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      setIsLoggedIn(true);
+      setUser({ name: result.user.displayName, email: result.user.email });
+      window.location.href = "/";
+    } catch (error) {
+      console.error("로그인 실패", error);
+    }
+  };
+
+  // 로그아웃
+  const handleLogout = async () => {
+    await signOut(auth);
+    setIsLoggedIn(false);
+    setUser(null);
+    window.location.href = "/";
+  };
+
   const commonProps = {
     searchQuery,
     onSearchChange: setSearchQuery,
@@ -221,8 +262,7 @@ export default function App() {
         element={
           <GoogleLoginPage
             {...commonProps}
-            // 🔧 [기능] 구글 로그인 API 연결 후 setIsLoggedIn(true), setUser(data) 호출
-            onGoogleLogin={() => console.log("TODO: 구글 로그인 API 연결")}
+            onGoogleLogin={handleGoogleLogin}
           />
         }
       />
@@ -302,7 +342,7 @@ export default function App() {
         element={
           <MyPage
             {...commonProps}
-            onLogout={() => console.log("TODO: 로그아웃 연결")}
+            onLogout={handleLogout}
             onEditProfile={() => console.log("TODO: 프로필 수정")}
             onClubClick={(id) => (window.location.href = `/clubs/${id}`)}
           />

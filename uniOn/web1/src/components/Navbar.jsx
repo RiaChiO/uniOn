@@ -1,4 +1,24 @@
+import { useState, useEffect } from "react";
+
 export default function Navbar({ searchQuery, onSearchChange, isLoggedIn, user, onLoginClick }) {
+
+  const [isDark, setIsDark] = useState(false);
+
+  // 처음 로드 시 적용
+  useEffect(() => {
+    const saved = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", saved);
+    setIsDark(saved === "dark");
+  }, []);
+
+    // 로컬스토리지에 저장
+  const toggleDark = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
+
   return (
     <header className="navbar">
       <div className="navbar__inner">
@@ -29,7 +49,7 @@ export default function Navbar({ searchQuery, onSearchChange, isLoggedIn, user, 
           <a href="#search" className="navbar__nav-link">소모임 찾기</a>
           <a href="#create" className="navbar__nav-link">소모임 개설</a>
           {isLoggedIn ? (
-            <button className="navbar__btn navbar__btn--profile">
+            <button className="navbar__btn navbar__btn--profile" onClick={() => window.location.href = "/mypage"} >
               {user?.name ?? "마이페이지"}
             </button>
           ) : (
@@ -37,6 +57,9 @@ export default function Navbar({ searchQuery, onSearchChange, isLoggedIn, user, 
               로그인
             </button>
           )}
+          <button onClick={toggleDark} style={{ fontSize: "20px", padding: "4px 8px" }}>
+            {isDark ? "☀️" : "🌙"}
+          </button>
         </nav>
       </div>
     </header>
