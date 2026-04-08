@@ -1,0 +1,302 @@
+[
+  {
+    "meetingId": "meeting9",
+    "cosine": 0.7966075009489179,
+    "jaccard": 1,
+    "finalScore": 90
+  },
+  {
+    "meetingId": "meeting28",
+    "cosine": 0.7608658491363336,
+    "jaccard": 1,
+    "finalScore": 88
+  },
+  {
+    "meetingId": "meeting45",
+    "cosine": 0.750014589181902,
+    "jaccard": 1,
+    "finalScore": 88
+  },
+  {
+    "meetingId": "meeting47",
+    "cosine": 0.680220991425553,
+    "jaccard": 1,
+    "finalScore": 84
+  },
+  {
+    "meetingId": "meeting11",
+    "cosine": 0.8348417609291576,
+    "jaccard": 0.8333333333333334,
+    "finalScore": 83
+  },
+  {
+    "meetingId": "meeting44",
+    "cosine": 0.8636373035232581,
+    "jaccard": 0.8,
+    "finalScore": 83
+  },
+  {
+    "meetingId": "meeting36",
+    "cosine": 0.8333066637873789,
+    "jaccard": 0.8,
+    "finalScore": 82
+  },
+  {
+    "meetingId": "meeting31",
+    "cosine": 0.8067238541820354,
+    "jaccard": 0.8,
+    "finalScore": 80
+  },
+  {
+    "meetingId": "meeting22",
+    "cosine": 0.7841690273820088,
+    "jaccard": 0.8,
+    "finalScore": 79
+  },
+  {
+    "meetingId": "meeting16",
+    "cosine": 0.558639591509276,
+    "jaccard": 1,
+    "finalScore": 78
+  },
+  {
+    "meetingId": "meeting30",
+    "cosine": 0.731466396814428,
+    "jaccard": 0.8333333333333334,
+    "finalScore": 78
+  },
+  {
+    "meetingId": "meeting2",
+    "cosine": 0.8713689970767811,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 77
+  },
+  {
+    "meetingId": "meeting4",
+    "cosine": 0.744353264314999,
+    "jaccard": 0.8,
+    "finalScore": 77
+  },
+  {
+    "meetingId": "meeting21",
+    "cosine": 0.8654016557556873,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 77
+  },
+  {
+    "meetingId": "meeting26",
+    "cosine": 0.708805377583395,
+    "jaccard": 0.8333333333333334,
+    "finalScore": 77
+  },
+  {
+    "meetingId": "meeting37",
+    "cosine": 0.7136837065305727,
+    "jaccard": 0.8333333333333334,
+    "finalScore": 77
+  },
+  {
+    "meetingId": "meeting42",
+    "cosine": 0.8811286378550675,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 77
+  },
+  {
+    "meetingId": "meeting48",
+    "cosine": 0.8525257971006541,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 76
+  },
+  {
+    "meetingId": "meeting7",
+    "cosine": 0.8302465644461245,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 75
+  },
+  {
+    "meetingId": "meeting33",
+    "cosine": 0.8276453968427244,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 75
+  },
+  {
+    "meetingId": "meeting3",
+    "cosine": 0.8779983006505209,
+    "jaccard": 0.6,
+    "finalScore": 74
+  },
+  {
+    "meetingId": "meeting25",
+    "cosine": 0.8074157982914861,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 74
+  },
+  {
+    "meetingId": "meeting39",
+    "cosine": 0.8071103750687725,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 74
+  },
+  {
+    "meetingId": "meeting8",
+    "cosine": 0.7975720631145066,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 73
+  },
+  {
+    "meetingId": "meeting38",
+    "cosine": 0.8007690505491627,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 73
+  },
+  {
+    "meetingId": "meeting24",
+    "cosine": 0.7758641538481406,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 72
+  },
+  {
+    "meetingId": "meeting6",
+    "cosine": 0.7485911964602194,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 71
+  },
+  {
+    "meetingId": "meeting15",
+    "cosine": 0.7574023022815465,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 71
+  },
+  {
+    "meetingId": "meeting23",
+    "cosine": 0.7560593066930522,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 71
+  },
+  {
+    "meetingId": "meeting40",
+    "cosine": 0.8957253914088256,
+    "jaccard": 0.5,
+    "finalScore": 70
+  },
+  {
+    "meetingId": "meeting41",
+    "cosine": 0.7990029205038004,
+    "jaccard": 0.6,
+    "finalScore": 70
+  },
+  {
+    "meetingId": "meeting50",
+    "cosine": 0.736504497554572,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 70
+  },
+  {
+    "meetingId": "meeting1",
+    "cosine": 0.7192196627142613,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 69
+  },
+  {
+    "meetingId": "meeting10",
+    "cosine": 0.7178978472944235,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 69
+  },
+  {
+    "meetingId": "meeting20",
+    "cosine": 0.7114101661056287,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 69
+  },
+  {
+    "meetingId": "meeting32",
+    "cosine": 0.6990881587105967,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 68
+  },
+  {
+    "meetingId": "meeting49",
+    "cosine": 0.8681161644938086,
+    "jaccard": 0.5,
+    "finalScore": 68
+  },
+  {
+    "meetingId": "meeting5",
+    "cosine": 0.5300339691782955,
+    "jaccard": 0.8,
+    "finalScore": 67
+  },
+  {
+    "meetingId": "meeting13",
+    "cosine": 0.8398921846495853,
+    "jaccard": 0.5,
+    "finalScore": 67
+  },
+  {
+    "meetingId": "meeting46",
+    "cosine": 0.657938903329871,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 66
+  },
+  {
+    "meetingId": "meeting12",
+    "cosine": 0.8057693102265414,
+    "jaccard": 0.5,
+    "finalScore": 65
+  },
+  {
+    "meetingId": "meeting43",
+    "cosine": 0.6908303747198151,
+    "jaccard": 0.6,
+    "finalScore": 65
+  },
+  {
+    "meetingId": "meeting18",
+    "cosine": 0.6203632092511963,
+    "jaccard": 0.6666666666666666,
+    "finalScore": 64
+  },
+  {
+    "meetingId": "meeting34",
+    "cosine": 0.7600156248467204,
+    "jaccard": 0.5,
+    "finalScore": 63
+  },
+  {
+    "meetingId": "meeting35",
+    "cosine": 0.7620278161203945,
+    "jaccard": 0.5,
+    "finalScore": 63
+  },
+  {
+    "meetingId": "meeting17",
+    "cosine": 0.7375004381379533,
+    "jaccard": 0.5,
+    "finalScore": 62
+  },
+  {
+    "meetingId": "meeting27",
+    "cosine": 0.7139913334903026,
+    "jaccard": 0.5,
+    "finalScore": 61
+  },
+  {
+    "meetingId": "meeting29",
+    "cosine": 0.5958925658410742,
+    "jaccard": 0.5,
+    "finalScore": 55
+  },
+  {
+    "meetingId": "meeting19",
+    "cosine": 0.7548671584929968,
+    "jaccard": 0.3333333333333333,
+    "finalScore": 54
+  },
+  {
+    "meetingId": "meeting14",
+    "cosine": 0.8079385649607879,
+    "jaccard": 0.16666666666666666,
+    "finalScore": 49
+  }
+]

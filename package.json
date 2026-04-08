@@ -1,0 +1,28 @@
+{
+  "name": "project",
+  "version": "1.0.0",
+  "description": "Hybrid recommendation system (Node + React Dashboard)",
+  "main": "backend/app.js",
+  "type": "module",
+  "scripts": {
+    "generate": "node backend/logic/generator.js",
+    "recommend": "node backend/logic/export-dashboard-data.js",
+    "start": "npm run generate && npm run recommend",
+    "dashboard": "cd frontend && npm start",
+    "api": "node backend/app.js",
+    "demo": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/run-demo.ps1",
+    "demo:reset": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/run-demo.ps1 -ResetData",
+    "demo:bat": "scripts\\run-demo.bat keep",
+    "demo:bat:reset": "scripts\\run-demo.bat reset",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "db:seed": "node backend/logic/seed-postgres.js",
+    "db:init": "npm run db:up && npm run db:seed"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  },
+  "keywords": ["recommendation", "firebase", "dashboard"],
+  "author": "",
+  "license": "ISC"
+}

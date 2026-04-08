@@ -1,0 +1,763 @@
+{
+  "meeting1": {
+    "title": "모임 1",
+    "meetingType": "one-time",
+    "tagId": "exercise",
+    "description": "exercise 관련 활동",
+    "hostUserId": "user38",
+    "participants": [
+      "user38",
+      "user46",
+      "user48"
+    ],
+    "createdAt": "2026-04-06T07:04:21.329Z"
+  },
+  "meeting2": {
+    "title": "모임 2",
+    "meetingType": "club",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user5",
+    "participants": [
+      "user5",
+      "user57",
+      "user46",
+      "user77",
+      "user100",
+      "user97",
+      "user89"
+    ],
+    "createdAt": "2026-04-06T07:04:21.329Z"
+  },
+  "meeting3": {
+    "title": "모임 3",
+    "meetingType": "club",
+    "tagId": "religion",
+    "description": "religion 관련 활동",
+    "hostUserId": "user15",
+    "participants": [
+      "user15",
+      "user69",
+      "user95",
+      "user6"
+    ],
+    "createdAt": "2026-04-06T07:04:21.329Z"
+  },
+  "meeting4": {
+    "title": "모임 4",
+    "meetingType": "small-group",
+    "tagId": "culture",
+    "description": "culture 관련 활동",
+    "hostUserId": "user25",
+    "participants": [
+      "user25",
+      "user76",
+      "user14",
+      "user33",
+      "user43"
+    ],
+    "createdAt": "2026-04-06T07:04:21.329Z"
+  },
+  "meeting5": {
+    "title": "모임 5",
+    "meetingType": "club",
+    "tagId": "volunteer",
+    "description": "volunteer 관련 활동",
+    "hostUserId": "user51",
+    "participants": [
+      "user51",
+      "user19",
+      "user14"
+    ],
+    "createdAt": "2026-04-06T07:04:21.329Z"
+  },
+  "meeting6": {
+    "title": "모임 6",
+    "meetingType": "small-group",
+    "tagId": "exercise",
+    "description": "exercise 관련 활동",
+    "hostUserId": "user24",
+    "participants": [
+      "user24",
+      "user27",
+      "user35",
+      "user20",
+      "user28"
+    ],
+    "createdAt": "2026-04-06T07:04:21.329Z"
+  },
+  "meeting7": {
+    "title": "모임 7",
+    "meetingType": "small-group",
+    "tagId": "volunteer",
+    "description": "volunteer 관련 활동",
+    "hostUserId": "user58",
+    "participants": [
+      "user58",
+      "user78",
+      "user30",
+      "user6"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting8": {
+    "title": "모임 8",
+    "meetingType": "one-time",
+    "tagId": "culture",
+    "description": "culture 관련 활동",
+    "hostUserId": "user51",
+    "participants": [
+      "user51",
+      "user96",
+      "user98",
+      "user66"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting9": {
+    "title": "모임 9",
+    "meetingType": "one-time",
+    "tagId": "culture",
+    "description": "culture 관련 활동",
+    "hostUserId": "user34",
+    "participants": [
+      "user34",
+      "user98",
+      "user29",
+      "user47",
+      "user92",
+      "user24",
+      "user42"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting10": {
+    "title": "모임 10",
+    "meetingType": "club",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user75",
+    "participants": [
+      "user75",
+      "user36",
+      "user57",
+      "user1",
+      "user72",
+      "user44"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting11": {
+    "title": "모임 11",
+    "meetingType": "small-group",
+    "tagId": "exercise",
+    "description": "exercise 관련 활동",
+    "hostUserId": "user39",
+    "participants": [
+      "user39",
+      "user24",
+      "user46",
+      "user78",
+      "user1",
+      "user2",
+      "user23"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting12": {
+    "title": "모임 12",
+    "meetingType": "small-group",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user51",
+    "participants": [
+      "user51",
+      "user15",
+      "user13",
+      "user31",
+      "user17",
+      "user1"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting13": {
+    "title": "모임 13",
+    "meetingType": "club",
+    "tagId": "volunteer",
+    "description": "volunteer 관련 활동",
+    "hostUserId": "user16",
+    "participants": [
+      "user16",
+      "user76",
+      "user68",
+      "user34",
+      "user17"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting14": {
+    "title": "모임 14",
+    "meetingType": "club",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user91",
+    "participants": [
+      "user91",
+      "user33",
+      "user26",
+      "user5"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting15": {
+    "title": "모임 15",
+    "meetingType": "small-group",
+    "tagId": "exercise",
+    "description": "exercise 관련 활동",
+    "hostUserId": "user1",
+    "participants": [
+      "user1",
+      "user2",
+      "user13",
+      "user47",
+      "user10"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting16": {
+    "title": "모임 16",
+    "meetingType": "one-time",
+    "tagId": "volunteer",
+    "description": "volunteer 관련 활동",
+    "hostUserId": "user26",
+    "participants": [
+      "user26",
+      "user29",
+      "user31",
+      "user63",
+      "user96"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting17": {
+    "title": "모임 17",
+    "meetingType": "one-time",
+    "tagId": "study",
+    "description": "study 관련 활동",
+    "hostUserId": "user94",
+    "participants": [
+      "user94",
+      "user71",
+      "user57",
+      "user78",
+      "user61",
+      "user87",
+      "user89"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting18": {
+    "title": "모임 18",
+    "meetingType": "small-group",
+    "tagId": "culture",
+    "description": "culture 관련 활동",
+    "hostUserId": "user31",
+    "participants": [
+      "user31",
+      "user67",
+      "user1",
+      "user45",
+      "user2",
+      "user40",
+      "user3"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting19": {
+    "title": "모임 19",
+    "meetingType": "small-group",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user50",
+    "participants": [
+      "user50",
+      "user36",
+      "user48",
+      "user78",
+      "user64",
+      "user46",
+      "user65"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting20": {
+    "title": "모임 20",
+    "meetingType": "club",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user83",
+    "participants": [
+      "user83",
+      "user24",
+      "user8",
+      "user3",
+      "user7",
+      "user25",
+      "user48"
+    ],
+    "createdAt": "2026-04-06T07:04:21.330Z"
+  },
+  "meeting21": {
+    "title": "모임 21",
+    "meetingType": "small-group",
+    "tagId": "exercise",
+    "description": "exercise 관련 활동",
+    "hostUserId": "user28",
+    "participants": [
+      "user28",
+      "user32",
+      "user6",
+      "user27",
+      "user30",
+      "user5",
+      "user18"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting22": {
+    "title": "모임 22",
+    "meetingType": "club",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user60",
+    "participants": [
+      "user60",
+      "user10",
+      "user51",
+      "user64",
+      "user31",
+      "user25",
+      "user49"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting23": {
+    "title": "모임 23",
+    "meetingType": "club",
+    "tagId": "study",
+    "description": "study 관련 활동",
+    "hostUserId": "user25",
+    "participants": [
+      "user25",
+      "user29",
+      "user97",
+      "user46",
+      "user8",
+      "user60",
+      "user3"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting24": {
+    "title": "모임 24",
+    "meetingType": "one-time",
+    "tagId": "exercise",
+    "description": "exercise 관련 활동",
+    "hostUserId": "user39",
+    "participants": [
+      "user39",
+      "user3",
+      "user20",
+      "user61",
+      "user60",
+      "user12"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting25": {
+    "title": "모임 25",
+    "meetingType": "club",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user68",
+    "participants": [
+      "user68",
+      "user65",
+      "user67",
+      "user99",
+      "user79",
+      "user86"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting26": {
+    "title": "모임 26",
+    "meetingType": "one-time",
+    "tagId": "study",
+    "description": "study 관련 활동",
+    "hostUserId": "user99",
+    "participants": [
+      "user99",
+      "user44",
+      "user41",
+      "user25",
+      "user14"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting27": {
+    "title": "모임 27",
+    "meetingType": "club",
+    "tagId": "exercise",
+    "description": "exercise 관련 활동",
+    "hostUserId": "user25",
+    "participants": [
+      "user25",
+      "user21",
+      "user72",
+      "user60",
+      "user74",
+      "user11"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting28": {
+    "title": "모임 28",
+    "meetingType": "one-time",
+    "tagId": "culture",
+    "description": "culture 관련 활동",
+    "hostUserId": "user68",
+    "participants": [
+      "user68",
+      "user70",
+      "user34",
+      "user11",
+      "user39"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting29": {
+    "title": "모임 29",
+    "meetingType": "club",
+    "tagId": "study",
+    "description": "study 관련 활동",
+    "hostUserId": "user11",
+    "participants": [
+      "user11",
+      "user46",
+      "user66"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting30": {
+    "title": "모임 30",
+    "meetingType": "one-time",
+    "tagId": "volunteer",
+    "description": "volunteer 관련 활동",
+    "hostUserId": "user21",
+    "participants": [
+      "user21",
+      "user50",
+      "user48",
+      "user6",
+      "user45"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting31": {
+    "title": "모임 31",
+    "meetingType": "small-group",
+    "tagId": "religion",
+    "description": "religion 관련 활동",
+    "hostUserId": "user24",
+    "participants": [
+      "user24",
+      "user21",
+      "user15",
+      "user35",
+      "user25"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting32": {
+    "title": "모임 32",
+    "meetingType": "small-group",
+    "tagId": "religion",
+    "description": "religion 관련 활동",
+    "hostUserId": "user82",
+    "participants": [
+      "user82",
+      "user53",
+      "user88",
+      "user4",
+      "user47",
+      "user24"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting33": {
+    "title": "모임 33",
+    "meetingType": "one-time",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user34",
+    "participants": [
+      "user34",
+      "user48",
+      "user15"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting34": {
+    "title": "모임 34",
+    "meetingType": "small-group",
+    "tagId": "culture",
+    "description": "culture 관련 활동",
+    "hostUserId": "user62",
+    "participants": [
+      "user62",
+      "user66",
+      "user98",
+      "user80",
+      "user60",
+      "user67",
+      "user81"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting35": {
+    "title": "모임 35",
+    "meetingType": "small-group",
+    "tagId": "culture",
+    "description": "culture 관련 활동",
+    "hostUserId": "user90",
+    "participants": [
+      "user90",
+      "user54",
+      "user9",
+      "user45",
+      "user26",
+      "user21",
+      "user56"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting36": {
+    "title": "모임 36",
+    "meetingType": "one-time",
+    "tagId": "study",
+    "description": "study 관련 활동",
+    "hostUserId": "user22",
+    "participants": [
+      "user22",
+      "user98",
+      "user62"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting37": {
+    "title": "모임 37",
+    "meetingType": "one-time",
+    "tagId": "volunteer",
+    "description": "volunteer 관련 활동",
+    "hostUserId": "user10",
+    "participants": [
+      "user10",
+      "user77",
+      "user84",
+      "user60",
+      "user63"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting38": {
+    "title": "모임 38",
+    "meetingType": "one-time",
+    "tagId": "culture",
+    "description": "culture 관련 활동",
+    "hostUserId": "user21",
+    "participants": [
+      "user21",
+      "user19",
+      "user8",
+      "user1",
+      "user30",
+      "user51"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting39": {
+    "title": "모임 39",
+    "meetingType": "one-time",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user24",
+    "participants": [
+      "user24",
+      "user2",
+      "user42",
+      "user43",
+      "user30"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting40": {
+    "title": "모임 40",
+    "meetingType": "small-group",
+    "tagId": "volunteer",
+    "description": "volunteer 관련 활동",
+    "hostUserId": "user26",
+    "participants": [
+      "user26",
+      "user77",
+      "user99",
+      "user18",
+      "user61",
+      "user80",
+      "user14"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting41": {
+    "title": "모임 41",
+    "meetingType": "one-time",
+    "tagId": "volunteer",
+    "description": "volunteer 관련 활동",
+    "hostUserId": "user34",
+    "participants": [
+      "user34",
+      "user2",
+      "user81"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting42": {
+    "title": "모임 42",
+    "meetingType": "club",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user57",
+    "participants": [
+      "user57",
+      "user66",
+      "user92",
+      "user80"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting43": {
+    "title": "모임 43",
+    "meetingType": "club",
+    "tagId": "volunteer",
+    "description": "volunteer 관련 활동",
+    "hostUserId": "user24",
+    "participants": [
+      "user24",
+      "user52",
+      "user85"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting44": {
+    "title": "모임 44",
+    "meetingType": "small-group",
+    "tagId": "religion",
+    "description": "religion 관련 활동",
+    "hostUserId": "user85",
+    "participants": [
+      "user85",
+      "user40",
+      "user26",
+      "user53",
+      "user1"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting45": {
+    "title": "모임 45",
+    "meetingType": "club",
+    "tagId": "volunteer",
+    "description": "volunteer 관련 활동",
+    "hostUserId": "user64",
+    "participants": [
+      "user64",
+      "user25",
+      "user41",
+      "user4"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting46": {
+    "title": "모임 46",
+    "meetingType": "club",
+    "tagId": "study",
+    "description": "study 관련 활동",
+    "hostUserId": "user4",
+    "participants": [
+      "user4",
+      "user64",
+      "user75"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting47": {
+    "title": "모임 47",
+    "meetingType": "club",
+    "tagId": "study",
+    "description": "study 관련 활동",
+    "hostUserId": "user26",
+    "participants": [
+      "user26",
+      "user24",
+      "user33",
+      "user7",
+      "user27"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting48": {
+    "title": "모임 48",
+    "meetingType": "club",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user18",
+    "participants": [
+      "user18",
+      "user78",
+      "user67",
+      "user86",
+      "user23",
+      "user51",
+      "user97"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting49": {
+    "title": "모임 49",
+    "meetingType": "small-group",
+    "tagId": "game",
+    "description": "game 관련 활동",
+    "hostUserId": "user60",
+    "participants": [
+      "user60",
+      "user55",
+      "user71",
+      "user90"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  },
+  "meeting50": {
+    "title": "모임 50",
+    "meetingType": "club",
+    "tagId": "culture",
+    "description": "culture 관련 활동",
+    "hostUserId": "user7",
+    "participants": [
+      "user7",
+      "user71",
+      "user15",
+      "user17"
+    ],
+    "createdAt": "2026-04-06T07:04:21.331Z"
+  }
+}

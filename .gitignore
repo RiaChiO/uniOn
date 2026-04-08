@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+web1/node_modules/
+uniOn/web1/node_modules/
+
+# Build outputs
+dist/
+build/
+web1/dist/
+uniOn/web1/dist/
+
+# Tool caches
+.vite/
+web1/.vite/
+uniOn/web1/.vite/
+.cache/
+.eslintcache
+coverage/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime / temp
+tmp/
+temp/
+*.pid
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local key/test artifacts
+key-gen.txt

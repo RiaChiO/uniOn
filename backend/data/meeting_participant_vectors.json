@@ -1,0 +1,402 @@
+{
+  "meeting1": {
+    "study": 6.57,
+    "exercise": 3.86,
+    "culture": 4.57,
+    "game": 5.43,
+    "religion": 3,
+    "volunteer": 3.71
+  },
+  "meeting2": {
+    "study": 4.2,
+    "exercise": 2.4,
+    "culture": 3.8,
+    "game": 2.2,
+    "religion": 4.4,
+    "volunteer": 5.6
+  },
+  "meeting3": {
+    "study": 0.67,
+    "exercise": 3.67,
+    "culture": 3.33,
+    "game": 2.33,
+    "religion": 3.33,
+    "volunteer": 3.67
+  },
+  "meeting4": {
+    "study": 1.33,
+    "exercise": 6,
+    "culture": 2.67,
+    "game": 6,
+    "religion": 3.67,
+    "volunteer": 4.33
+  },
+  "meeting5": {
+    "study": 7,
+    "exercise": 4.75,
+    "culture": 3.75,
+    "game": 2.5,
+    "religion": 2.75,
+    "volunteer": 6.25
+  },
+  "meeting6": {
+    "study": 5.17,
+    "exercise": 4.33,
+    "culture": 6.5,
+    "game": 5.5,
+    "religion": 4.33,
+    "volunteer": 4
+  },
+  "meeting7": {
+    "study": 3.8,
+    "exercise": 3.6,
+    "culture": 5,
+    "game": 2,
+    "religion": 3.6,
+    "volunteer": 6.6
+  },
+  "meeting8": {
+    "study": 6.5,
+    "exercise": 5.5,
+    "culture": 5,
+    "game": 5,
+    "religion": 4.25,
+    "volunteer": 4
+  },
+  "meeting9": {
+    "study": 4.33,
+    "exercise": 6.33,
+    "culture": 7,
+    "game": 7.33,
+    "religion": 5.33,
+    "volunteer": 4.67
+  },
+  "meeting10": {
+    "study": 3,
+    "exercise": 4.14,
+    "culture": 4.43,
+    "game": 4.29,
+    "religion": 4.86,
+    "volunteer": 4.43
+  },
+  "meeting11": {
+    "study": 6.17,
+    "exercise": 3.5,
+    "culture": 4.33,
+    "game": 5.33,
+    "religion": 5.83,
+    "volunteer": 6
+  },
+  "meeting12": {
+    "study": 5.8,
+    "exercise": 3.4,
+    "culture": 4.2,
+    "game": 5.4,
+    "religion": 3,
+    "volunteer": 5
+  },
+  "meeting13": {
+    "study": 5.83,
+    "exercise": 2,
+    "culture": 3.17,
+    "game": 4,
+    "religion": 3.5,
+    "volunteer": 6.17
+  },
+  "meeting14": {
+    "study": 3.4,
+    "exercise": 4.4,
+    "culture": 4.6,
+    "game": 5.6,
+    "religion": 3.2,
+    "volunteer": 6
+  },
+  "meeting15": {
+    "study": 5.4,
+    "exercise": 4.6,
+    "culture": 4.2,
+    "game": 6.4,
+    "religion": 3.8,
+    "volunteer": 5.4
+  },
+  "meeting16": {
+    "study": 4.17,
+    "exercise": 4.33,
+    "culture": 4,
+    "game": 3.33,
+    "religion": 4.83,
+    "volunteer": 4.17
+  },
+  "meeting17": {
+    "study": 4.33,
+    "exercise": 4,
+    "culture": 4,
+    "game": 5.67,
+    "religion": 1.33,
+    "volunteer": 3.67
+  },
+  "meeting18": {
+    "study": 6.2,
+    "exercise": 3.6,
+    "culture": 4,
+    "game": 6.2,
+    "religion": 4.4,
+    "volunteer": 5.4
+  },
+  "meeting19": {
+    "study": 3.25,
+    "exercise": 4.25,
+    "culture": 7.5,
+    "game": 2,
+    "religion": 4.75,
+    "volunteer": 4.5
+  },
+  "meeting20": {
+    "study": 4.6,
+    "exercise": 4.2,
+    "culture": 5.6,
+    "game": 5.2,
+    "religion": 4.6,
+    "volunteer": 3.8
+  },
+  "meeting21": {
+    "study": 6.17,
+    "exercise": 4,
+    "culture": 4,
+    "game": 4.83,
+    "religion": 3.83,
+    "volunteer": 3.33
+  },
+  "meeting22": {
+    "study": 4.6,
+    "exercise": 3,
+    "culture": 5.6,
+    "game": 6.2,
+    "religion": 4,
+    "volunteer": 4.8
+  },
+  "meeting23": {
+    "study": 1.75,
+    "exercise": 5.75,
+    "culture": 5.5,
+    "game": 4.75,
+    "religion": 2.75,
+    "volunteer": 0.5
+  },
+  "meeting24": {
+    "study": 5,
+    "exercise": 3.57,
+    "culture": 6.43,
+    "game": 3.43,
+    "religion": 3.43,
+    "volunteer": 4.57
+  },
+  "meeting25": {
+    "study": 4.86,
+    "exercise": 4.86,
+    "culture": 5.71,
+    "game": 3.71,
+    "religion": 2.71,
+    "volunteer": 5.29
+  },
+  "meeting26": {
+    "study": 4.25,
+    "exercise": 4.75,
+    "culture": 6.75,
+    "game": 4.5,
+    "religion": 5,
+    "volunteer": 6.75
+  },
+  "meeting27": {
+    "study": 5.5,
+    "exercise": 5,
+    "culture": 2.25,
+    "game": 4.75,
+    "religion": 1.75,
+    "volunteer": 4.25
+  },
+  "meeting28": {
+    "study": 2.6,
+    "exercise": 6.2,
+    "culture": 3.8,
+    "game": 3,
+    "religion": 3.2,
+    "volunteer": 3.4
+  },
+  "meeting29": {
+    "study": 4.6,
+    "exercise": 4.2,
+    "culture": 3.4,
+    "game": 6.2,
+    "religion": 4.2,
+    "volunteer": 6.2
+  },
+  "meeting30": {
+    "study": 4.33,
+    "exercise": 3.33,
+    "culture": 2.67,
+    "game": 1.67,
+    "religion": 5.67,
+    "volunteer": 4.33
+  },
+  "meeting31": {
+    "study": 1.5,
+    "exercise": 6,
+    "culture": 3.5,
+    "game": 4.25,
+    "religion": 3.75,
+    "volunteer": 5
+  },
+  "meeting32": {
+    "study": 6.25,
+    "exercise": 3.5,
+    "culture": 5.5,
+    "game": 2.75,
+    "religion": 4.75,
+    "volunteer": 5.75
+  },
+  "meeting33": {
+    "study": 4.33,
+    "exercise": 3.67,
+    "culture": 4,
+    "game": 3,
+    "religion": 3.33,
+    "volunteer": 5
+  },
+  "meeting34": {
+    "study": 6,
+    "exercise": 3.33,
+    "culture": 1.67,
+    "game": 6.67,
+    "religion": 2.67,
+    "volunteer": 3.33
+  },
+  "meeting35": {
+    "study": 6.6,
+    "exercise": 5.8,
+    "culture": 4.4,
+    "game": 5.2,
+    "religion": 5,
+    "volunteer": 5.2
+  },
+  "meeting36": {
+    "study": 4.29,
+    "exercise": 4.14,
+    "culture": 4.86,
+    "game": 3.71,
+    "religion": 4.29,
+    "volunteer": 3.29
+  },
+  "meeting37": {
+    "study": 3.43,
+    "exercise": 4.43,
+    "culture": 4.71,
+    "game": 4.29,
+    "religion": 3.29,
+    "volunteer": 2.29
+  },
+  "meeting38": {
+    "study": 5.67,
+    "exercise": 5.17,
+    "culture": 3.33,
+    "game": 3.67,
+    "religion": 4.33,
+    "volunteer": 5.5
+  },
+  "meeting39": {
+    "study": 4,
+    "exercise": 2,
+    "culture": 4.43,
+    "game": 4.29,
+    "religion": 4,
+    "volunteer": 5
+  },
+  "meeting40": {
+    "study": 6.75,
+    "exercise": 2.25,
+    "culture": 3,
+    "game": 4,
+    "religion": 3.5,
+    "volunteer": 6.25
+  },
+  "meeting41": {
+    "study": 5.5,
+    "exercise": 5,
+    "culture": 2.75,
+    "game": 4.75,
+    "religion": 3,
+    "volunteer": 3.5
+  },
+  "meeting42": {
+    "study": 1,
+    "exercise": 4.33,
+    "culture": 5.33,
+    "game": 6.33,
+    "religion": 2.33,
+    "volunteer": 5.67
+  },
+  "meeting43": {
+    "study": 5.14,
+    "exercise": 3.29,
+    "culture": 3,
+    "game": 6,
+    "religion": 3.71,
+    "volunteer": 6.29
+  },
+  "meeting44": {
+    "study": 3,
+    "exercise": 3.86,
+    "culture": 4.71,
+    "game": 4.43,
+    "religion": 2.86,
+    "volunteer": 6.57
+  },
+  "meeting45": {
+    "study": 6.4,
+    "exercise": 3.4,
+    "culture": 3.4,
+    "game": 3.4,
+    "religion": 5.2,
+    "volunteer": 4.8
+  },
+  "meeting46": {
+    "study": 5.5,
+    "exercise": 5,
+    "culture": 4,
+    "game": 6.5,
+    "religion": 3.17,
+    "volunteer": 4.67
+  },
+  "meeting47": {
+    "study": 5.17,
+    "exercise": 5.33,
+    "culture": 3.5,
+    "game": 5.5,
+    "religion": 5.17,
+    "volunteer": 5.17
+  },
+  "meeting48": {
+    "study": 3.33,
+    "exercise": 6.33,
+    "culture": 4,
+    "game": 5,
+    "religion": 7,
+    "volunteer": 7.67
+  },
+  "meeting49": {
+    "study": 2,
+    "exercise": 3,
+    "culture": 8.67,
+    "game": 5,
+    "religion": 4.33,
+    "volunteer": 3.67
+  },
+  "meeting50": {
+    "study": 6.5,
+    "exercise": 5.75,
+    "culture": 3,
+    "game": 4.75,
+    "religion": 2.75,
+    "volunteer": 4
+  }
+}
