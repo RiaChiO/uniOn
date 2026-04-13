@@ -10,7 +10,7 @@ import { useState, useMemo } from "react";
 import Navbar from "../components/Navbar";
 import ClubCard from "../components/ClubCard";
 import Footer from "../components/Footer";
-import { CLUB_TYPES, CATEGORIES } from "../data/mockData";
+import { CATEGORIES } from "../data/mockData";
 
 // 🔧 [기능] 정렬 옵션 - 필요 시 추가/수정
 const SORT_OPTIONS = [
@@ -33,6 +33,9 @@ export default function SearchPage({
   user,
   onLoginClick,
   clubs = [],
+  meetingTypes = [],
+  meetingTypesLoading = false,
+  meetingTypesError = "",
   loading = false,
   error = "",
   onDetailClick,
@@ -41,6 +44,9 @@ export default function SearchPage({
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedMember, setSelectedMember] = useState("all");
+  const [appliedTypes, setAppliedTypes] = useState([]);
+  const [appliedCategories, setAppliedCategories] = useState([]);
+  const [appliedMember, setAppliedMember] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
 
   // 타입 토글
@@ -57,6 +63,21 @@ export default function SearchPage({
     );
   };
 
+  const applyFilters = () => {
+    setAppliedTypes(selectedTypes);
+    setAppliedCategories(selectedCategories);
+    setAppliedMember(selectedMember);
+  };
+
+  const resetFilters = () => {
+    setSelectedTypes([]);
+    setSelectedCategories([]);
+    setSelectedMember("all");
+    setAppliedTypes([]);
+    setAppliedCategories([]);
+    setAppliedMember("all");
+  };
+
   const filteredClubs = useMemo(() => {
     const filtered = clubs.filter((club) => {
       const matchesSearch =
@@ -66,19 +87,19 @@ export default function SearchPage({
         club.tags.some((tag) => tag.includes(searchQuery));
 
       const matchesType =
-        selectedTypes.length === 0 || selectedTypes.includes(club.type);
+        appliedTypes.length === 0 || appliedTypes.includes(club.type);
 
       const matchesCategory =
-        selectedCategories.length === 0 ||
-        selectedCategories.includes(club.category);
+        appliedCategories.length === 0 ||
+        appliedCategories.includes(club.category);
 
       const matchesMember =
-        selectedMember === "all" ||
-        (selectedMember === "small" && club.memberCount <= 10) ||
-        (selectedMember === "medium" &&
+        appliedMember === "all" ||
+        (appliedMember === "small" && club.memberCount <= 10) ||
+        (appliedMember === "medium" &&
           club.memberCount > 10 &&
           club.memberCount <= 30) ||
-        (selectedMember === "large" && club.memberCount > 30);
+        (appliedMember === "large" && club.memberCount > 30);
 
       return matchesSearch && matchesType && matchesCategory && matchesMember;
     });
@@ -102,9 +123,9 @@ export default function SearchPage({
   }, [
     clubs,
     searchQuery,
-    selectedTypes,
-    selectedCategories,
-    selectedMember,
+    appliedTypes,
+    appliedCategories,
+    appliedMember,
     sortBy,
   ]);
 
@@ -144,12 +165,7 @@ export default function SearchPage({
               <span className="search-filter__title">🔧 필터</span>
               <button
                 className="search-filter__reset"
-                // 🔧 [기능] 필터 초기화
-                onClick={() => {
-                  setSelectedTypes([]);
-                  setSelectedCategories([]);
-                  setSelectedMember("all");
-                }}
+                onClick={resetFilters}
               >
                 초기화
               </button>
@@ -158,7 +174,12 @@ export default function SearchPage({
             {/* 모임 유형 */}
             <div className="search-filter__group">
               <h4 className="search-filter__group-title">모임 유형</h4>
-              {CLUB_TYPES.map((type) => (
+              {meetingTypes.length === 0 && meetingTypesLoading ? (
+                <p>모임 유형을 불러오는 중입니다.</p>
+              ) : meetingTypesError ? (
+                <p>{meetingTypesError}</p>
+              ) : (
+                meetingTypes.map((type) => (
                 <label key={type.id} className="search-filter__check-label">
                   <input
                     type="checkbox"
@@ -167,7 +188,8 @@ export default function SearchPage({
                   />
                   {type.label}
                 </label>
-              ))}
+                ))
+              )}
             </div>
 
             {/* 관심 분야 */}
@@ -203,8 +225,7 @@ export default function SearchPage({
 
             <button
               className="btn btn--primary search-filter__apply"
-              // 🔧 [기능] API 연동 시 여기서 fetch 호출
-              onClick={() => console.log("TODO: 필터 적용")}
+              onClick={applyFilters}
             >
               필터 적용
             </button>

@@ -7,25 +7,10 @@
 //   - onLogout      : 로그아웃 클릭 → 로그아웃 로직 연결
 //   - onClubClick   : 소모임 클릭 → 소모임 상세 페이지 이동
 
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-
-// 🔧 [기능] 더미 유저 정보 → 로그인 API 응답으로 교체
-const MOCK_USER = {
-  name: "김경상",
-  department: "컴퓨터과학과",
-  grade: "21학번",
-  email: "kim@gnu.ac.kr",
-  joinDate: "2024.03.02",
-  clubCount: 2,
-  wishlistCount: 2,
-};
-
-// 🔧 [기능] 더미 참여 소모임 → API 응답으로 교체
-const MOCK_MY_CLUBS = [
-  { id: 1, name: "GNU 코딩 스터디", memberCount: 24, role: "멤버" },
-  { id: 2, name: "FC GNU",          memberCount: 35, role: "리더" },
-];
+import { getUserMeetings } from "../api/users";
 
 // 🔧 [기능] 더미 알림 → API 응답으로 교체
 const MOCK_NOTIFICATIONS = [
@@ -33,6 +18,19 @@ const MOCK_NOTIFICATIONS = [
   { id: 2, message: "FC GNU 모임이 내일 예정되어 있습니다",        date: "2026.03.12" },
   { id: 3, message: "아트클럽을 관심 목록에 추가했습니다",          date: "2026.03.08" },
 ];
+
+function formatDate(value) {
+  if (!value) return "-";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
 
 export default function MyPage({
   searchQuery,
@@ -44,7 +42,49 @@ export default function MyPage({
   onLogout,
   onClubClick,
 }) {
-  const displayUser = user ?? MOCK_USER;
+  const [myClubs, setMyClubs] = useState([]);
+  const [myClubsLoading, setMyClubsLoading] = useState(false);
+  const [myClubsError, setMyClubsError] = useState("");
+  const displayUser = user ?? {};
+
+  useEffect(() => {
+    const userId = user?.userId ?? user?.id;
+
+    if (!userId) {
+      setMyClubs([]);
+      return;
+    }
+
+    async function loadMyClubs() {
+      try {
+        setMyClubsLoading(true);
+        setMyClubsError("");
+
+        const data = await getUserMeetings(userId);
+        setMyClubs(
+          data.map((club) => ({
+            id: club.meetingId,
+            name: club.title,
+            memberCount: club.participantCount,
+            role: club.role,
+          }))
+        );
+      } catch (error) {
+        setMyClubsError(error.message);
+      } finally {
+        setMyClubsLoading(false);
+      }
+    }
+
+    loadMyClubs();
+  }, [user]);
+
+  const displayedClubs = user ? myClubs : [];
+  const displayedDepartment = displayUser.department ?? "학과 정보 없음";
+  const displayedEmail = displayUser.email ?? "로그인이 필요합니다";
+  const displayedGrade = displayUser.grade ?? "학번 정보 없음";
+  const displayedJoinDate = formatDate(displayUser.createdAt ?? displayUser.joinDate);
+  const displayedWishlistCount = displayUser.wishlistCount ?? 0;
 
   return (
     <div className="mypage">
@@ -64,14 +104,14 @@ export default function MyPage({
 
             <div className="mypage__profile">
               <div className="mypage__avatar">👤</div>
-              <h2 className="mypage__name">{displayUser.name}</h2>
-              <p className="mypage__info">{displayUser.department} · {displayUser.grade}</p>
+              <h2 className="mypage__name">{displayUser.name ?? "로그인 필요"}</h2>
+              <p className="mypage__info">{displayedDepartment} · {displayedGrade}</p>
             </div>
 
             <div className="mypage__profile-detail">
-              <div className="mypage__profile-row">📧 {displayUser.email}</div>
-              <div className="mypage__profile-row">📅 가입일: {displayUser.joinDate}</div>
-              <div className="mypage__profile-row">👥 참여 소모임: {displayUser.clubCount}개</div>
+              <div className="mypage__profile-row">📧 {displayedEmail}</div>
+              <div className="mypage__profile-row">📅 가입일: {displayedJoinDate}</div>
+              <div className="mypage__profile-row">👥 참여 소모임: {displayedClubs.length}개</div>
             </div>
 
             <div className="mypage__profile-actions">
@@ -94,11 +134,11 @@ export default function MyPage({
             {/* 통계 */}
             <div className="mypage__stats">
               <div className="mypage__stat-item">
-                <span className="mypage__stat-value">{displayUser.clubCount}</span>
+                <span className="mypage__stat-value">{displayedClubs.length}</span>
                 <span className="mypage__stat-label">참여중</span>
               </div>
               <div className="mypage__stat-item">
-                <span className="mypage__stat-value">{displayUser.wishlistCount}</span>
+                <span className="mypage__stat-value">{displayedWishlistCount}</span>
                 <span className="mypage__stat-label">관심목록</span>
               </div>
             </div>
@@ -112,21 +152,29 @@ export default function MyPage({
             <section className="mypage__section">
               <h3 className="mypage__section-title">참여 중인 소모임</h3>
               <div className="mypage__club-list">
-                {MOCK_MY_CLUBS.map((club) => (
-                  <div
-                    key={club.id}
-                    className="mypage__club-card"
-                    // 🔧 [기능] 소모임 상세 페이지 이동
-                    onClick={() => onClubClick && onClubClick(club.id)}
-                  >
-                    <div className="mypage__club-thumb">🏠</div>
-                    <div className="mypage__club-info">
-                      <div className="mypage__club-role">{club.role}</div>
-                      <div className="mypage__club-name">{club.name}</div>
-                      <div className="mypage__club-member">👥 {club.memberCount}명</div>
+                {myClubsLoading ? (
+                  <p>참여 중인 모임을 불러오는 중입니다.</p>
+                ) : myClubsError ? (
+                  <p>{myClubsError}</p>
+                ) : displayedClubs.length === 0 ? (
+                  <p>참여 중인 모임이 없습니다.</p>
+                ) : (
+                  displayedClubs.map((club) => (
+                    <div
+                      key={club.id}
+                      className="mypage__club-card"
+                      // 🔧 [기능] 소모임 상세 페이지 이동
+                      onClick={() => onClubClick && onClubClick(club.id)}
+                    >
+                      <div className="mypage__club-thumb">🏠</div>
+                      <div className="mypage__club-info">
+                        <div className="mypage__club-role">{club.role}</div>
+                        <div className="mypage__club-name">{club.name}</div>
+                        <div className="mypage__club-member">👥 {club.memberCount}명</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </section>
 

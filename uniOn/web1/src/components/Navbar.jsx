@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 
-export default function Navbar({ searchQuery, onSearchChange, isLoggedIn, user, onLoginClick }) {
-
+export default function Navbar({
+  searchQuery,
+  onSearchChange,
+  isLoggedIn,
+  user,
+  onLoginClick,
+}) {
   const [isDark, setIsDark] = useState(false);
 
   // 처음 로드 시 적용
@@ -11,11 +16,14 @@ export default function Navbar({ searchQuery, onSearchChange, isLoggedIn, user, 
     setIsDark(saved === "dark");
   }, []);
 
-    // 로컬스토리지에 저장
+  // 로컬스토리지에 저장
   const toggleDark = () => {
     const next = !isDark;
     setIsDark(next);
-    document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
+    document.documentElement.setAttribute(
+      "data-theme",
+      next ? "dark" : "light",
+    );
     localStorage.setItem("theme", next ? "dark" : "light");
   };
 
@@ -23,10 +31,18 @@ export default function Navbar({ searchQuery, onSearchChange, isLoggedIn, user, 
     <header className="navbar">
       <div className="navbar__inner">
         <div className="navbar__logo">
-          <a href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-            <img 
-              src="/favicon-32x32.png" 
-              alt="경상대 소모임 로고" 
+          <a
+            href="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              textDecoration: "none",
+            }}
+          >
+            <img
+              src="/favicon-32x32.png"
+              alt="경상대 소모임 로고"
               style={{ width: "40px", height: "40px", borderRadius: "8px" }}
             />
             <div className="navbar__logo-text">
@@ -46,18 +62,31 @@ export default function Navbar({ searchQuery, onSearchChange, isLoggedIn, user, 
           />
         </div>
         <nav className="navbar__nav">
-          <a href="#search" className="navbar__nav-link">소모임 찾기</a>
-          <a href="#create" className="navbar__nav-link">소모임 개설</a>
+          <a href="/search" className="navbar__nav-link">
+            소모임 찾기
+          </a>
+          <a href="/create" className="navbar__nav-link">
+            소모임 개설
+          </a>
           {isLoggedIn ? (
-            <button className="navbar__btn navbar__btn--profile" onClick={() => window.location.href = "/mypage"} >
+            <button
+              className="navbar__btn navbar__btn--profile"
+              onClick={() => (window.location.href = "/mypage")}
+            >
               {user?.name ?? "마이페이지"}
             </button>
           ) : (
-            <button className="navbar__btn navbar__btn--login" onClick={onLoginClick}>
+            <button
+              className="navbar__btn navbar__btn--login"
+              onClick={onLoginClick}
+            >
               로그인
             </button>
           )}
-          <button onClick={toggleDark} style={{ fontSize: "20px", padding: "4px 8px" }}>
+          <button
+            onClick={toggleDark}
+            style={{ fontSize: "20px", padding: "4px 8px" }}
+          >
             {isDark ? "☀️" : "🌙"}
           </button>
         </nav>

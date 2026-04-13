@@ -10,12 +10,6 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { CATEGORIES } from "../data/mockData";
 
-const CLUB_TYPES = [
-  { id: "club",        emoji: "🏛️", label: "동아리",    desc: "정식 등록" },
-  { id: "small-group", emoji: "👥", label: "소모임",    desc: "자유 활동" },
-  { id: "one-time",    emoji: "⚡", label: "일회성모임", desc: "단기 진행" },
-];
-
 export default function CreatePage({
   onSubmit,
   onCancel,
@@ -24,6 +18,9 @@ export default function CreatePage({
   isLoggedIn,
   user,
   onLoginClick,
+  meetingTypes = [],
+  meetingTypesLoading = false,
+  meetingTypesError = "",
 }) {
   const [image,       setImage]       = useState(null);
   const [name,        setName]        = useState("");
@@ -47,7 +44,7 @@ export default function CreatePage({
 
   const removeTag = (index) => setTags((prev) => prev.filter((_, i) => i !== index));
 
-  const selectedTypeLabel     = CLUB_TYPES.find((t) => t.id === type)?.label ?? "유형 선택";
+  const selectedTypeLabel     = meetingTypes.find((t) => t.id === type)?.label ?? "유형 선택";
   const selectedCategoryLabel = CATEGORIES.find((c) => c.id === category)?.label ?? "분야 선택";
 
   return (
@@ -117,7 +114,12 @@ export default function CreatePage({
                 <div className="form-field">
                   <label className="form-field__label">모임 유형 *</label>
                   <div className="create-type-group">
-                    {CLUB_TYPES.map((t) => (
+                    {meetingTypes.length === 0 && meetingTypesLoading ? (
+                      <p>모임 유형을 불러오는 중입니다.</p>
+                    ) : meetingTypesError ? (
+                      <p>{meetingTypesError}</p>
+                    ) : (
+                      meetingTypes.map((t) => (
                       <button
                         key={t.id}
                         className={`create-type-btn ${type === t.id ? "create-type-btn--active" : ""}`}
@@ -127,7 +129,8 @@ export default function CreatePage({
                         <span className="create-type-btn__label">{t.label}</span>
                         <span className="create-type-btn__desc">{t.desc}</span>
                       </button>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
 

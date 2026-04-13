@@ -1,9 +1,3 @@
-export const CLUB_TYPES = [
-  { id: "club",        label: "동아리",     description: "정기적으로 활동하는 공식 동아리" },
-  { id: "small-group", label: "소모임",     description: "관심사가 같은 사람들의 모임" },
-  { id: "one-time",    label: "일회성모임", description: "한 번의 만남을 위한 모임" },
-];
-
 export const CATEGORIES = [
   { id: "academic",   label: "학술/교육",    icon: "🎓" },
   { id: "music",      label: "음악/공연",    icon: "🎵" },

@@ -12,44 +12,14 @@
 //   - onToggleRecruit  : 모집 상태 변경 → 상태 변경 API 연결
 //   - onGoPublic       : 공개 페이지 보기 → 상세 페이지 이동
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { CATEGORIES } from "../data/mockData";
-
-// 🔧 [기능] 더미 데이터 → useParams()로 id 받아서 API로 교체
-const MOCK_CLUB = {
-  id: 1,
-  name: "GNU 코딩 스터디",
-  categoryLabel: "IT/개발",
-  category: "it",
-  type: "club",
-  description: "알고리즘부터 프로젝트까지, 함께 성장하는 개발 스터디",
-  location: "공학관 3층",
-  meetingTime: "매주 수요일 19:00",
-  maxMembers: 30,
-  memberCount: 24,
-  isRecruiting: true,
-  joinCondition: "승인 필요",
-  tags: ["#Python", "#JavaScript", "#웹개발", "#알고리즘"],
-  rating: 4.8,
-  activityCount: 12,
-  reviewCount: 3,
-};
-
-const MOCK_PENDING = [
-  { id: 101, name: "한지수", initial: "한", department: "컴퓨터과학과" },
-  { id: 102, name: "오민재", initial: "오", department: "소프트웨어공학과" },
-];
-
-const MOCK_MEMBERS = [
-  { id: 1, name: "김철수", initial: "김", department: "컴퓨터과학과",    role: "리더" },
-  { id: 2, name: "이영희", initial: "이", department: "소프트웨어공학과", role: "멤버" },
-  { id: 3, name: "박민수", initial: "박", department: "정보통신공학과",   role: "멤버" },
-  { id: 4, name: "정지원", initial: "정", department: "컴퓨터과학과",     role: "멤버" },
-  { id: 5, name: "최은지", initial: "최", department: "경영학과",         role: "멤버" },
-  { id: 6, name: "강민호", initial: "강", department: "산업공학과",       role: "멤버" },
-];
+import {
+  getMeetingJoinRequests,
+  getMeetingMembers,
+} from "../api/meetings";
 
 const MOCK_ACTIVITIES = [
   { id: 1, title: "알고리즘 스터디 Week 12", date: "2024.03.20", type: "정기모임" },
@@ -66,12 +36,34 @@ const ACTIVITY_TYPE_COLORS = {
 
 const TABS = ["기본 정보", "멤버 관리", "활동 관리", "모집 설정"];
 
+function mapJoinRequest(request) {
+  return {
+    id: request.userId,
+    name: request.name,
+    initial: (request.name || "?").slice(0, 1),
+    department: "정보 없음",
+  };
+}
+
+function mapMember(member) {
+  return {
+    id: member.userId,
+    name: member.name,
+    initial: (member.name || "?").slice(0, 1),
+    department: "정보 없음",
+    role: member.role,
+  };
+}
+
 export default function ClubManagePage({
   searchQuery,
   onSearchChange,
   isLoggedIn,
   user,
   onLoginClick,
+  clubs = [],
+  loading = false,
+  error = "",
   onSave,
   onDelete,
   onApproveMember,
@@ -82,15 +74,33 @@ export default function ClubManagePage({
   onToggleRecruit,
   onGoPublic,
 }) {
+  const { id } = useParams();
   const [activeTab, setActiveTab] = useState("기본 정보");
-  const club = MOCK_CLUB;
+  const matchedClub = clubs.find((item) => String(item.id) === String(id));
+  const club = matchedClub
+    ? {
+        meetingTime: matchedClub.meetingDay || "일정 조율중",
+        maxMembers: matchedClub.maxMembers ?? null,
+        joinCondition: matchedClub.joinCondition ?? "등록된 조건 없음",
+        rating: matchedClub.rating ?? "-",
+        activityCount: matchedClub.activityCount ?? 0,
+        reviewCount: matchedClub.reviewCount ?? 0,
+        ...matchedClub,
+      }
+    : null;
+  const [members, setMembers] = useState([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [membersError, setMembersError] = useState("");
+  const [pendingMembers, setPendingMembers] = useState([]);
+  const [pendingMembersLoading, setPendingMembersLoading] = useState(false);
+  const [pendingMembersError, setPendingMembersError] = useState("");
 
   // 기본 정보 수정 상태
-  const [name,        setName]        = useState(club.name);
-  const [description, setDescription] = useState(club.description);
-  const [location,    setLocation]    = useState(club.location);
-  const [meetingTime, setMeetingTime] = useState(club.meetingTime);
-  const [tags,        setTags]        = useState(club.tags);
+  const [name,        setName]        = useState("");
+  const [description, setDescription] = useState("");
+  const [location,    setLocation]    = useState("");
+  const [meetingTime, setMeetingTime] = useState("");
+  const [tags,        setTags]        = useState([]);
   const [tagInput,    setTagInput]    = useState("");
 
   const handleTagKeyDown = (e) => {
@@ -101,6 +111,82 @@ export default function ClubManagePage({
     }
   };
   const removeTag = (index) => setTags((prev) => prev.filter((_, i) => i !== index));
+
+  useEffect(() => {
+    if (!club) return;
+
+    setName(club.name);
+    setDescription(club.description);
+    setLocation(club.location);
+    setMeetingTime(club.meetingTime);
+    setTags(club.tags || []);
+  }, [matchedClub]);
+
+  useEffect(() => {
+    async function loadMembers() {
+      try {
+        setMembersLoading(true);
+        setMembersError("");
+
+        const data = await getMeetingMembers(id);
+        setMembers(data.map(mapMember));
+      } catch (error) {
+        setMembersError(error.message);
+      } finally {
+        setMembersLoading(false);
+      }
+    }
+
+    if (id) {
+      loadMembers();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    async function loadPendingMembers() {
+      try {
+        setPendingMembersLoading(true);
+        setPendingMembersError("");
+
+        const data = await getMeetingJoinRequests(id);
+        setPendingMembers(data.map(mapJoinRequest));
+      } catch (error) {
+        setPendingMembersError(error.message);
+      } finally {
+        setPendingMembersLoading(false);
+      }
+    }
+
+    if (id) {
+      loadPendingMembers();
+    }
+  }, [id]);
+
+  const handleApproveMember = async (memberId) => {
+    await onApproveMember?.(id, memberId);
+    const approvedMember = pendingMembers.find((member) => member.id === memberId);
+    setPendingMembers((prev) => prev.filter((member) => member.id !== memberId));
+    if (approvedMember) {
+      setMembers((prev) => [...prev, { ...approvedMember, role: "멤버" }]);
+    }
+  };
+
+  const handleRejectMember = async (memberId) => {
+    await onRejectMember?.(id, memberId);
+    setPendingMembers((prev) => prev.filter((member) => member.id !== memberId));
+  };
+
+  if (loading) {
+    return <div>불러오는 중...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!club) {
+    return <div>해당 모임을 찾을 수 없습니다.</div>;
+  }
 
   return (
     <div className="manage-page">
@@ -212,11 +298,16 @@ export default function ClubManagePage({
             {activeTab === "멤버 관리" && (
               <div className="manage-card">
 
-                {/* 가입 대기 */}
-                {MOCK_PENDING.length > 0 && (
-                  <div className="manage-section">
-                    <h3 className="manage-section__title">가입 대기 <span className="manage-section__count">{MOCK_PENDING.length}명</span></h3>
-                    {MOCK_PENDING.map((member) => (
+                <div className="manage-section">
+                  <h3 className="manage-section__title">가입 대기 <span className="manage-section__count">{pendingMembers.length}명</span></h3>
+                  {pendingMembersLoading ? (
+                    <p>가입 신청 목록을 불러오는 중입니다.</p>
+                  ) : pendingMembersError ? (
+                    <p>{pendingMembersError}</p>
+                  ) : pendingMembers.length === 0 ? (
+                    <p>가입 대기 중인 멤버가 없습니다.</p>
+                  ) : (
+                    pendingMembers.map((member) => (
                       <div key={member.id} className="manage-member-item">
                         <div className="manage-avatar manage-avatar--pending">{member.initial}</div>
                         <div>
@@ -227,56 +318,64 @@ export default function ClubManagePage({
                           <button
                             className="manage-btn manage-btn--approve"
                             // 🔧 [기능] 승인 API 연결
-                            onClick={() => onApproveMember && onApproveMember(member.id)}
+                            onClick={() => handleApproveMember(member.id)}
                           >
                             승인
                           </button>
                           <button
                             className="manage-btn manage-btn--danger"
                             // 🔧 [기능] 거절 API 연결
-                            onClick={() => onRejectMember && onRejectMember(member.id)}
+                            onClick={() => handleRejectMember(member.id)}
                           >
                             거절
                           </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    ))
+                  )}
+                </div>
 
                 {/* 활동 멤버 */}
                 <div className="manage-section">
-                  <h3 className="manage-section__title">활동 멤버 <span className="manage-section__count">{MOCK_MEMBERS.length}명</span></h3>
-                  {MOCK_MEMBERS.map((member) => (
-                    <div key={member.id} className="manage-member-item">
-                      <div className={`manage-avatar ${member.role === "리더" ? "manage-avatar--leader" : ""}`}>{member.initial}</div>
-                      <div>
-                        <div className="manage-member-name">{member.name}</div>
-                        <div className="manage-member-dept">{member.department}</div>
-                      </div>
-                      <span className={`manage-role-badge ${member.role === "리더" ? "manage-role-badge--leader" : ""}`}>
-                        {member.role}
-                      </span>
-                      {member.role !== "리더" && (
-                        <div className="manage-member-actions">
-                          <button
-                            className="manage-btn"
-                            // 🔧 [기능] 리더 위임 API 연결
-                            onClick={() => console.log("TODO: 리더 위임")}
-                          >
-                            위임
-                          </button>
-                          <button
-                            className="manage-btn manage-btn--danger"
-                            // 🔧 [기능] 내보내기 API 연결
-                            onClick={() => onRemoveMember && onRemoveMember(member.id)}
-                          >
-                            내보내기
-                          </button>
+                  <h3 className="manage-section__title">활동 멤버 <span className="manage-section__count">{members.length}명</span></h3>
+                  {membersLoading ? (
+                    <p>활동 멤버를 불러오는 중입니다.</p>
+                  ) : membersError ? (
+                    <p>{membersError}</p>
+                  ) : members.length === 0 ? (
+                    <p>활동 멤버가 없습니다.</p>
+                  ) : (
+                    members.map((member) => (
+                      <div key={member.id} className="manage-member-item">
+                        <div className={`manage-avatar ${member.role === "리더" ? "manage-avatar--leader" : ""}`}>{member.initial}</div>
+                        <div>
+                          <div className="manage-member-name">{member.name}</div>
+                          <div className="manage-member-dept">{member.department}</div>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        <span className={`manage-role-badge ${member.role === "리더" ? "manage-role-badge--leader" : ""}`}>
+                          {member.role}
+                        </span>
+                        {member.role !== "리더" && (
+                          <div className="manage-member-actions">
+                            <button
+                              className="manage-btn"
+                              // 🔧 [기능] 리더 위임 API 연결
+                              onClick={() => console.log("TODO: 리더 위임")}
+                            >
+                              위임
+                            </button>
+                            <button
+                              className="manage-btn manage-btn--danger"
+                              // 🔧 [기능] 내보내기 API 연결
+                              onClick={() => onRemoveMember && onRemoveMember(member.id)}
+                            >
+                              내보내기
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -337,7 +436,7 @@ export default function ClubManagePage({
                     </li>
                     <li className="manage-recruit-item">
                       <span className="manage-recruit-label">현재 인원</span>
-                      <span>{club.memberCount} / {club.maxMembers}명</span>
+                      <span>{members.length}{club.maxMembers ? ` / ${club.maxMembers}` : ""}명</span>
                     </li>
                     <li className="manage-recruit-item">
                       <span className="manage-recruit-label">가입 조건</span>
@@ -358,7 +457,7 @@ export default function ClubManagePage({
                   <h3 className="manage-section__title">모임 통계</h3>
                   <div className="manage-stat-grid">
                     <div className="manage-stat-item">
-                      <span className="manage-stat-value">{club.memberCount}</span>
+                      <span className="manage-stat-value">{members.length}</span>
                       <span className="manage-stat-label">멤버 수</span>
                     </div>
                     <div className="manage-stat-item">
@@ -385,11 +484,11 @@ export default function ClubManagePage({
               <h3 className="manage-sidebar-title">빠른 통계</h3>
               <div className="manage-stat-grid">
                 <div className="manage-stat-item">
-                  <span className="manage-stat-value">{club.memberCount}</span>
+                  <span className="manage-stat-value">{members.length}</span>
                   <span className="manage-stat-label">멤버</span>
                 </div>
                 <div className="manage-stat-item">
-                  <span className="manage-stat-value">{MOCK_PENDING.length}</span>
+                  <span className="manage-stat-value">{pendingMembers.length}</span>
                   <span className="manage-stat-label">대기중</span>
                 </div>
                 <div className="manage-stat-item">

@@ -100,6 +100,7 @@ img    { max-width: 100%; display: block; }
 .club-list-section__subtitle { font-size: 15px; color: var(--color-text-sub); }
 .club-list-section__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
 .club-list-section__empty { text-align: center; padding: 80px; color: var(--color-text-sub); }
+.club-list-section__more { display: flex; justify-content: center; margin-top: 28px; }
 
 /* Club Card */
 .club-card { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .2s, transform .2s; }

@@ -1,0 +1,1354 @@
+{
+  "gnu_host_001": {
+    "name": "김규진",
+    "email": "gnu_host_001@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_002": {
+    "name": "하정원",
+    "email": "gnu_host_002@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_003": {
+    "name": "김장현",
+    "email": "gnu_host_003@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_004": {
+    "name": "변재현",
+    "email": "gnu_host_004@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_005": {
+    "name": "주원진",
+    "email": "gnu_host_005@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_006": {
+    "name": "최수민",
+    "email": "gnu_host_006@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_007": {
+    "name": "박상은",
+    "email": "gnu_host_007@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_008": {
+    "name": "안성균",
+    "email": "gnu_host_008@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_009": {
+    "name": "진성민",
+    "email": "gnu_host_009@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_010": {
+    "name": "정미수",
+    "email": "gnu_host_010@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_011": {
+    "name": "김민석",
+    "email": "gnu_host_011@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_012": {
+    "name": "원정환",
+    "email": "gnu_host_012@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_013": {
+    "name": "허혜원",
+    "email": "gnu_host_013@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_014": {
+    "name": "김경린",
+    "email": "gnu_host_014@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_015": {
+    "name": "윤지민",
+    "email": "gnu_host_015@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_016": {
+    "name": "김수연",
+    "email": "gnu_host_016@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_017": {
+    "name": "김수경",
+    "email": "gnu_host_017@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_018": {
+    "name": "함수희",
+    "email": "gnu_host_018@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_019": {
+    "name": "정하늘",
+    "email": "gnu_host_019@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_020": {
+    "name": "이서형",
+    "email": "gnu_host_020@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_021": {
+    "name": "송민황",
+    "email": "gnu_host_021@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_022": {
+    "name": "송호준",
+    "email": "gnu_host_022@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_023": {
+    "name": "이나경",
+    "email": "gnu_host_023@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_024": {
+    "name": "강성민",
+    "email": "gnu_host_024@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_025": {
+    "name": "김신우",
+    "email": "gnu_host_025@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_026": {
+    "name": "강민기",
+    "email": "gnu_host_026@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_027": {
+    "name": "손준호",
+    "email": "gnu_host_027@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_028": {
+    "name": "박지운",
+    "email": "gnu_host_028@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_029": {
+    "name": "김수민",
+    "email": "gnu_host_029@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_030": {
+    "name": "김혜선",
+    "email": "gnu_host_030@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_031": {
+    "name": "이세환",
+    "email": "gnu_host_031@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_032": {
+    "name": "안소현",
+    "email": "gnu_host_032@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_033": {
+    "name": "임지헌",
+    "email": "gnu_host_033@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_034": {
+    "name": "한정화",
+    "email": "gnu_host_034@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_035": {
+    "name": "한태경",
+    "email": "gnu_host_035@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_036": {
+    "name": "임석호",
+    "email": "gnu_host_036@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_037": {
+    "name": "양성문",
+    "email": "gnu_host_037@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_038": {
+    "name": "서지훈",
+    "email": "gnu_host_038@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_039": {
+    "name": "김경민",
+    "email": "gnu_host_039@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_040": {
+    "name": "신명규",
+    "email": "gnu_host_040@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_041": {
+    "name": "이재호",
+    "email": "gnu_host_041@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_042": {
+    "name": "이의준",
+    "email": "gnu_host_042@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_043": {
+    "name": "조성현",
+    "email": "gnu_host_043@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_044": {
+    "name": "김강산",
+    "email": "gnu_host_044@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_045": {
+    "name": "정민재",
+    "email": "gnu_host_045@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_046": {
+    "name": "김현지",
+    "email": "gnu_host_046@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_047": {
+    "name": "송성훈",
+    "email": "gnu_host_047@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_048": {
+    "name": "류승현",
+    "email": "gnu_host_048@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_049": {
+    "name": "김형준",
+    "email": "gnu_host_049@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_050": {
+    "name": "김건휘",
+    "email": "gnu_host_050@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_051": {
+    "name": "홍명완",
+    "email": "gnu_host_051@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_052": {
+    "name": "박채원",
+    "email": "gnu_host_052@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_053": {
+    "name": "박준민",
+    "email": "gnu_host_053@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_054": {
+    "name": "이민영",
+    "email": "gnu_host_054@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_055": {
+    "name": "최현수",
+    "email": "gnu_host_055@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_056": {
+    "name": "김민준",
+    "email": "gnu_host_056@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_057": {
+    "name": "차준호",
+    "email": "gnu_host_057@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_058": {
+    "name": "변동현",
+    "email": "gnu_host_058@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_059": {
+    "name": "황찬민",
+    "email": "gnu_host_059@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_060": {
+    "name": "정영채",
+    "email": "gnu_host_060@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_061": {
+    "name": "최규일",
+    "email": "gnu_host_061@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_062": {
+    "name": "정은비",
+    "email": "gnu_host_062@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_063": {
+    "name": "김승겸",
+    "email": "gnu_host_063@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_064": {
+    "name": "양현희",
+    "email": "gnu_host_064@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_065": {
+    "name": "조은혜",
+    "email": "gnu_host_065@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_066": {
+    "name": "원준우",
+    "email": "gnu_host_066@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_067": {
+    "name": "오승언",
+    "email": "gnu_host_067@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_068": {
+    "name": "천성하",
+    "email": "gnu_host_068@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_069": {
+    "name": "정요셉",
+    "email": "gnu_host_069@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_070": {
+    "name": "서지윤",
+    "email": "gnu_host_070@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_071": {
+    "name": "홍경민",
+    "email": "gnu_host_071@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_072": {
+    "name": "전서현",
+    "email": "gnu_host_072@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_073": {
+    "name": "이우리",
+    "email": "gnu_host_073@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_074": {
+    "name": "김동언",
+    "email": "gnu_host_074@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_075": {
+    "name": "류태광",
+    "email": "gnu_host_075@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_076": {
+    "name": "구재경",
+    "email": "gnu_host_076@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_077": {
+    "name": "이시환",
+    "email": "gnu_host_077@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_078": {
+    "name": "배성우",
+    "email": "gnu_host_078@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_079": {
+    "name": "이태문",
+    "email": "gnu_host_079@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 10
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_080": {
+    "name": "문덕규",
+    "email": "gnu_host_080@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_081": {
+    "name": "박은용",
+    "email": "gnu_host_081@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_082": {
+    "name": "김동현",
+    "email": "gnu_host_082@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_083": {
+    "name": "최지호",
+    "email": "gnu_host_083@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_084": {
+    "name": "강신원",
+    "email": "gnu_host_084@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_085": {
+    "name": "구은서",
+    "email": "gnu_host_085@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_086": {
+    "name": "김미조",
+    "email": "gnu_host_086@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_087": {
+    "name": "이영근",
+    "email": "gnu_host_087@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 10,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_088": {
+    "name": "김도영",
+    "email": "gnu_host_088@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_089": {
+    "name": "임원섭",
+    "email": "gnu_host_089@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_090": {
+    "name": "최민준",
+    "email": "gnu_host_090@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_091": {
+    "name": "이성준",
+    "email": "gnu_host_091@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_092": {
+    "name": "허우현",
+    "email": "gnu_host_092@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_093": {
+    "name": "양석구",
+    "email": "gnu_host_093@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_094": {
+    "name": "박정익",
+    "email": "gnu_host_094@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 10,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_095": {
+    "name": "박나현",
+    "email": "gnu_host_095@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_096": {
+    "name": "차도훈",
+    "email": "gnu_host_096@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_097": {
+    "name": "최재용",
+    "email": "gnu_host_097@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_098": {
+    "name": "강태윤",
+    "email": "gnu_host_098@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_099": {
+    "name": "이용환",
+    "email": "gnu_host_099@gnu.local",
+    "interestVector": {
+      "study": 10,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 0,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_100": {
+    "name": "조은솔",
+    "email": "gnu_host_100@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_101": {
+    "name": "공나영",
+    "email": "gnu_host_101@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_102": {
+    "name": "강주안",
+    "email": "gnu_host_102@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_103": {
+    "name": "옥은송",
+    "email": "gnu_host_103@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  },
+  "gnu_host_104": {
+    "name": "성현준",
+    "email": "gnu_host_104@gnu.local",
+    "interestVector": {
+      "study": 0,
+      "exercise": 0,
+      "culture": 0,
+      "game": 0,
+      "religion": 10,
+      "volunteer": 0
+    },
+    "createdAt": "2026-04-11T11:48:20.391Z"
+  }
+}

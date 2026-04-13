@@ -1,4 +1,4 @@
-// 📌 ClubDetailPage - 소모임 상세 페이지 (소개 / 활동 / 멤버 / 후기 탭 포함)
+// 📌 ClubDetailPage - 모임 상세 페이지 (소개 / 활동 / 멤버 / 후기 탭 포함)
 // 🔧 [기능 포인트]
 //   - club            : 더미 데이터 → API 응답으로 교체 (useParams로 id 받아서 fetch)
 //   - onJoin          : 가입 신청하기 → 가입 신청 API 연결
@@ -7,136 +7,35 @@
 //   - onContactLeader : 문의하기 → 리더에게 메시지 기능 연결
 //   - onRelatedClick  : 관련 모임 클릭 → 해당 소모임 상세 페이지 이동
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { getMeetingMembers } from "../api/meetings";
 
-const MOCK_CLUB = {
-  id: 1,
-  name: "GNU 코딩 스터디",
-  type: "동아리",
-  categoryLabel: "IT/개발",
-  isRecruiting: true,
-  description: "알고리즘부터 프로젝트까지, 함께 성장하는 개발 스터디",
-  intro: [
-    "GNU 코딩 스터디는 프로그래밍에 관심 있는 경상대 학생들이 모여 함께 공부하고 성장하는 동아리입니다.",
-    "매주 수요일 저녁, 우리는 알고리즘 문제를 풀고, 최신 기술 트렌드를 공유하며, 팀 프로젝트를 진행합니다. 초보자부터 경험자까지 누구나 환영합니다!",
-  ],
-  activities: [
-    "알고리즘 스터디 (백준, 프로그래머스)",
-    "웹 개발 프로젝트",
-    "기술 세미나 및 코드 리뷰",
-    "해커톤 참가",
-  ],
-  // 🔧 [기능] 최근 활동 목록 → API로 교체
-  recentActivities: [
-    {
-      id: 1,
-      title: "알고리즘 스터디 Week 12",
-      date: "2024.03.20",
-      type: "정기모임",
-    },
-    { id: 2, title: "해커톤 참가", date: "2024.03.15", type: "특별활동" },
-    { id: 3, title: "신입생 환영회", date: "2024.03.10", type: "행사" },
-    { id: 4, title: "코드 리뷰 세션", date: "2024.03.05", type: "정기모임" },
-  ],
-  // 🔧 [기능] 멤버 목록 → API로 교체
-  members: [
-    {
-      id: 1,
-      name: "김철수",
-      initial: "김",
-      department: "컴퓨터과학과",
-      role: "리더",
-    },
-    {
-      id: 2,
-      name: "이영희",
-      initial: "이",
-      department: "소프트웨어공학과",
-      role: "멤버",
-    },
-    {
-      id: 3,
-      name: "박민수",
-      initial: "박",
-      department: "정보통신공학과",
-      role: "멤버",
-    },
-    {
-      id: 4,
-      name: "정지원",
-      initial: "정",
-      department: "컴퓨터과학과",
-      role: "멤버",
-    },
-    {
-      id: 5,
-      name: "최은지",
-      initial: "최",
-      department: "경영학과",
-      role: "멤버",
-    },
-    {
-      id: 6,
-      name: "강민호",
-      initial: "강",
-      department: "산업공학과",
-      role: "멤버",
-    },
-  ],
-  // 🔧 [기능] 후기 목록 → API로 교체
-  reviews: [
-    {
-      id: 1,
-      name: "김민준",
-      initial: "김",
-      rating: 5,
-      date: "2024.03.15",
-      content: "정말 유익한 스터디였습니다! 알고리즘 실력이 많이 늘었어요.",
-    },
-    {
-      id: 2,
-      name: "박서현",
-      initial: "박",
-      rating: 5,
-      date: "2024.03.10",
-      content:
-        "분위기가 너무 좋고 선배들이 친절하게 가르쳐주셔서 초보자도 쉽게 배울 수 있어요.",
-    },
-    {
-      id: 3,
-      name: "이준호",
-      initial: "이",
-      rating: 4,
-      date: "2024.03.05",
-      content:
-        "프로젝트 경험을 쌓을 수 있어서 좋았습니다. 포트폴리오에 큰 도움이 되었어요.",
-    },
-  ],
-  memberCount: 24,
-  maxMembers: 30,
-  meetingDay: "매주 수요일",
-  location: "공학관 3층",
-  startTime: "19:00",
-  rating: 4.8,
-  tags: ["#Python", "#JavaScript", "#웹개발", "#알고리즘", "#스터디"],
-  joinCondition: "승인 필요",
-  activePeriod: "상시 활동",
-  leader: {
-    name: "김철수",
-    initial: "김",
-    department: "컴퓨터과학과",
-    grade: "21학번",
-  },
-  relatedClubs: [
-    { id: 2, name: "알고리즘 스터디", category: "IT/개발", isRecruiting: true },
-    { id: 3, name: "웹 개발 동아리", category: "IT/개발", isRecruiting: true },
-  ],
+const DEFAULT_DETAIL_INFO = {
+  meetingDay: "일정 조율중",
+  location: "장소 협의 예정",
+  startTime: "시간 협의 예정",
+  joinCondition: "등록된 조건 없음",
+  activePeriod: "등록된 기간 없음",
 };
 
 const TABS = ["소개", "활동", "멤버", "후기"];
+
+function EmptyTabMessage({ children }) {
+  return <p className="cd-section-text">{children}</p>;
+}
+
+function mapMember(member) {
+  return {
+    id: member.userId,
+    name: member.name,
+    initial: (member.name || "?").slice(0, 1),
+    department: "정보 없음",
+    role: member.role,
+  };
+}
 
 // 활동 탭 컴포넌트
 function ActivityTab({ activities }) {
@@ -149,6 +48,9 @@ function ActivityTab({ activities }) {
   return (
     <div>
       <h2 className="cd-tab__title">최근 활동</h2>
+      {activities.length === 0 && (
+        <EmptyTabMessage>등록된 최근 활동이 없습니다.</EmptyTabMessage>
+      )}
       <div className="cd-activity-list">
         {activities.map((act) => {
           const color = TYPE_COLORS[act.type] || {
@@ -184,6 +86,9 @@ function MemberTab({ members }) {
         <h2 className="cd-tab__title">멤버</h2>
         <span className="cd-tab__count">총 {members.length}명</span>
       </div>
+      {members.length === 0 && (
+        <EmptyTabMessage>등록된 멤버 정보가 없습니다.</EmptyTabMessage>
+      )}
       <div className="cd-member-grid">
         {members.map((member) => (
           <div key={member.id} className="cd-member-card">
@@ -204,16 +109,21 @@ function MemberTab({ members }) {
 
 // 후기 탭 컴포넌트
 function ReviewTab({ reviews, rating }) {
+  const displayRating = reviews.length > 0 ? rating : "-";
+
   return (
     <div>
       <div className="cd-tab__header">
         <h2 className="cd-tab__title">멤버 후기</h2>
         <div className="cd-review-rating">
           <span className="cd-review-star">⭐</span>
-          <span className="cd-review-score">{rating}</span>
+          <span className="cd-review-score">{displayRating}</span>
           <span className="cd-review-count">({reviews.length}개)</span>
         </div>
       </div>
+      {reviews.length === 0 && (
+        <EmptyTabMessage>등록된 후기가 없습니다.</EmptyTabMessage>
+      )}
       <div className="cd-review-list">
         {reviews.map((review) => (
           <div key={review.id} className="cd-review-item">
@@ -250,24 +160,23 @@ function IntroTab({ club }) {
         ))}
       </div>
       <div className="cd-section">
-        <h3 className="cd-section-subtitle">🎯 주요 활동</h3>
-        <ul className="cd-activity-check-list">
-          {club.activities.map((act, i) => (
-            <li key={i} className="cd-activity-check-item">
-              <span className="cd-check">✓</span>
-              {act}
-            </li>
-          ))}
-        </ul>
+        <h3 className="cd-section-subtitle">관심 태그</h3>
+        {club.activities.length === 0 ? (
+          <EmptyTabMessage>등록된 태그가 없습니다.</EmptyTabMessage>
+        ) : (
+          <ul className="cd-activity-check-list">
+            {club.activities.map((act, i) => (
+              <li key={i} className="cd-activity-check-item">
+                <span className="cd-check">✓</span>
+                {act}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <div className="cd-section">
         <h3 className="cd-section-subtitle">활동 사진</h3>
-        {/* 🔧 [기능] 실제 활동 사진 API로 교체 */}
-        <div className="cd-photo-grid">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="cd-photo-item" />
-          ))}
-        </div>
+        <EmptyTabMessage>등록된 활동 사진이 없습니다.</EmptyTabMessage>
       </div>
     </div>
   );
@@ -283,6 +192,7 @@ export default function ClubDetailPage({
   loading = false,
   error = "",
   onJoin,
+  joiningMeetingId = "",
   onWishlist,
   onShare,
   onContactLeader,
@@ -291,17 +201,51 @@ export default function ClubDetailPage({
 }) {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("소개");
-  const matchedClub = clubs.find((item) => String(item.id) === String(id));
+  const [members, setMembers] = useState([]);
+  const [membersError, setMembersError] = useState("");
+  const matchedClub = clubs.find(
+    (item) => String(item.id) === String(id)
+  );
 
-  // 🔧 [기능] useParams()로 id 받아서 API 호출로 교체
+  useEffect(() => {
+    async function loadMembers() {
+      try {
+        setMembersError("");
+
+        const data = await getMeetingMembers(id);
+        setMembers(data.map(mapMember));
+      } catch (error) {
+        setMembers([]);
+        setMembersError(error.message);
+      }
+    }
+
+    if (id) {
+      loadMembers();
+    }
+  }, [id]);
+
   const club = matchedClub
     ? {
-        ...MOCK_CLUB,
+        ...DEFAULT_DETAIL_INFO,
         ...matchedClub,
-        intro: [matchedClub.description],
-        activities: matchedClub.tags,
+        intro: [matchedClub.description || "등록된 소개가 없습니다."],
+        activities: matchedClub.tags || [],
+        recentActivities: [],
+        members,
+        reviews: [],
+        rating: "-",
+        leader: {
+          name: matchedClub.leaderName || matchedClub.hostUserId || "등록된 리더 정보 없음",
+          initial: (matchedClub.leaderName || matchedClub.hostUserId || "?").slice(0, 1),
+          department: "정보 없음",
+          grade: "",
+        },
         relatedClubs: clubs
-          .filter((item) => item.id !== matchedClub.id)
+          .filter(
+            (item) =>
+              item.id !== matchedClub.id && item.category === matchedClub.category
+          )
           .slice(0, 2)
           .map((item) => ({
             id: item.id,
@@ -323,6 +267,8 @@ export default function ClubDetailPage({
   if (!club) {
     return <div>해당 모임을 찾을 수 없습니다.</div>;
   }
+
+  const isJoining = String(joiningMeetingId) === String(club.id);
 
   return (
     <div className="club-detail-page">
@@ -359,8 +305,7 @@ export default function ClubDetailPage({
                 <p className="club-detail__desc">{club.description}</p>
                 <div className="club-detail__meta-row">
                   <span>👥 {club.memberCount}명 활동중</span>
-                  <span>⭐ {club.rating} 평점</span>
-                  <span>🔥 인기 급상승</span>
+                  {club.reviews.length > 0 && <span>⭐ {club.rating} 평점</span>}
                 </div>
               </div>
             </div>
@@ -423,7 +368,12 @@ export default function ClubDetailPage({
               {activeTab === "활동" && (
                 <ActivityTab activities={club.recentActivities} />
               )}
-              {activeTab === "멤버" && <MemberTab members={club.members} />}
+              {activeTab === "멤버" &&
+                (membersError ? (
+                  <EmptyTabMessage>{membersError}</EmptyTabMessage>
+                ) : (
+                  <MemberTab members={club.members} />
+                ))}
               {activeTab === "후기" && (
                 <ReviewTab reviews={club.reviews} rating={club.rating} />
               )}
@@ -436,10 +386,11 @@ export default function ClubDetailPage({
             <div className="club-detail__actions">
               <button
                 className="btn btn--primary club-detail__join-btn"
+                disabled={isJoining}
                 // 🔧 [기능] 로그인 확인 후 가입 신청 API 연결
                 onClick={() => onJoin && onJoin(club.id)}
               >
-                가입 신청하기
+                {isJoining ? "가입 신청 중..." : "가입 신청하기"}
               </button>
               <button
                 className="btn btn--outline club-detail__action-btn"
@@ -483,7 +434,8 @@ export default function ClubDetailPage({
                     현재 인원
                   </span>
                   <span>
-                    {club.memberCount} / {club.maxMembers}명
+                    {club.memberCount}
+                    {club.maxMembers ? ` / ${club.maxMembers}` : ""}명
                   </span>
                 </li>
                 <li className="club-detail__info-list-item">

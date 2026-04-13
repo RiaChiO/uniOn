@@ -11,6 +11,14 @@ import CreatePage from "./pages/CreatePage";
 import GoogleLoginPage from "./pages/GoogleLoginPage";
 import ClubDetailPage from "./pages/ClubDetailPage";
 import ClubManagePage from "./pages/ClubManagePage";
+import {
+  createMeeting,
+  createMeetingJoinRequest,
+  getMeetings,
+  updateMeetingJoinRequest,
+} from "./api/meetings";
+import { getMeetingTypes } from "./api/meetingTypes";
+import { syncUser } from "./api/users";
 import "./styles/global.css";
 import {
   auth,
@@ -19,6 +27,8 @@ import {
   signInWithPopup,
   signOut,
 } from "./lib/firebase";
+
+const ALLOWED_EMAIL_DOMAIN = "@gnu.ac.kr";
 
 const CATEGORY_TO_TAG_ID = {
   academic: "study",
@@ -44,11 +54,14 @@ const TAG_ID_TO_CATEGORY = {
   volunteer: { id: "volunteer", label: "봉사/사회" },
 };
 
-const MEETING_TYPE_LABELS = {
-  club: "동아리",
-  "small-group": "소모임",
-  "one-time": "일회성 모임",
-};
+function getStoredMeetingTypes() {
+  try {
+    const stored = localStorage.getItem("meetingTypes");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
 
 // 메인 페이지
 function MainPage({
@@ -58,6 +71,8 @@ function MainPage({
   user,
   onLoginClick,
   clubs,
+  meetingTypes,
+  meetingTypesLoading,
   loading,
   error,
 }) {
@@ -79,6 +94,8 @@ function MainPage({
           onCreateClick={() => (window.location.href = "/create")}
         />
         <SearchSection
+          meetingTypes={meetingTypes}
+          meetingTypesLoading={meetingTypesLoading}
           selectedType={selectedType}
           selectedCategory={selectedCategory}
           onTypeSelect={setSelectedType}
@@ -86,6 +103,7 @@ function MainPage({
         />
         <ClubListSection
           clubs={clubs}
+          limit={6}
           loading={loading}
           error={error}
           searchQuery={searchQuery}
@@ -105,6 +123,12 @@ export default function App() {
   const [clubs, setClubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [joiningMeetingId, setJoiningMeetingId] = useState("");
+  const [meetingTypes, setMeetingTypes] = useState(getStoredMeetingTypes);
+  const [meetingTypesLoading, setMeetingTypesLoading] = useState(
+    meetingTypes.length === 0
+  );
+  const [meetingTypesError, setMeetingTypesError] = useState("");
 
   // 🔧 [기능] 로그인 상태 - 구글 로그인 연동 후 여기 업데이트
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -120,8 +144,10 @@ export default function App() {
       id: meeting.meetingId,
       name: meeting.title,
       type: meeting.meetingType,
-      typeLabel: MEETING_TYPE_LABELS[meeting.meetingType] ?? meeting.meetingType,
+      typeLabel: meeting.meetingTypeLabel ?? meeting.meetingType,
       description: meeting.description,
+      hostUserId: meeting.hostUserId,
+      leaderName: meeting.leaderName,
       memberCount: meeting.participantCount,
       tags: (meeting.tags || []).map((tag) => `#${tag}`),
       category: mappedCategory.id,
@@ -132,20 +158,35 @@ export default function App() {
     };
   }
 
+  async function syncFirebaseUser(firebaseUser) {
+    const email = String(firebaseUser?.email ?? "").trim().toLowerCase();
+    const name = String(firebaseUser?.displayName ?? "").trim();
+    const userId = String(firebaseUser?.uid ?? "").trim();
+
+    if (!email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
+      throw new Error(`경상국립대 이메일(${ALLOWED_EMAIL_DOMAIN})만 로그인할 수 있습니다.`);
+    }
+
+    const data = await syncUser({ userId, name, email });
+
+    return {
+      id: data.user.userId,
+      userId: data.user.userId,
+      name: data.user.name,
+      email: data.user.email,
+      createdAt: data.user.createdAt,
+    };
+  }
+
   useEffect(() => {
     async function loadMeetings() {
       try {
         setLoading(true);
         setLoadError("");
 
-        const res = await fetch("/api/meetings");
-        const data = await res.json();
+        const meetings = await getMeetings();
 
-        if (!res.ok) {
-          throw new Error(data.message || "모임 목록을 불러오지 못했습니다.");
-        }
-
-        setClubs(data.map(mapMeetingToClub));
+        setClubs(meetings.map(mapMeetingToClub));
       } catch (error) {
         setLoadError(error.message);
       } finally {
@@ -156,17 +197,48 @@ export default function App() {
     loadMeetings();
   }, []);
 
+  useEffect(() => {
+    async function loadMeetingTypes() {
+      try {
+        setMeetingTypesLoading(true);
+        setMeetingTypesError("");
+
+        const types = await getMeetingTypes();
+        setMeetingTypes(types);
+        localStorage.setItem("meetingTypes", JSON.stringify(types));
+      } catch (error) {
+        setMeetingTypesError(error.message);
+      } finally {
+        setMeetingTypesLoading(false);
+      }
+    }
+
+    loadMeetingTypes();
+  }, []);
+
   // 로그인 상태 자동 감지
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setIsLoggedIn(true);
-        setUser({ name: firebaseUser.displayName, email: firebaseUser.email });
-      } else {
+      if (!firebaseUser) {
         setIsLoggedIn(false);
         setUser(null);
+        return;
       }
+
+      syncFirebaseUser(firebaseUser)
+        .then((syncedUser) => {
+          setIsLoggedIn(true);
+          setUser(syncedUser);
+        })
+        .catch(async (error) => {
+          console.error("사용자 동기화 실패", error);
+          await signOut(auth);
+          setIsLoggedIn(false);
+          setUser(null);
+          window.alert(error.message || "로그인 처리 중 오류가 발생했습니다.");
+        });
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -184,25 +256,13 @@ export default function App() {
     }
 
     try {
-      const res = await fetch("/api/meetings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          meetingType,
-          tagId,
-          description,
-          hostUserId,
-        }),
+      const data = await createMeeting({
+        title,
+        meetingType,
+        tagId,
+        description,
+        hostUserId,
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "모임 생성에 실패했습니다.");
-      }
 
       const createdMeeting = data.meeting ?? data;
       const createdClub = mapMeetingToClub(createdMeeting);
@@ -213,15 +273,52 @@ export default function App() {
     }
   }
 
+  async function handleJoinRequest(meetingId) {
+    const userId = user?.id ?? user?.userId;
+
+    if (!userId) {
+      window.alert("로그인 후 가입 신청할 수 있습니다.");
+      return;
+    }
+
+    if (!window.confirm("이 모임에 가입 신청하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      setJoiningMeetingId(meetingId);
+      const data = await createMeetingJoinRequest(meetingId, userId);
+
+      window.alert(data.message || "가입 신청이 접수되었습니다.");
+    } catch (error) {
+      window.alert(error.message || "가입 신청 중 오류가 발생했습니다.");
+    } finally {
+      setJoiningMeetingId("");
+    }
+  }
+
+  async function handleJoinRequestDecision(meetingId, userId, action) {
+    try {
+      return await updateMeetingJoinRequest(meetingId, userId, action);
+    } catch (error) {
+      window.alert(error.message || "가입 신청 처리 중 오류가 발생했습니다.");
+      throw error;
+    }
+  }
+
   // 구글 로그인
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
+      const syncedUser = await syncFirebaseUser(result.user);
       setIsLoggedIn(true);
-      setUser({ name: result.user.displayName, email: result.user.email });
+      setUser(syncedUser);
       window.location.href = "/";
     } catch (error) {
       console.error("로그인 실패", error);
+      if (error?.code !== "auth/popup-closed-by-user") {
+        window.alert(error.message || "로그인 중 오류가 발생했습니다.");
+      }
     }
   };
 
@@ -250,6 +347,8 @@ export default function App() {
           <MainPage
             {...commonProps}
             clubs={clubs}
+            meetingTypes={meetingTypes}
+            meetingTypesLoading={meetingTypesLoading}
             loading={loading}
             error={loadError}
           />
@@ -274,6 +373,9 @@ export default function App() {
           <SearchPage
             {...commonProps}
             clubs={clubs}
+            meetingTypes={meetingTypes}
+            meetingTypesLoading={meetingTypesLoading}
+            meetingTypesError={meetingTypesError}
             loading={loading}
             error={loadError}
             onDetailClick={(id) => (window.location.href = `/clubs/${id}`)}
@@ -291,7 +393,8 @@ export default function App() {
             loading={loading}
             error={loadError}
             // 🔧 [기능] 각 버튼 API 연결
-            onJoin={(id) => console.log(`TODO: 소모임 ${id} 가입 신청`)}
+            onJoin={handleJoinRequest}
+            joiningMeetingId={joiningMeetingId}
             onWishlist={(id) =>
               console.log(`TODO: 소모임 ${id} 관심 목록 추가`)
             }
@@ -312,14 +415,17 @@ export default function App() {
         element={
           <ClubManagePage
             {...commonProps}
+            clubs={clubs}
+            loading={loading}
+            error={loadError}
             // 🔧 [기능] 각 관리 기능 API 연결
             onSave={(data) => console.log("TODO: 모임 정보 저장", data)}
             onDelete={(id) => console.log(`TODO: 모임 ${id} 삭제`)}
-            onApproveMember={(memberId) =>
-              console.log(`TODO: 멤버 ${memberId} 승인`)
+            onApproveMember={(meetingId, memberId) =>
+              handleJoinRequestDecision(meetingId, memberId, "approve")
             }
-            onRejectMember={(memberId) =>
-              console.log(`TODO: 멤버 ${memberId} 거절`)
+            onRejectMember={(meetingId, memberId) =>
+              handleJoinRequestDecision(meetingId, memberId, "reject")
             }
             onRemoveMember={(memberId) =>
               console.log(`TODO: 멤버 ${memberId} 내보내기`)
@@ -355,6 +461,9 @@ export default function App() {
         element={
           <CreatePage
             {...commonProps}
+            meetingTypes={meetingTypes}
+            meetingTypesLoading={meetingTypesLoading}
+            meetingTypesError={meetingTypesError}
             onSubmit={handleCreateMeeting}
             onCancel={() => (window.location.href = "/")}
           />

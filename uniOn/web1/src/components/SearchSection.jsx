@@ -1,6 +1,13 @@
-import { CLUB_TYPES, CATEGORIES } from "../data/mockData";
+import { CATEGORIES } from "../data/mockData";
 
-export default function SearchSection({ selectedType, selectedCategory, onTypeSelect, onCategorySelect }) {
+export default function SearchSection({
+  meetingTypes = [],
+  meetingTypesLoading = false,
+  selectedType,
+  selectedCategory,
+  onTypeSelect,
+  onCategorySelect,
+}) {
   return (
     <section className="search-section" id="search">
       <div className="search-section__inner">
@@ -11,7 +18,10 @@ export default function SearchSection({ selectedType, selectedCategory, onTypeSe
         <div className="filter-group">
           <h3 className="filter-group__title">모임 유형</h3>
           <div className="filter-group__options">
-            {CLUB_TYPES.map((type) => (
+            {meetingTypes.length === 0 && meetingTypesLoading ? (
+              <p>모임 유형을 불러오는 중입니다.</p>
+            ) : (
+              meetingTypes.map((type) => (
               <button
                 key={type.id}
                 className={`filter-card ${selectedType === type.id ? "filter-card--active" : ""}`}
@@ -20,7 +30,8 @@ export default function SearchSection({ selectedType, selectedCategory, onTypeSe
                 <span className="filter-card__label">{type.label}</span>
                 <span className="filter-card__desc">{type.description}</span>
               </button>
-            ))}
+              ))
+            )}
           </div>
         </div>
         <div className="filter-group">

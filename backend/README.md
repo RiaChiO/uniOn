@@ -7,7 +7,7 @@
 역할은 크게 3가지입니다.
 
 1. Node.js HTTP API 서버 실행
-2. 추천 시스템용 더미 데이터 생성 및 PostgreSQL 시드 적재
+2. 공식/보조 JSON 데이터를 PostgreSQL 시드로 적재
 3. 유저 관심 벡터 + 모임 참여자 + 모임 태그를 기반으로 추천 계산
 
 기본 API 서버 주소는 `http://localhost:4000` 입니다.
@@ -41,26 +41,25 @@ backend/
 주요 파일:
 
 - `users.json`
-  - 유저 기본 정보와 관심 벡터 저장
-- `meetings.json`
-  - 모임 기본 정보 저장
-  - 현재 구조는 `meetingType`, `tagId`, `participants`를 포함
+  - 공식 모임 참여자에 포함된 `user1` 계열 임시 참여자 정보
+- `official_users.json`
+  - 공식 동아리 호스트 유저 정보
+- `official_meetings.json`
+  - 공식 동아리 모임 정보
+- `official_extra_users.json`
+  - 소모임/일회성 모임용 추가 호스트 유저 정보
+- `official_extra_meetings.json`
+  - 소모임/일회성 모임 추가 데이터
 
-현재 폴더 안의 아래 파일들은 과거 구조의 잔여 파일일 수 있습니다.
-
-- `meeting_participant_vectors.json`
-- `meeting_tag_vectors.json`
-- `result.json`
-
-현재 추천 계산과 DB 시드의 핵심 입력은 `users.json`, `meetings.json` 입니다.
+현재 DB 시드의 핵심 입력은 위 5개 파일입니다.
 
 ### `logic/`
 
 추천 로직과 데이터 가공 스크립트 모음입니다.
 
 - `generator.js`
-  - 더미 유저/모임 데이터 생성
-  - `backend/data/users.json`, `backend/data/meetings.json` 생성
+  - 레거시 더미 유저/모임 데이터 생성
+  - 현재 공식 데이터 기반 시드 흐름에서는 보조 스크립트
 - `recommendation.js`
   - 추천 핵심 함수
   - 유저 관심 벡터
@@ -70,7 +69,7 @@ backend/
   - 생성된 JSON 데이터 기준으로 추천 결과를 계산해 파일로 출력
   - 현재는 레거시 대시보드용 보조 스크립트 성격이 강함
 - `seed-postgres.js`
-  - JSON 데이터를 PostgreSQL에 적재
+  - 공식/추가 JSON 데이터를 PostgreSQL에 적재
   - 현재 DB 구조에 맞게 `users`, `tags`, `meetings`, `meeting_participants`, `recommendations` 등을 채움
 
 ### `postgres/`
@@ -231,33 +230,13 @@ server/
 npm run db:up
 ```
 
-### 2. 더미 데이터 생성
-
-```powershell
-npm run generate
-```
-
-생성 결과:
-
-- `backend/data/users.json`
-- `backend/data/meetings.json`
-
-### 3. 추천 결과 파일 생성
-
-```powershell
-npm run recommend
-```
-
-이 명령은 레거시 대시보드용 추천 JSON 파일을 생성합니다.
-현재 API 자체는 추천을 DB 실시간 계산 방식으로 처리합니다.
-
-### 4. PostgreSQL 시드 적재
+### 2. PostgreSQL 시드 적재
 
 ```powershell
 npm run db:seed
 ```
 
-### 5. API 서버 실행
+### 3. API 서버 실행
 
 ```powershell
 npm run api
@@ -277,8 +256,6 @@ http://localhost:4000
 
 ```powershell
 npm run db:up
-npm run generate
-npm run recommend
 npm run db:seed
 npm run api
 ```
@@ -289,11 +266,9 @@ DB만 켜고 API만 다시 띄울 때:
 npm run api
 ```
 
-데이터를 새로 만들고 DB에 다시 넣고 싶을 때:
+현재 JSON 데이터를 DB에 다시 넣고 싶을 때:
 
 ```powershell
-npm run generate
-npm run recommend
 npm run db:seed
 ```
 
