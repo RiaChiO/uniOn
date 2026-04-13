@@ -1,6 +1,0 @@
- 
-수정
-git status -> 변경사항 확인
-git add *
-git commit -m "주석"
-git push -u origin master
