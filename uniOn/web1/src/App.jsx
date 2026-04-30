@@ -134,6 +134,56 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
 
+
+  // 1. 상태 선언 (컴포넌트 상단)
+  const [userVector, setUserVector] = useState(null);
+
+  // App.js 예시 로직
+
+  useEffect(() => {
+    const fetchClubs = async () => {
+      try {
+        // 🌟 여기가 중요! 우리가 SQL 쿼리 짰던 그 API 주소여야 해.
+        const response = await fetch("http://localhost:4000/api/meetings"); 
+        const data = await response.json();
+        
+        // 데이터가 오면 clubs 상태 업데이트
+        setClubs(data); 
+      } catch (err) {
+        console.error("데이터 로딩 실패:", err);
+      }
+    };
+    fetchClubs();
+  }, []);
+
+  // 2. 데이터 동기화 로직 (useEffect)
+  useEffect(() => {
+    async function syncRecommendationData() {
+      // 로그인 상태이고 user 객체가 존재할 때만 실행
+      if (isLoggedIn && user) {
+        try {
+          // user.id 또는 user.userId 중 현재 사용 중인 필드 확인 필요
+          const targetId = user.userId || user.id; 
+          
+          // 4000번 포트 서버의 새로운 엔드포인트 호출
+          const response = await fetch(`http://localhost:4000/api/users/vectors/${targetId}`);
+          
+          if (response.ok) {
+            const vectorData = await response.json();
+            setUserVector(vectorData); 
+            console.log("✅ 유저 벡터 로드 성공:", vectorData);
+          }
+        } catch (err) {
+          console.error("❌ 유저 벡터 로드 실패:", err);
+        }
+      } else {
+        // 로그아웃 시 벡터 초기화
+        setUserVector(null);
+      }
+    }
+    syncRecommendationData();
+  }, [isLoggedIn, user]); // 로그인 상태나 유저 정보가 바뀔 때마다 실행
+
   function mapMeetingToClub(meeting) {
     const mappedCategory = TAG_ID_TO_CATEGORY[meeting.tagId] ?? {
       id: "culture",
@@ -155,6 +205,8 @@ export default function App() {
       meetingDay: "일정 조율중",
       location: "장소 협의 예정",
       isRecruiting: true,
+      avg_participant_vector: meeting.avg_participant_vector,
+      tagId: meeting.tagId // 자카드 계산을 위해 이것도 넘겨주면 좋습니다.
     };
   }
 

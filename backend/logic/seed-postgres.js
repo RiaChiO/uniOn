@@ -3,6 +3,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import pg from "pg";
 
+
+
+
 const { Client } = pg;
 const TAGS = ["study", "exercise", "culture", "game", "religion", "volunteer"];
 const MEETING_TYPES = [
@@ -290,6 +293,48 @@ async function main() {
       UNION ALL SELECT 'recommendations', COUNT(*) FROM recommendations
       ORDER BY table_name
     `);
+
+    for (const [meetingId, meeting] of Object.entries(meetings)) {
+      // 1. meetings 기본 정보 삽입 (ON CONFLICT 추가)
+      await client.query(
+        `
+        INSERT INTO meetings(meeting_id, title, meeting_type, tag_id, description, host_user_id, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7::timestamptz)
+        ON CONFLICT (meeting_id) DO UPDATE SET
+          title = EXCLUDED.title,
+          meeting_type = EXCLUDED.meeting_type,
+          tag_id = EXCLUDED.tag_id,
+          description = EXCLUDED.description,
+          host_user_id = EXCLUDED.host_user_id,
+          created_at = EXCLUDED.created_at
+        `,
+        [
+          meetingId,
+          meeting.title,
+          meeting.meetingType ?? "small-group",
+          meeting.tagId ?? meeting.tags?.[0] ?? null,
+          meeting.description,
+          meeting.hostUserId,
+          meeting.createdAt,
+        ]
+      );
+
+      // 2. participants 삽입 부분 (기존과 동일하지만 안전하게 ON CONFLICT 유지)
+      if (meeting.participants && Array.isArray(meeting.participants)) {
+        for (const userId of meeting.participants) {
+          if (users[userId]) {
+            await client.query(
+              `
+              INSERT INTO meeting_participants(meeting_id, user_id, joined_at)
+              VALUES ($1, $2, $3::timestamptz)
+              ON CONFLICT (meeting_id, user_id) DO NOTHING
+              `,
+              [meetingId, userId, meeting.createdAt]
+            );
+          }
+        }
+      }
+    }
 
     console.log("PostgreSQL 시드 완료");
     counts.rows.forEach((row) => {

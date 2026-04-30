@@ -29,15 +29,31 @@ export async function getMeetings() {
         WHEN m.tag_id IS NULL THEN ARRAY[]::text[]
         ELSE ARRAY[m.tag_id]
       END AS tags,
-      COALESCE(mp.participant_count, 0)::INT AS "participantCount"
+      COALESCE(mp_count.participant_count, 0)::INT AS "participantCount",
+      -- [추가] 참여자 평균 벡터 계산
+      ARRAY[
+        COALESCE(AVG(uv.study), 0)::FLOAT, 
+        COALESCE(AVG(uv.exercise), 0)::FLOAT, 
+        COALESCE(AVG(uv.culture), 0)::FLOAT, 
+        COALESCE(AVG(uv.game), 0)::FLOAT, 
+        COALESCE(AVG(uv.religion), 0)::FLOAT, 
+        COALESCE(AVG(uv.volunteer), 0)::FLOAT
+      ] AS "avg_participant_vector"
     FROM meetings m
     JOIN users host ON host.user_id = m.host_user_id
     JOIN meeting_types mt ON mt.type_id = m.meeting_type
+    -- 참여자 수 카운트 서브쿼리
     LEFT JOIN (
       SELECT meeting_id, COUNT(*) AS participant_count
       FROM meeting_participants
       GROUP BY meeting_id
-    ) mp ON mp.meeting_id = m.meeting_id
+    ) mp_count ON TRIM(mp_count.meeting_id) = TRIM(m.meeting_id)
+    -- [추가] 참여자 벡터 데이터를 가져오기 위한 JOIN
+    LEFT JOIN meeting_participants mp ON TRIM(mp.meeting_id) = TRIM(m.meeting_id)
+    LEFT JOIN user_interest_vectors uv ON TRIM(uv.user_id) = TRIM(mp.user_id)
+    GROUP BY 
+      m.meeting_id, m.title, m.meeting_type, mt.label, m.tag_id, 
+      m.description, m.host_user_id, host.name, m.created_at, mp_count.participant_count
     ORDER BY
       NULLIF(regexp_replace(m.meeting_id, '[^0-9]', '', 'g'), '')::INT,
       m.meeting_id
