@@ -69,8 +69,24 @@ export async function handleApiRoute(req, res, pathname) {
     return;
   }
 
+  if (req.method === "GET" && pathname.startsWith("/api/users/vectors/")) {
+    const userId = decodeURIComponent(pathname.replace("/api/users/vectors/", ""));
+    const result = await pool.query(
+      "SELECT * FROM user_interest_vectors WHERE TRIM(user_id) = TRIM($1)", 
+      [userId]
+    );
+    
+    if (result.rows.length === 0) {
+      sendJson(res, 404, { message: "유저 벡터 정보를 찾을 수 없습니다." });
+      return;
+    }
+    sendJson(res, 200, result.rows[0]);
+    return;
+  }
+
+  // 2. 기존 /api/meetings GET 요청 (위의 서비스 수정을 통해 데이터가 이미 포함됨)
   if (req.method === "GET" && pathname === "/api/meetings") {
-    const meetings = await getMeetings();
+    const meetings = await getMeetings(); // 수정된 getMeetings 호출
     sendJson(res, 200, meetings);
     return;
   }

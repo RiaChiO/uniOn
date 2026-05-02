@@ -1,30 +1,23 @@
-// 📌 SearchPage - 소모임 검색 화면
-// 🔧 [기능 포인트]
-//   - onFilterApply  : 필터 적용 버튼 클릭 → 필터링 API 또는 클라이언트 로직 연결
-//   - onFilterReset  : 초기화 버튼 클릭 → 필터 상태 초기화
-//   - onSortChange   : 정렬 드롭다운 변경 → 정렬 로직 연결
-//   - onDetailClick  : 카드 클릭 → 소모임 상세 페이지 이동
-//   - clubs          : 현재 mockData 사용 → API 응답으로 교체
-
 import { useState, useMemo } from "react";
 import Navbar from "../components/Navbar";
 import ClubCard from "../components/ClubCard";
 import Footer from "../components/Footer";
 import { CATEGORIES } from "../data/mockData";
 
-// 🔧 [기능] 정렬 옵션 - 필요 시 추가/수정
 const SORT_OPTIONS = [
+  { id: "recommend", label: "추천순 ✨" },
   { id: "newest", label: "최신순" },
   { id: "member", label: "멤버 많은순" },
 ];
 
-// 🔧 [기능] 인원 필터 옵션
 const MEMBER_OPTIONS = [
   { id: "all", label: "전체" },
   { id: "small", label: "10명 이하" },
   { id: "medium", label: "10-30명" },
   { id: "large", label: "30명 이상" },
 ];
+
+const VECTOR_KEYS = ["study", "exercise", "culture", "game", "religion", "volunteer"];
 
 export default function SearchPage({
   searchQuery,
@@ -39,196 +32,169 @@ export default function SearchPage({
   loading = false,
   error = "",
   onDetailClick,
+  // 기본 유저 벡터 (로그인 안 했을 때나 데이터 없을 때 대비)
+  userVector = { study: 9, exercise: 2, culture: 4, game: 1, religion: 0, volunteer: 2 },
 }) {
-  // 🔧 [기능] 필터 상태
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedMember, setSelectedMember] = useState("all");
   const [appliedTypes, setAppliedTypes] = useState([]);
   const [appliedCategories, setAppliedCategories] = useState([]);
   const [appliedMember, setAppliedMember] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState("recommend");
 
-  // 타입 토글
-  const toggleType = (id) => {
-    setSelectedTypes((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
-    );
+  // --- [필터 핸들러] ---
+  const toggleType = (id) => setSelectedTypes(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
+  const toggleCategory = (id) => setSelectedCategories(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+  const applyFilters = () => { setAppliedTypes(selectedTypes); setAppliedCategories(selectedCategories); setAppliedMember(selectedMember); };
+  const resetFilters = () => { setSelectedTypes([]); setSelectedCategories([]); setSelectedMember("all"); setAppliedTypes([]); setAppliedCategories([]); setAppliedMember("all"); };
+
+  // --- [유사도 계산 함수] ---
+  const getCosine = (vA, vB) => {
+    const dot = vA.reduce((a, b, i) => a + b * vB[i], 0);
+    const magA = Math.sqrt(vA.reduce((a, b) => a + b ** 2, 0));
+    const magB = Math.sqrt(vB.reduce((a, b) => a + b ** 2, 0));
+    return magA && magB ? dot / (magA * magB) : 0;
   };
 
-  // 카테고리 토글
-  const toggleCategory = (id) => {
-    setSelectedCategories((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
-    );
+  const getJaccard = (vA, vB) => {
+    let inter = 0, uni = 0;
+    for (let i = 0; i < vA.length; i++) {
+      inter += Math.min(vA[i], vB[i]);
+      uni += Math.max(vA[i], vB[i]);
+    }
+    return uni ? inter / uni : 0;
   };
 
-  const applyFilters = () => {
-    setAppliedTypes(selectedTypes);
-    setAppliedCategories(selectedCategories);
-    setAppliedMember(selectedMember);
-  };
-
-  const resetFilters = () => {
-    setSelectedTypes([]);
-    setSelectedCategories([]);
-    setSelectedMember("all");
-    setAppliedTypes([]);
-    setAppliedCategories([]);
-    setAppliedMember("all");
-  };
-
+  // --- [핵심: 필터링 + 추천 계산 통합 로직] ---
   const filteredClubs = useMemo(() => {
+    if (!clubs || !Array.isArray(clubs)) return [];
+
+    // 1. 먼저 필터링 수행
     const filtered = clubs.filter((club) => {
+      // 검색어 (이름, 설명, 태그)
       const matchesSearch =
         !searchQuery ||
-        club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        club.description.includes(searchQuery) ||
-        club.tags.some((tag) => tag.includes(searchQuery));
+        club.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        club.description?.includes(searchQuery) ||
+        club.tags?.some((tag) => tag.includes(searchQuery));
 
-      const matchesType =
-        appliedTypes.length === 0 || appliedTypes.includes(club.type);
+      // 모임 유형
+      const matchesType = appliedTypes.length === 0 || appliedTypes.includes(club.type);
 
-      const matchesCategory =
-        appliedCategories.length === 0 ||
-        appliedCategories.includes(club.category);
+      // 관심 분야 (카테고리)
+      const matchesCategory = appliedCategories.length === 0 || appliedCategories.includes(club.category);
 
+      // 인원
       const matchesMember =
         appliedMember === "all" ||
         (appliedMember === "small" && club.memberCount <= 10) ||
-        (appliedMember === "medium" &&
-          club.memberCount > 10 &&
-          club.memberCount <= 30) ||
+        (appliedMember === "medium" && club.memberCount > 10 && club.memberCount <= 30) ||
         (appliedMember === "large" && club.memberCount > 30);
 
       return matchesSearch && matchesType && matchesCategory && matchesMember;
     });
 
-    const extractNumericId = (id) => {
-      const matched = String(id).match(/\d+/);
-      return matched ? Number(matched[0]) : 0;
-    };
+    // 2. 필터링된 결과에 추천 점수 매기기
+    const uV = VECTOR_KEYS.map(k => Number(userVector[k]) || 0);
 
-    return [...filtered].sort((a, b) => {
+    const scoredData = filtered.map((item) => {
+      const avgVec = item.avg_participant_vector || [];
+      const tagId = (item.category || "").toLowerCase();
+
+      const pAvgV = (Array.isArray(avgVec) && avgVec.length === 6) ? avgVec.map(Number) : [0, 0, 0, 0, 0, 0];
+
+      const cosSim = getCosine(uV, pAvgV);
+      const isStudy = ["study", "academic", "it", "startup"].includes(tagId);
+      const mTagV = VECTOR_KEYS.map(k => ((isStudy && k === "study") || tagId === k ? 10.0 : 0.0));
+      const jacSim = getJaccard(uV, mTagV);
+
+      const finalScore = Math.round(((cosSim + 1) + (jacSim * 2)) * 25);
+
+      return { ...item, recommendationScore: finalScore, cosSim };
+    });
+
+    // 3. 정렬 수행
+    const sorted = [...scoredData].sort((a, b) => {
+      if (sortBy === "recommend") {
+        if (b.recommendationScore !== a.recommendationScore) return b.recommendationScore - a.recommendationScore;
+        return b.cosSim - a.cosSim;
+      }
       if (sortBy === "newest") {
-        return extractNumericId(b.id) - extractNumericId(a.id);
+        const getNum = (id) => Number(String(id).match(/\d+/)?.[0]) || 0;
+        return getNum(b.id) - getNum(a.id);
       }
-
-      if (sortBy === "member") {
-        return b.memberCount - a.memberCount;
-      }
-
+      if (sortBy === "member") return (b.memberCount || 0) - (a.memberCount || 0);
       return 0;
     });
-  }, [
-    clubs,
-    searchQuery,
-    appliedTypes,
-    appliedCategories,
-    appliedMember,
-    sortBy,
-  ]);
+
+    // 🌟 로그 출력 (반드시 return 보다 위에 있어야 함!)
+    if (sortBy === "recommend" && sorted.length > 0) {
+      console.log(
+        `%c 🎯 현재 유저를 위한 추천 Top 5 `,
+        "background: #222; color: #bada55; font-size: 12px; font-weight: bold; padding: 4px;"
+      );
+      
+      sorted.slice(0, 5).forEach((club, i) => {
+        console.log(
+          `${i + 1}위: [%c${club.name || club.displayTitle}%c] - %c${club.recommendationScore}점 %c(Cos: ${club.cosSim.toFixed(3)})`,
+          "color: #3b82f6; font-weight: bold;",
+          "color: inherit;",
+          "color: #ef4444; font-weight: bold;",
+          "color: #888; font-size: 11px;"
+        );
+      });
+      console.log("-----------------------------------------");
+    }
+
+    // 🌟 마지막에 반환
+    return sorted;
+
+  }, [clubs, searchQuery, appliedTypes, appliedCategories, appliedMember, sortBy, JSON.stringify(userVector)]);
 
   return (
     <div className="search-page">
-      <Navbar
-        searchQuery={searchQuery}
-        onSearchChange={onSearchChange}
-        isLoggedIn={isLoggedIn}
-        user={user}
-        onLoginClick={onLoginClick}
-      />
-
+      <Navbar searchQuery={searchQuery} onSearchChange={onSearchChange} isLoggedIn={isLoggedIn} user={user} onLoginClick={onLoginClick} />
       <main className="search-page__main">
-        {/* 검색 헤더 */}
-        {/*
-        <div className="search-page__header">
-          <div className="search-page__header-inner">
-            <div className="search-page__search-bar">
-              <span className="search-page__search-icon">🔍</span>
-              <input
-                className="search-page__search-input"
-                type="text"
-                placeholder="모임 이름, 태그로 검색"
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-        */}
-
         <div className="search-page__body">
           {/* 사이드바 필터 */}
           <aside className="search-filter">
             <div className="search-filter__header">
               <span className="search-filter__title">🔧 필터</span>
-              <button
-                className="search-filter__reset"
-                onClick={resetFilters}
-              >
-                초기화
-              </button>
+              <button className="search-filter__reset" onClick={resetFilters}>초기화</button>
             </div>
 
-            {/* 모임 유형 */}
             <div className="search-filter__group">
               <h4 className="search-filter__group-title">모임 유형</h4>
-              {meetingTypes.length === 0 && meetingTypesLoading ? (
-                <p>모임 유형을 불러오는 중입니다.</p>
-              ) : meetingTypesError ? (
-                <p>{meetingTypesError}</p>
-              ) : (
-                meetingTypes.map((type) => (
+              {meetingTypesLoading ? <p>로딩 중...</p> : meetingTypes.map((type) => (
                 <label key={type.id} className="search-filter__check-label">
-                  <input
-                    type="checkbox"
-                    checked={selectedTypes.includes(type.id)}
-                    onChange={() => toggleType(type.id)}
-                  />
+                  <input type="checkbox" checked={selectedTypes.includes(type.id)} onChange={() => toggleType(type.id)} />
                   {type.label}
                 </label>
-                ))
-              )}
+              ))}
             </div>
 
-            {/* 관심 분야 */}
             <div className="search-filter__group">
               <h4 className="search-filter__group-title">관심 분야</h4>
               {CATEGORIES.map((cat) => (
                 <label key={cat.id} className="search-filter__check-label">
-                  <input
-                    type="checkbox"
-                    checked={selectedCategories.includes(cat.id)}
-                    onChange={() => toggleCategory(cat.id)}
-                  />
+                  <input type="checkbox" checked={selectedCategories.includes(cat.id)} onChange={() => toggleCategory(cat.id)} />
                   {cat.icon} {cat.label}
                 </label>
               ))}
             </div>
 
-            {/* 인원 */}
             <div className="search-filter__group">
               <h4 className="search-filter__group-title">인원</h4>
               {MEMBER_OPTIONS.map((opt) => (
                 <label key={opt.id} className="search-filter__check-label">
-                  <input
-                    type="radio"
-                    name="memberFilter"
-                    checked={selectedMember === opt.id}
-                    onChange={() => setSelectedMember(opt.id)}
-                  />
+                  <input type="radio" name="memberFilter" checked={selectedMember === opt.id} onChange={() => setSelectedMember(opt.id)} />
                   {opt.label}
                 </label>
               ))}
             </div>
 
-            <button
-              className="btn btn--primary search-filter__apply"
-              onClick={applyFilters}
-            >
-              필터 적용
-            </button>
+            <button className="btn btn--primary search-filter__apply" onClick={applyFilters}>필터 적용</button>
           </aside>
 
           {/* 검색 결과 */}
@@ -236,44 +202,27 @@ export default function SearchPage({
             <div className="search-results__header">
               <div>
                 <h2 className="search-results__title">검색 결과</h2>
-                <p className="search-results__count">
-                  총 {filteredClubs.length}개의 모임
-                </p>
+                <p className="search-results__count">총 {filteredClubs.length}개의 모임</p>
               </div>
-              <select
-                className="search-results__sort"
-                value={sortBy}
-                // 🔧 [기능] 정렬 로직 연결
-                onChange={(e) => setSortBy(e.target.value)}
-              >
+              <select className="search-results__sort" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                 {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.label}
-                  </option>
+                  <option key={opt.id} value={opt.id}>{opt.label}</option>
                 ))}
               </select>
             </div>
 
             {loading ? (
-              <div className="search-results__empty">
-                <p>모임 목록을 불러오는 중입니다.</p>
-              </div>
-            ) : error ? (
-              <div className="search-results__empty">
-                <p>{error}</p>
-              </div>
+              <div className="search-results__empty"><p>데이터를 불러오는 중입니다...</p></div>
             ) : filteredClubs.length === 0 ? (
-              <div className="search-results__empty">
-                <p>검색 결과가 없습니다.</p>
-              </div>
+              <div className="search-results__empty"><p>조건에 맞는 검색 결과가 없습니다.</p></div>
             ) : (
               <div className="search-results__grid">
                 {filteredClubs.map((club) => (
-                  <ClubCard
-                    key={club.id}
-                    club={club}
-                    // 🔧 [기능] 상세 페이지 이동
-                    onDetailClick={(id) => onDetailClick && onDetailClick(id)}
+                  <ClubCard 
+                    // 🌟 key 값을 더 확실하게! (데이터의 고유 ID가 우선, 없으면 index)
+                    key={club.id || club.meetingId || `club-${index}`} 
+                    club={club} 
+                    onDetailClick={(id) => onDetailClick && onDetailClick(id)} 
                   />
                 ))}
               </div>
@@ -281,7 +230,6 @@ export default function SearchPage({
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );
