@@ -34,6 +34,9 @@ import {
   upsertUser,
 } from "../services/userService.js";
 
+const ALLOWED_EMAIL_DOMAIN = "@gnu.ac.kr";
+const ALLOW_TEST_LOGIN = process.env.ALLOW_TEST_LOGIN === "true";
+
 export async function handleApiRoute(req, res, pathname) {
   if (req.method === "GET" && pathname === "/api/health") {
     const result = await pool.query("SELECT NOW() AS now");
@@ -64,7 +67,7 @@ export async function handleApiRoute(req, res, pathname) {
       return;
     }
 
-    if (!email.endsWith("@gnu.ac.kr")) {
+    if (!ALLOW_TEST_LOGIN && !email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
       sendJson(res, 403, {
         message: "gnu.ac.kr 계정만 허용됩니다.",
       });

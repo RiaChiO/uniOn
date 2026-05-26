@@ -9,13 +9,14 @@ import {
 import { syncUser } from "../api/users";
 
 const ALLOWED_EMAIL_DOMAIN = "@gnu.ac.kr";
+const ALLOW_TEST_LOGIN = import.meta.env.VITE_ALLOW_TEST_LOGIN === "true";
 
 async function syncFirebaseUser(firebaseUser) {
   const email = String(firebaseUser?.email ?? "").trim().toLowerCase();
   const name = String(firebaseUser?.displayName ?? "").trim();
   const userId = String(firebaseUser?.uid ?? "").trim();
 
-  if (!email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
+  if (!ALLOW_TEST_LOGIN && !email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
     throw new Error(`경상국립대 이메일(${ALLOWED_EMAIL_DOMAIN})만 로그인할 수 있습니다.`);
   }
 
