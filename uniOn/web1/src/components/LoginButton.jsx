@@ -1,10 +1,23 @@
-import { useAuth } from "../hooks/useAuth";
+import { useState } from "react";
+import { useAuthSession } from "../hooks/useAuthSession";
 import styles from "./LoginButton.module.css";
 
 export default function LoginButton() {
-  const { user, loading, error, login, logout } = useAuth();
+  const { user, authLoading, loginWithGoogle, logout } = useAuthSession();
+  const [error, setError] = useState("");
 
-  if (loading) {
+  async function handleLogin() {
+    try {
+      setError("");
+      await loginWithGoogle();
+    } catch (loginError) {
+      if (loginError?.code !== "auth/popup-closed-by-user") {
+        setError(loginError.message || "로그인 중 오류가 발생했습니다.");
+      }
+    }
+  }
+
+  if (authLoading) {
     return <div className={styles.loading}>로딩 중...</div>;
   }
 
@@ -12,13 +25,9 @@ export default function LoginButton() {
   if (user) {
     return (
       <div className={styles.profile}>
-        <img
-          src={user.photoURL}
-          alt="프로필"
-          className={styles.avatar}
-        />
+        <div className={styles.avatar}>{(user.name || "?").slice(0, 1)}</div>
         <div className={styles.info}>
-          <span className={styles.name}>{user.displayName}</span>
+          <span className={styles.name}>{user.name}</span>
           <span className={styles.email}>{user.email}</span>
         </div>
         <button className={styles.logoutBtn} onClick={logout}>
@@ -31,7 +40,7 @@ export default function LoginButton() {
   // 로그아웃된 상태
   return (
     <div>
-      <button className={styles.loginBtn} onClick={login}>
+      <button className={styles.loginBtn} onClick={handleLogin}>
         <GoogleIcon />
         경상국립대 구글 계정으로 로그인
       </button>

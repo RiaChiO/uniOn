@@ -1,4 +1,4 @@
-// 📌 ClubDetailPage - 모임 상세 페이지 (소개 / 활동 / 멤버 / 후기 탭 포함)
+// 📌 ClubDetailPage - 모임 상세 페이지 (소개 / 활동 / 멤버 탭 포함)
 // 🔧 [기능 포인트]
 //   - club            : 더미 데이터 → API 응답으로 교체 (useParams로 id 받아서 fetch)
 //   - onJoin          : 가입 신청하기 → 가입 신청 API 연결
@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { getMeetingMembers } from "../api/meetings";
+import { getMeetingActivities, getMeetingMembers } from "../api/meetings";
 
 const DEFAULT_DETAIL_INFO = {
   meetingDay: "일정 조율중",
@@ -21,7 +21,7 @@ const DEFAULT_DETAIL_INFO = {
   activePeriod: "등록된 기간 없음",
 };
 
-const TABS = ["소개", "활동", "멤버", "후기"];
+const TABS = ["소개", "활동", "멤버"];
 
 function EmptyTabMessage({ children }) {
   return <p className="cd-section-text">{children}</p>;
@@ -34,6 +34,20 @@ function mapMember(member) {
     initial: (member.name || "?").slice(0, 1),
     department: "정보 없음",
     role: member.role,
+  };
+}
+
+function formatActivityDate(value) {
+  if (!value) return "날짜 미정";
+  return String(value).slice(0, 10).replace(/-/g, ".");
+}
+
+function mapActivity(activity) {
+  return {
+    id: activity.activityId,
+    title: activity.title,
+    date: formatActivityDate(activity.activityDate),
+    type: activity.activityType,
   };
 }
 
@@ -107,46 +121,6 @@ function MemberTab({ members }) {
   );
 }
 
-// 후기 탭 컴포넌트
-function ReviewTab({ reviews, rating }) {
-  const displayRating = reviews.length > 0 ? rating : "-";
-
-  return (
-    <div>
-      <div className="cd-tab__header">
-        <h2 className="cd-tab__title">멤버 후기</h2>
-        <div className="cd-review-rating">
-          <span className="cd-review-star">⭐</span>
-          <span className="cd-review-score">{displayRating}</span>
-          <span className="cd-review-count">({reviews.length}개)</span>
-        </div>
-      </div>
-      {reviews.length === 0 && (
-        <EmptyTabMessage>등록된 후기가 없습니다.</EmptyTabMessage>
-      )}
-      <div className="cd-review-list">
-        {reviews.map((review) => (
-          <div key={review.id} className="cd-review-item">
-            <div className="cd-review-header">
-              <div className="cd-review-user">
-                <div className="cd-member-avatar">{review.initial}</div>
-                <div>
-                  <div className="cd-member-name">{review.name}</div>
-                  <div className="cd-review-stars">
-                    {"⭐".repeat(review.rating)}
-                  </div>
-                </div>
-              </div>
-              <span className="cd-review-date">{review.date}</span>
-            </div>
-            <p className="cd-review-content">{review.content}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // 소개 탭 컴포넌트
 function IntroTab({ club }) {
   return (
@@ -186,6 +160,7 @@ export default function ClubDetailPage({
   searchQuery,
   onSearchChange,
   isLoggedIn,
+  authLoading = false,
   user,
   onLoginClick,
   clubs = [],
@@ -194,6 +169,8 @@ export default function ClubDetailPage({
   onJoin,
   joiningMeetingId = "",
   onWishlist,
+  wishlistMeetingIds = [],
+  wishlistUpdatingMeetingId = "",
   onShare,
   onContactLeader,
   onRelatedClick,
@@ -203,9 +180,12 @@ export default function ClubDetailPage({
   const [activeTab, setActiveTab] = useState("소개");
   const [members, setMembers] = useState([]);
   const [membersError, setMembersError] = useState("");
+  const [activities, setActivities] = useState([]);
+  const [activitiesError, setActivitiesError] = useState("");
   const matchedClub = clubs.find(
     (item) => String(item.id) === String(id)
   );
+  const currentUserId = user?.id ?? user?.userId;
 
   useEffect(() => {
     async function loadMembers() {
@@ -225,19 +205,43 @@ export default function ClubDetailPage({
     }
   }, [id]);
 
+  useEffect(() => {
+    async function loadActivities() {
+      try {
+        setActivitiesError("");
+
+        const data = await getMeetingActivities(id);
+        setActivities(data.map(mapActivity));
+      } catch (error) {
+        setActivities([]);
+        setActivitiesError(error.message);
+      }
+    }
+
+    if (id) {
+      loadActivities();
+    }
+  }, [id]);
+
   const club = matchedClub
-    ? {
+    ? (() => {
+        const isCurrentUserLeader =
+          currentUserId && String(currentUserId) === String(matchedClub.hostUserId);
+        const leaderName =
+          matchedClub.leaderName ||
+          (isCurrentUserLeader ? user?.name : "") ||
+          "등록된 리더 정보 없음";
+
+        return {
         ...DEFAULT_DETAIL_INFO,
         ...matchedClub,
         intro: [matchedClub.description || "등록된 소개가 없습니다."],
         activities: matchedClub.tags || [],
-        recentActivities: [],
+        recentActivities: activities,
         members,
-        reviews: [],
-        rating: "-",
         leader: {
-          name: matchedClub.leaderName || matchedClub.hostUserId || "등록된 리더 정보 없음",
-          initial: (matchedClub.leaderName || matchedClub.hostUserId || "?").slice(0, 1),
+          name: leaderName,
+          initial: leaderName.slice(0, 1),
           department: "정보 없음",
           grade: "",
         },
@@ -253,7 +257,8 @@ export default function ClubDetailPage({
             category: item.categoryLabel,
             isRecruiting: item.isRecruiting,
           })),
-      }
+      };
+    })()
     : null;
 
   if (loading) {
@@ -269,6 +274,17 @@ export default function ClubDetailPage({
   }
 
   const isJoining = String(joiningMeetingId) === String(club.id);
+  const isLeader = Boolean(
+    currentUserId && String(currentUserId) === String(club.hostUserId)
+  );
+  const isWishlisted = wishlistMeetingIds
+    .map((meetingId) => String(meetingId))
+    .includes(String(club.id));
+  const isWishlistUpdating = String(wishlistUpdatingMeetingId) === String(club.id);
+  const isJoinDisabled = isJoining || !club.isRecruiting;
+  const recruitBadgeClass = club.isRecruiting
+    ? "club-detail__badge club-detail__badge--recruiting"
+    : "club-detail__badge club-detail__badge--closed";
 
   return (
     <div className="club-detail-page">
@@ -292,11 +308,9 @@ export default function ClubDetailPage({
                   <span className="club-detail__badge">
                     {club.typeLabel ?? club.type}
                   </span>
-                  {club.isRecruiting && (
-                    <span className="club-detail__badge club-detail__badge--recruiting">
-                      모집중
-                    </span>
-                  )}
+                  <span className={recruitBadgeClass}>
+                    {club.isRecruiting ? "모집중" : "모집 마감"}
+                  </span>
                   <span className="club-detail__badge club-detail__badge--category">
                     {club.categoryLabel}
                   </span>
@@ -305,7 +319,7 @@ export default function ClubDetailPage({
                 <p className="club-detail__desc">{club.description}</p>
                 <div className="club-detail__meta-row">
                   <span>👥 {club.memberCount}명 활동중</span>
-                  {club.reviews.length > 0 && <span>⭐ {club.rating} 평점</span>}
+                  <span>📌 {club.recentActivities.length}개 활동</span>
                 </div>
               </div>
             </div>
@@ -366,7 +380,11 @@ export default function ClubDetailPage({
             <div className="club-detail__tab-content">
               {activeTab === "소개" && <IntroTab club={club} />}
               {activeTab === "활동" && (
-                <ActivityTab activities={club.recentActivities} />
+                activitiesError ? (
+                  <EmptyTabMessage>{activitiesError}</EmptyTabMessage>
+                ) : (
+                  <ActivityTab activities={club.recentActivities} />
+                )
               )}
               {activeTab === "멤버" &&
                 (membersError ? (
@@ -374,9 +392,6 @@ export default function ClubDetailPage({
                 ) : (
                   <MemberTab members={club.members} />
                 ))}
-              {activeTab === "후기" && (
-                <ReviewTab reviews={club.reviews} rating={club.rating} />
-              )}
             </div>
           </div>
 
@@ -386,18 +401,27 @@ export default function ClubDetailPage({
             <div className="club-detail__actions">
               <button
                 className="btn btn--primary club-detail__join-btn"
-                disabled={isJoining}
+                disabled={isJoinDisabled}
                 // 🔧 [기능] 로그인 확인 후 가입 신청 API 연결
                 onClick={() => onJoin && onJoin(club.id)}
               >
-                {isJoining ? "가입 신청 중..." : "가입 신청하기"}
+                {isJoining
+                  ? "가입 신청 중..."
+                  : club.isRecruiting
+                    ? "가입 신청하기"
+                    : "모집 마감"}
               </button>
               <button
                 className="btn btn--outline club-detail__action-btn"
+                disabled={isWishlistUpdating}
                 // 🔧 [기능] 관심 목록 API 연결
                 onClick={() => onWishlist && onWishlist(club.id)}
               >
-                ♡ 관심 목록 추가
+                {isWishlistUpdating
+                  ? "처리 중..."
+                  : isWishlisted
+                    ? "♥ 관심 목록에서 제거"
+                    : "♡ 관심 목록 추가"}
               </button>
               <button
                 className="btn btn--outline club-detail__action-btn"
@@ -407,7 +431,7 @@ export default function ClubDetailPage({
                 공유하기
               </button>
               {/* 🔧 [기능] 로그인한 유저가 리더인 경우에만 표시 */}
-              {isLoggedIn && (
+              {!authLoading && isLoggedIn && isLeader && (
                 <button
                   className="club-detail__manage-btn"
                   onClick={() => onManageClick && onManageClick(club.id)}
@@ -425,8 +449,8 @@ export default function ClubDetailPage({
                   <span className="club-detail__info-list-label">
                     모집 상태
                   </span>
-                  <span className="club-detail__badge club-detail__badge--recruiting">
-                    모집중
+                  <span className={recruitBadgeClass}>
+                    {club.isRecruiting ? "모집중" : "모집 마감"}
                   </span>
                 </li>
                 <li className="club-detail__info-list-item">
@@ -497,11 +521,15 @@ export default function ClubDetailPage({
                       <div className="club-detail__related-category">
                         {related.category}
                       </div>
-                      {related.isRecruiting && (
-                        <span className="club-detail__badge club-detail__badge--recruiting">
-                          모집중
-                        </span>
-                      )}
+                      <span
+                        className={
+                          related.isRecruiting
+                            ? "club-detail__badge club-detail__badge--recruiting"
+                            : "club-detail__badge club-detail__badge--closed"
+                        }
+                      >
+                        {related.isRecruiting ? "모집중" : "모집 마감"}
+                      </span>
                     </div>
                   </div>
                 ))}

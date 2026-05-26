@@ -1,4 +1,4 @@
-import { STATS } from "../data/mockData";
+import { HERO_STATS } from "../data/categoryOptions";
 
 export default function HeroSection({ onBrowseClick, onCreateClick }) {
   return (
@@ -26,7 +26,7 @@ export default function HeroSection({ onBrowseClick, onCreateClick }) {
           </div>
         </div>
         <div className="hero__stats">
-          {STATS.map((stat) => (
+          {HERO_STATS.map((stat) => (
             <div key={stat.label} className="hero__stat-item">
               <span className="hero__stat-value">{stat.value}</span>
               <span className="hero__stat-label">{stat.label}</span>

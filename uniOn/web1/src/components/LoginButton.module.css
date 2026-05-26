@@ -28,7 +28,14 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .info {

@@ -1,4 +1,4 @@
-import { CATEGORIES } from "../data/mockData";
+import { CATEGORY_OPTIONS } from "../data/categoryOptions";
 
 export default function SearchSection({
   meetingTypes = [],
@@ -37,7 +37,7 @@ export default function SearchSection({
         <div className="filter-group">
           <h3 className="filter-group__title">관심 분야</h3>
           <div className="filter-group__categories">
-            {CATEGORIES.map((cat) => (
+            {CATEGORY_OPTIONS.map((cat) => (
               <button
                 key={cat.id}
                 className={`category-chip ${selectedCategory === cat.id ? "category-chip--active" : ""}`}

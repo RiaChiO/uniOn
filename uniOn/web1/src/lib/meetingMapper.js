@@ -1,0 +1,47 @@
+import {
+  ALGORITHM_CATEGORY_FALLBACKS,
+  CATEGORY_LABELS,
+} from "../data/categoryOptions";
+
+function mapDisplayCategory(meeting, algorithmCategory) {
+  const displayCategory = meeting.displayCategory || algorithmCategory.id;
+
+  return {
+    id: displayCategory,
+    label: CATEGORY_LABELS[displayCategory] ?? algorithmCategory.label,
+  };
+}
+
+export function mapMeetingToClub(meeting) {
+  const algorithmCategory = ALGORITHM_CATEGORY_FALLBACKS[meeting.tagId] ?? {
+    id: "culture",
+    label: meeting.tagId || "기타",
+  };
+  const displayCategory = mapDisplayCategory(meeting, algorithmCategory);
+
+  return {
+    id: meeting.meetingId,
+    name: meeting.title,
+    type: meeting.meetingType,
+    typeLabel: meeting.meetingTypeLabel ?? meeting.meetingType,
+    description: meeting.description,
+    location: meeting.location || "장소 협의 예정",
+    meetingTime: meeting.meetingTime || "일정 조율중",
+    maxMembers: meeting.maxMembers ?? null,
+    isRecruiting: meeting.isRecruiting ?? true,
+    joinCondition: meeting.joinCondition || "등록된 조건 없음",
+    hostUserId: meeting.hostUserId,
+    leaderName: meeting.leaderName,
+    memberCount: meeting.participantCount,
+    tags: (meeting.tags || []).map((tag) => `#${tag}`),
+    algorithmCategory: algorithmCategory.id,
+    algorithmCategoryLabel: algorithmCategory.label,
+    category: displayCategory.id,
+    categoryLabel: displayCategory.label,
+    displayCategory: displayCategory.id,
+    displayCategoryLabel: displayCategory.label,
+    meetingDay: meeting.meetingTime || "일정 조율중",
+    avg_participant_vector: meeting.avg_participant_vector,
+    tagId: meeting.tagId,
+  };
+}

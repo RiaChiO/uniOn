@@ -8,7 +8,7 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { CATEGORIES } from "../data/mockData";
+import { CATEGORY_OPTIONS } from "../data/categoryOptions";
 
 export default function CreatePage({
   onSubmit,
@@ -45,7 +45,7 @@ export default function CreatePage({
   const removeTag = (index) => setTags((prev) => prev.filter((_, i) => i !== index));
 
   const selectedTypeLabel     = meetingTypes.find((t) => t.id === type)?.label ?? "유형 선택";
-  const selectedCategoryLabel = CATEGORIES.find((c) => c.id === category)?.label ?? "분야 선택";
+  const selectedCategoryLabel = CATEGORY_OPTIONS.find((c) => c.id === category)?.label ?? "분야 선택";
 
   return (
     <div className="create-page">
@@ -143,7 +143,7 @@ export default function CreatePage({
                     onChange={(e) => setCategory(e.target.value)}
                   >
                     <option value="">분야 선택</option>
-                    {CATEGORIES.map((cat) => (
+                    {CATEGORY_OPTIONS.map((cat) => (
                       <option key={cat.id} value={cat.id}>{cat.icon} {cat.label}</option>
                     ))}
                   </select>

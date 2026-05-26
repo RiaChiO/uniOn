@@ -117,6 +117,36 @@ async function main() {
     `);
 
     await client.query(`
+      ALTER TABLE meetings
+      ADD COLUMN IF NOT EXISTS location TEXT
+    `);
+
+    await client.query(`
+      ALTER TABLE meetings
+      ADD COLUMN IF NOT EXISTS display_category TEXT
+    `);
+
+    await client.query(`
+      ALTER TABLE meetings
+      ADD COLUMN IF NOT EXISTS meeting_time TEXT
+    `);
+
+    await client.query(`
+      ALTER TABLE meetings
+      ADD COLUMN IF NOT EXISTS max_members INTEGER
+    `);
+
+    await client.query(`
+      ALTER TABLE meetings
+      ADD COLUMN IF NOT EXISTS is_recruiting BOOLEAN NOT NULL DEFAULT TRUE
+    `);
+
+    await client.query(`
+      ALTER TABLE meetings
+      ADD COLUMN IF NOT EXISTS join_condition TEXT
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS meeting_types (
         type_id TEXT PRIMARY KEY,
         label TEXT NOT NULL,
@@ -167,6 +197,15 @@ async function main() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_wishlist_meetings (
+        user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+        meeting_id TEXT NOT NULL REFERENCES meetings(meeting_id) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (user_id, meeting_id)
+      )
+    `);
+
     const tableExists = await client.query(
       "SELECT to_regclass('public.users') IS NOT NULL AS ok"
     );
@@ -179,6 +218,7 @@ async function main() {
     await client.query(`
       TRUNCATE TABLE
         recommendations,
+        user_wishlist_meetings,
         meeting_join_requests,
         meeting_participants,
         meetings,
@@ -228,8 +268,21 @@ async function main() {
     for (const [meetingId, meeting] of Object.entries(meetings)) {
       await client.query(
         `
-        INSERT INTO meetings(meeting_id, title, meeting_type, tag_id, description, host_user_id, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7::timestamptz)
+        INSERT INTO meetings(
+          meeting_id,
+          title,
+          meeting_type,
+          tag_id,
+          description,
+          location,
+          meeting_time,
+          max_members,
+          is_recruiting,
+          join_condition,
+          host_user_id,
+          created_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::timestamptz)
       `,
         [
           meetingId,
@@ -237,6 +290,11 @@ async function main() {
           meeting.meetingType ?? "small-group",
           meeting.tagId ?? meeting.tags?.[0] ?? null,
           meeting.description,
+          meeting.location ?? null,
+          meeting.meetingTime ?? null,
+          meeting.maxMembers ?? null,
+          meeting.isRecruiting ?? true,
+          meeting.joinCondition ?? null,
           meeting.hostUserId,
           meeting.createdAt,
         ]
@@ -298,13 +356,31 @@ async function main() {
       // 1. meetings 기본 정보 삽입 (ON CONFLICT 추가)
       await client.query(
         `
-        INSERT INTO meetings(meeting_id, title, meeting_type, tag_id, description, host_user_id, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7::timestamptz)
+        INSERT INTO meetings(
+          meeting_id,
+          title,
+          meeting_type,
+          tag_id,
+          description,
+          location,
+          meeting_time,
+          max_members,
+          is_recruiting,
+          join_condition,
+          host_user_id,
+          created_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::timestamptz)
         ON CONFLICT (meeting_id) DO UPDATE SET
           title = EXCLUDED.title,
           meeting_type = EXCLUDED.meeting_type,
           tag_id = EXCLUDED.tag_id,
           description = EXCLUDED.description,
+          location = EXCLUDED.location,
+          meeting_time = EXCLUDED.meeting_time,
+          max_members = EXCLUDED.max_members,
+          is_recruiting = EXCLUDED.is_recruiting,
+          join_condition = EXCLUDED.join_condition,
           host_user_id = EXCLUDED.host_user_id,
           created_at = EXCLUDED.created_at
         `,
@@ -314,6 +390,11 @@ async function main() {
           meeting.meetingType ?? "small-group",
           meeting.tagId ?? meeting.tags?.[0] ?? null,
           meeting.description,
+          meeting.location ?? null,
+          meeting.meetingTime ?? null,
+          meeting.maxMembers ?? null,
+          meeting.isRecruiting ?? true,
+          meeting.joinCondition ?? null,
           meeting.hostUserId,
           meeting.createdAt,
         ]

@@ -47,6 +47,12 @@ CREATE TABLE IF NOT EXISTS meetings (
   meeting_type TEXT NOT NULL DEFAULT 'small-group' REFERENCES meeting_types(type_id),
   tag_id TEXT REFERENCES tags(tag_id),
   description TEXT NOT NULL,
+  display_category TEXT,
+  location TEXT,
+  meeting_time TEXT,
+  max_members INTEGER,
+  is_recruiting BOOLEAN NOT NULL DEFAULT TRUE,
+  join_condition TEXT,
   host_user_id TEXT NOT NULL REFERENCES users(user_id),
   created_at TIMESTAMPTZ NOT NULL
 );
@@ -55,6 +61,18 @@ ALTER TABLE meetings
   ADD COLUMN IF NOT EXISTS meeting_type TEXT NOT NULL DEFAULT 'small-group';
 ALTER TABLE meetings
   ADD COLUMN IF NOT EXISTS tag_id TEXT REFERENCES tags(tag_id);
+ALTER TABLE meetings
+  ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE meetings
+  ADD COLUMN IF NOT EXISTS display_category TEXT;
+ALTER TABLE meetings
+  ADD COLUMN IF NOT EXISTS meeting_time TEXT;
+ALTER TABLE meetings
+  ADD COLUMN IF NOT EXISTS max_members INTEGER;
+ALTER TABLE meetings
+  ADD COLUMN IF NOT EXISTS is_recruiting BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE meetings
+  ADD COLUMN IF NOT EXISTS join_condition TEXT;
 
 DO $$
 BEGIN
@@ -81,6 +99,26 @@ CREATE TABLE IF NOT EXISTS meeting_join_requests (
   user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (meeting_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS meeting_activities (
+  activity_id BIGSERIAL PRIMARY KEY,
+  meeting_id TEXT NOT NULL REFERENCES meetings(meeting_id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  activity_type TEXT NOT NULL,
+  activity_date DATE NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_meeting_activities_meeting_date
+  ON meeting_activities(meeting_id, activity_date DESC, activity_id DESC);
+
+CREATE TABLE IF NOT EXISTS user_wishlist_meetings (
+  user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  meeting_id TEXT NOT NULL REFERENCES meetings(meeting_id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, meeting_id)
 );
 
 CREATE TABLE IF NOT EXISTS recommendations (

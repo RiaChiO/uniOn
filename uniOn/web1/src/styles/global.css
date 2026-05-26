@@ -106,8 +106,13 @@ img    { max-width: 100%; display: block; }
 .club-card { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .2s, transform .2s; }
 .club-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
 .club-card__thumbnail { position: relative; height: 120px; background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
-.club-card__category-badge { position: absolute; top: 8px; left: 8px; background: rgba(255,255,255,.9); color: var(--color-primary); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: var(--radius-full); }
-.club-card__recruiting-badge { position: absolute; top: 8px; right: 8px; background: var(--color-recruiting); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-full); }
+.club-card__classification { position: absolute; top: 8px; left: 8px; max-width: calc(100% - 104px); display: inline-flex; align-items: center; gap: 7px; min-width: 0; background: rgba(255,255,255,.92); color: var(--color-primary); font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-full); line-height: 1.25; box-shadow: 0 1px 2px rgba(15, 23, 42, .08); }
+.club-card__category-text,
+.club-card__type-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.club-card__type-text { color: var(--color-text-sub); font-weight: 600; }
+.club-card__classification-divider { width: 1px; height: 12px; background: var(--color-border); flex-shrink: 0; }
+.club-card__recruiting-badge { position: absolute; top: 8px; right: 8px; background: var(--color-recruiting); color: #fff; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-full); line-height: 1.25; box-shadow: 0 1px 2px rgba(15, 23, 42, .08); }
+.club-card__recruiting-badge--closed { background: #64748b; }
 .club-card__body { padding: 20px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
 .club-card__name { font-size: 17px; font-weight: 700; }
 .club-card__description { font-size: 14px; color: var(--color-text-sub); line-height: 1.6; }
@@ -284,6 +289,7 @@ img    { max-width: 100%; display: block; }
 .club-detail__badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .club-detail__badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: var(--radius-full); background: var(--color-bg-sub); color: var(--color-text-sub); border: 1px solid var(--color-border); }
 .club-detail__badge--recruiting { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+.club-detail__badge--closed { background: #64748b; color: #fff; border-color: #64748b; }
 .club-detail__badge--category { background: var(--color-primary-light); color: var(--color-primary); border-color: #93c5fd; }
 .club-detail__name { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
 .club-detail__desc { font-size: 15px; color: var(--color-text-sub); margin-bottom: 12px; line-height: 1.6; }
@@ -382,18 +388,6 @@ img    { max-width: 100%; display: block; }
 .cd-member-dept { font-size: 12px; color: var(--color-text-sub); }
 .cd-member-role { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: var(--radius-full); background: var(--color-bg-sub); color: var(--color-text-sub); }
 .cd-member-role--leader { background: var(--color-primary-light); color: var(--color-primary); }
-.cd-review-rating { display: flex; align-items: center; gap: 6px; }
-.cd-review-star { font-size: 16px; }
-.cd-review-score { font-size: 18px; font-weight: 700; color: var(--color-primary); }
-.cd-review-count { font-size: 14px; color: var(--color-text-sub); }
-.cd-review-list { display: flex; flex-direction: column; gap: 16px; }
-.cd-review-item { padding: 16px; border: 1.5px solid var(--color-border); border-radius: var(--radius); background: var(--color-bg); }
-.cd-review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.cd-review-user { display: flex; align-items: center; gap: 10px; }
-.cd-review-stars { font-size: 12px; margin-top: 2px; }
-.cd-review-date { font-size: 12px; color: var(--color-text-sub); }
-.cd-review-content { font-size: 14px; color: var(--color-text-sub); line-height: 1.7; }
-
 /* ===========================
    Create Page 추가 스타일
 =========================== */
@@ -429,6 +423,8 @@ img    { max-width: 100%; display: block; }
 .manage-section__count { font-size: 13px; font-weight: 400; color: var(--color-text-sub); margin-left: 6px; }
 .manage-section__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .manage-add-btn { padding: 8px 16px; font-size: 13px; }
+.manage-activity-form { display: flex; flex-direction: column; gap: 14px; padding: 16px; margin-bottom: 18px; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-bg-sub); }
+.manage-activity-form__actions { display: flex; gap: 8px; justify-content: flex-end; }
 
 .manage-member-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-border); }
 .manage-member-item:last-child { border-bottom: none; }

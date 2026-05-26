@@ -15,6 +15,10 @@ export default function ClubListSection({
   const [displayLimit, setDisplayLimit] = useState(limit);
 
   const filteredClubs = useMemo(() => {
+    if (!Array.isArray(clubs)) {
+      return [];
+    }
+
     return clubs.filter((club) => {
       const matchesSearch =
         !searchQuery ||

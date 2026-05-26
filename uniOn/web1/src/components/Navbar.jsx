@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Navbar({
   searchQuery,
@@ -7,6 +8,7 @@ export default function Navbar({
   user,
   onLoginClick,
 }) {
+  const navigate = useNavigate();
   const [isDark, setIsDark] = useState(false);
 
   // 처음 로드 시 적용
@@ -31,8 +33,8 @@ export default function Navbar({
     <header className="navbar">
       <div className="navbar__inner">
         <div className="navbar__logo">
-          <a
-            href="/"
+          <Link
+            to="/"
             style={{
               display: "flex",
               alignItems: "center",
@@ -49,7 +51,7 @@ export default function Navbar({
               <span className="navbar__logo-title">경상대 소모임</span>
               <span className="navbar__logo-sub">GNU Club Matching</span>
             </div>
-          </a>
+          </Link>
         </div>
         <div className="navbar__search">
           <span className="navbar__search-icon">🔍</span>
@@ -62,16 +64,16 @@ export default function Navbar({
           />
         </div>
         <nav className="navbar__nav">
-          <a href="/search" className="navbar__nav-link">
+          <Link to="/search" className="navbar__nav-link">
             소모임 찾기
-          </a>
-          <a href="/create" className="navbar__nav-link">
+          </Link>
+          <Link to="/create" className="navbar__nav-link">
             소모임 개설
-          </a>
+          </Link>
           {isLoggedIn ? (
             <button
               className="navbar__btn navbar__btn--profile"
-              onClick={() => (window.location.href = "/mypage")}
+              onClick={() => navigate("/mypage")}
             >
               {user?.name ?? "마이페이지"}
             </button>

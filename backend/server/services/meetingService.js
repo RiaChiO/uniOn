@@ -12,7 +12,57 @@ async function ensureJoinRequestsTable(client = pool) {
   `);
 }
 
+async function ensureActivitiesTable(client = pool) {
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS meeting_activities (
+      activity_id BIGSERIAL PRIMARY KEY,
+      meeting_id TEXT NOT NULL REFERENCES meetings(meeting_id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      activity_type TEXT NOT NULL,
+      activity_date DATE NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_meeting_activities_meeting_date
+    ON meeting_activities(meeting_id, activity_date DESC, activity_id DESC)
+  `);
+}
+
+async function ensureMeetingDisplayCategoryColumn(client = pool) {
+  await client.query(`
+    ALTER TABLE meetings
+    ADD COLUMN IF NOT EXISTS display_category TEXT
+  `);
+}
+
+function inferDisplayCategory({ displayCategory, tagId, description }) {
+  if (displayCategory) return displayCategory;
+
+  const text = String(description ?? "");
+  if (text.includes("공연분과") || text.includes("공연 관련")) return "music";
+  if (text.includes("체육분과")) return "sports";
+  if (text.includes("학술분과")) return "academic";
+  if (text.includes("봉사")) return "volunteer";
+  if (text.includes("종교분과")) return "religion";
+
+  const fallbackByTag = {
+    study: "academic",
+    exercise: "sports",
+    culture: "culture",
+    game: "game",
+    religion: "religion",
+    volunteer: "volunteer",
+  };
+
+  return fallbackByTag[tagId] ?? tagId ?? null;
+}
+
 export async function getMeetings() {
+  await ensureMeetingDisplayCategoryColumn();
+
   const result = await pool.query(
     `
     SELECT
@@ -21,7 +71,25 @@ export async function getMeetings() {
       m.meeting_type AS "meetingType",
       mt.label AS "meetingTypeLabel",
       m.tag_id AS "tagId",
+      COALESCE(
+        m.display_category,
+        CASE
+          WHEN m.description LIKE '%공연분과%' OR m.description LIKE '%공연 관련%' THEN 'music'
+          WHEN m.description LIKE '%체육분과%' THEN 'sports'
+          WHEN m.description LIKE '%학술분과%' THEN 'academic'
+          WHEN m.description LIKE '%봉사%' THEN 'volunteer'
+          WHEN m.description LIKE '%종교분과%' THEN 'religion'
+          WHEN m.tag_id = 'study' THEN 'academic'
+          WHEN m.tag_id = 'exercise' THEN 'sports'
+          ELSE m.tag_id
+        END
+      ) AS "displayCategory",
       m.description,
+      m.location,
+      m.meeting_time AS "meetingTime",
+      m.max_members AS "maxMembers",
+      m.is_recruiting AS "isRecruiting",
+      m.join_condition AS "joinCondition",
       m.host_user_id AS "hostUserId",
       host.name AS "leaderName",
       m.created_at AS "createdAt",
@@ -52,8 +120,9 @@ export async function getMeetings() {
     LEFT JOIN meeting_participants mp ON TRIM(mp.meeting_id) = TRIM(m.meeting_id)
     LEFT JOIN user_interest_vectors uv ON TRIM(uv.user_id) = TRIM(mp.user_id)
     GROUP BY 
-      m.meeting_id, m.title, m.meeting_type, mt.label, m.tag_id, 
-      m.description, m.host_user_id, host.name, m.created_at, mp_count.participant_count
+      m.meeting_id, m.title, m.meeting_type, mt.label, m.tag_id, m.display_category,
+      m.description, m.location, m.meeting_time, m.max_members, m.is_recruiting,
+      m.join_condition, m.host_user_id, host.name, m.created_at, mp_count.participant_count
     ORDER BY
       NULLIF(regexp_replace(m.meeting_id, '[^0-9]', '', 'g'), '')::INT,
       m.meeting_id
@@ -61,6 +130,118 @@ export async function getMeetings() {
   );
 
   return result.rows;
+}
+
+export async function getMeetingActivities(meetingId) {
+  await ensureActivitiesTable();
+
+  const result = await pool.query(
+    `
+    SELECT
+      activity_id AS "activityId",
+      meeting_id AS "meetingId",
+      title,
+      activity_type AS "activityType",
+      activity_date AS "activityDate",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
+    FROM meeting_activities
+    WHERE meeting_id = $1
+    ORDER BY activity_date DESC, activity_id DESC
+    `,
+    [meetingId]
+  );
+
+  return result.rows;
+}
+
+export async function createMeetingActivity({
+  meetingId,
+  title,
+  activityType,
+  activityDate,
+}) {
+  await ensureActivitiesTable();
+
+  const result = await pool.query(
+    `
+    INSERT INTO meeting_activities (
+      meeting_id,
+      title,
+      activity_type,
+      activity_date
+    )
+    VALUES ($1, $2, $3, $4)
+    RETURNING
+      activity_id AS "activityId",
+      meeting_id AS "meetingId",
+      title,
+      activity_type AS "activityType",
+      activity_date AS "activityDate",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
+    `,
+    [meetingId, title, activityType, activityDate]
+  );
+
+  return result.rows[0];
+}
+
+export async function updateMeetingActivity({
+  meetingId,
+  activityId,
+  title,
+  activityType,
+  activityDate,
+}) {
+  await ensureActivitiesTable();
+
+  const result = await pool.query(
+    `
+    UPDATE meeting_activities
+    SET
+      title = $3,
+      activity_type = $4,
+      activity_date = $5,
+      updated_at = NOW()
+    WHERE meeting_id = $1 AND activity_id = $2
+    RETURNING
+      activity_id AS "activityId",
+      meeting_id AS "meetingId",
+      title,
+      activity_type AS "activityType",
+      activity_date AS "activityDate",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
+    `,
+    [meetingId, activityId, title, activityType, activityDate]
+  );
+
+  if (result.rowCount === 0) {
+    const error = new Error("활동 내역을 찾을 수 없습니다.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return result.rows[0];
+}
+
+export async function deleteMeetingActivity({ meetingId, activityId }) {
+  await ensureActivitiesTable();
+
+  const result = await pool.query(
+    `
+    DELETE FROM meeting_activities
+    WHERE meeting_id = $1 AND activity_id = $2
+    `,
+    [meetingId, activityId]
+  );
+
+  if (result.rowCount === 0) {
+    const error = new Error("활동 내역을 찾을 수 없습니다.");
+    error.statusCode = 404;
+    throw error;
+  }
 }
 
 export async function getMeetingsByParticipant(userId) {
@@ -146,6 +327,27 @@ export async function getMeetingJoinRequests(meetingId) {
 
 export async function createMeetingJoinRequest({ meetingId, userId }) {
   await ensureJoinRequestsTable();
+
+  const meetingResult = await pool.query(
+    `
+    SELECT is_recruiting AS "isRecruiting"
+    FROM meetings
+    WHERE meeting_id = $1
+    `,
+    [meetingId]
+  );
+
+  if (meetingResult.rowCount === 0) {
+    const error = new Error("모임을 찾을 수 없습니다.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (!meetingResult.rows[0].isRecruiting) {
+    const error = new Error("현재 모집이 마감된 모임입니다.");
+    error.statusCode = 409;
+    throw error;
+  }
 
   const existingMember = await pool.query(
     `
@@ -237,11 +439,23 @@ export async function rejectMeetingJoinRequest({ meetingId, userId }) {
   }
 }
 
-export async function createMeeting({ title, meetingType, description, hostUserId, tagId }) {
+export async function createMeeting({
+  title,
+  meetingType,
+  description,
+  hostUserId,
+  tagId,
+  displayCategory,
+  location,
+  meetingTime,
+  maxMembers,
+  joinCondition,
+}) {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
+    await ensureMeetingDisplayCategoryColumn(client);
 
     const nextIdResult = await client.query(
       `
@@ -254,10 +468,36 @@ export async function createMeeting({ title, meetingType, description, hostUserI
 
     await client.query(
       `
-      INSERT INTO meetings (meeting_id, title, meeting_type, tag_id, description, host_user_id, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      INSERT INTO meetings (
+        meeting_id,
+        title,
+        meeting_type,
+        tag_id,
+        display_category,
+        description,
+        location,
+        meeting_time,
+        max_members,
+        is_recruiting,
+        join_condition,
+        host_user_id,
+        created_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10, $11, NOW())
       `,
-      [meetingId, title, meetingType, tagId, description, hostUserId]
+      [
+        meetingId,
+        title,
+        meetingType,
+        tagId,
+        inferDisplayCategory({ displayCategory, tagId, description }),
+        description,
+        location,
+        meetingTime,
+        maxMembers,
+        joinCondition,
+        hostUserId,
+      ]
     );
 
     await client.query(
@@ -268,6 +508,15 @@ export async function createMeeting({ title, meetingType, description, hostUserI
       [meetingId, hostUserId]
     );
 
+    const hostResult = await client.query(
+      `
+      SELECT name
+      FROM users
+      WHERE user_id = $1
+      `,
+      [hostUserId]
+    );
+
     await client.query("COMMIT");
 
     return {
@@ -275,8 +524,15 @@ export async function createMeeting({ title, meetingType, description, hostUserI
       title,
       meetingType,
       tagId,
+      displayCategory: inferDisplayCategory({ displayCategory, tagId, description }),
       description,
+      location,
+      meetingTime,
+      maxMembers,
+      isRecruiting: true,
+      joinCondition,
       hostUserId,
+      leaderName: hostResult.rows[0]?.name,
     };
   } catch (error) {
     await client.query("ROLLBACK");
@@ -284,4 +540,204 @@ export async function createMeeting({ title, meetingType, description, hostUserI
   } finally {
     client.release();
   }
+}
+
+export async function updateMeeting({
+  meetingId,
+  title,
+  description,
+  location,
+  meetingTime,
+  maxMembers,
+  tagId,
+  displayCategory,
+  joinCondition,
+}) {
+  await ensureMeetingDisplayCategoryColumn();
+
+  const result = await pool.query(
+    `
+    UPDATE meetings AS m
+    SET
+      title = $2,
+      description = $3,
+      location = $4,
+      meeting_time = $5,
+      max_members = $6,
+      tag_id = $7,
+      join_condition = $8,
+      display_category = COALESCE($9, m.display_category)
+    FROM users host
+    WHERE m.meeting_id = $1
+      AND host.user_id = m.host_user_id
+    RETURNING
+      m.meeting_id AS "meetingId",
+      m.title,
+      m.meeting_type AS "meetingType",
+      m.tag_id AS "tagId",
+      COALESCE(m.display_category, m.tag_id) AS "displayCategory",
+      m.description,
+      m.location,
+      m.meeting_time AS "meetingTime",
+      m.max_members AS "maxMembers",
+      m.is_recruiting AS "isRecruiting",
+      m.join_condition AS "joinCondition",
+      m.host_user_id AS "hostUserId",
+      host.name AS "leaderName",
+      m.created_at AS "createdAt"
+    `,
+    [
+      meetingId,
+      title,
+      description,
+      location,
+      meetingTime,
+      maxMembers,
+      tagId,
+      joinCondition,
+      displayCategory == null
+        ? null
+        : inferDisplayCategory({ displayCategory, tagId, description }),
+    ]
+  );
+
+  if (result.rowCount === 0) {
+    const error = new Error("모임을 찾을 수 없습니다.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return result.rows[0];
+}
+
+export async function deleteMeeting(meetingId) {
+  const result = await pool.query(
+    `
+    DELETE FROM meetings
+    WHERE meeting_id = $1
+    RETURNING meeting_id AS "meetingId"
+    `,
+    [meetingId]
+  );
+
+  if (result.rowCount === 0) {
+    const error = new Error("모임을 찾을 수 없습니다.");
+    error.statusCode = 404;
+    throw error;
+  }
+}
+
+export async function removeMeetingMember({ meetingId, userId }) {
+  const meetingResult = await pool.query(
+    `
+    SELECT host_user_id AS "hostUserId"
+    FROM meetings
+    WHERE meeting_id = $1
+    `,
+    [meetingId]
+  );
+
+  if (meetingResult.rowCount === 0) {
+    const error = new Error("모임을 찾을 수 없습니다.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (meetingResult.rows[0].hostUserId === userId) {
+    const error = new Error("리더는 내보낼 수 없습니다.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await pool.query(
+    `
+    DELETE FROM meeting_participants
+    WHERE meeting_id = $1 AND user_id = $2
+    `,
+    [meetingId, userId]
+  );
+
+  if (result.rowCount === 0) {
+    const error = new Error("해당 멤버를 찾을 수 없습니다.");
+    error.statusCode = 404;
+    throw error;
+  }
+}
+
+export async function transferMeetingLeadership({ meetingId, newLeaderUserId }) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const meetingResult = await client.query(
+      `
+      SELECT host_user_id AS "hostUserId"
+      FROM meetings
+      WHERE meeting_id = $1
+      `,
+      [meetingId]
+    );
+
+    if (meetingResult.rowCount === 0) {
+      const error = new Error("모임을 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (meetingResult.rows[0].hostUserId === newLeaderUserId) {
+      const error = new Error("이미 현재 리더입니다.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    await client.query(
+      `
+      INSERT INTO meeting_participants (meeting_id, user_id, joined_at)
+      VALUES ($1, $2, NOW())
+      ON CONFLICT (meeting_id, user_id) DO NOTHING
+      `,
+      [meetingId, newLeaderUserId]
+    );
+
+    const updateResult = await client.query(
+      `
+      UPDATE meetings
+      SET host_user_id = $2
+      WHERE meeting_id = $1
+      RETURNING host_user_id AS "hostUserId"
+      `,
+      [meetingId, newLeaderUserId]
+    );
+
+    await client.query("COMMIT");
+    return updateResult.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function updateMeetingRecruitment({ meetingId, isRecruiting }) {
+  const result = await pool.query(
+    `
+    UPDATE meetings
+    SET is_recruiting = $2
+    WHERE meeting_id = $1
+    RETURNING
+      meeting_id AS "meetingId",
+      is_recruiting AS "isRecruiting"
+    `,
+    [meetingId, isRecruiting]
+  );
+
+  if (result.rowCount === 0) {
+    const error = new Error("모임을 찾을 수 없습니다.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return result.rows[0];
 }

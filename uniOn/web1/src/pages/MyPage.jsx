@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { getUserMeetings } from "../api/users";
+import { getUserMeetings, getUserWishlistMeetings } from "../api/users";
 
 // 🔧 [기능] 더미 알림 → API 응답으로 교체
 const MOCK_NOTIFICATIONS = [
@@ -41,10 +41,14 @@ export default function MyPage({
   onEditProfile,
   onLogout,
   onClubClick,
+  wishlistCount,
 }) {
   const [myClubs, setMyClubs] = useState([]);
   const [myClubsLoading, setMyClubsLoading] = useState(false);
   const [myClubsError, setMyClubsError] = useState("");
+  const [wishlistClubs, setWishlistClubs] = useState([]);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [wishlistError, setWishlistError] = useState("");
   const displayUser = user ?? {};
 
   useEffect(() => {
@@ -79,12 +83,49 @@ export default function MyPage({
     loadMyClubs();
   }, [user]);
 
+  useEffect(() => {
+    const userId = user?.userId ?? user?.id;
+
+    if (!userId) {
+      setWishlistClubs([]);
+      return;
+    }
+
+    async function loadWishlistClubs() {
+      try {
+        setWishlistLoading(true);
+        setWishlistError("");
+
+        const data = await getUserWishlistMeetings(userId);
+        setWishlistClubs(
+          data.map((club) => ({
+            id: club.meetingId,
+            name: club.title,
+            memberCount: club.participantCount,
+            typeLabel: club.meetingTypeLabel,
+            wishlistedAt: club.wishlistedAt,
+          }))
+        );
+      } catch (error) {
+        setWishlistError(error.message);
+      } finally {
+        setWishlistLoading(false);
+      }
+    }
+
+    loadWishlistClubs();
+  }, [user]);
+
   const displayedClubs = user ? myClubs : [];
+  const displayedWishlistClubs = user ? wishlistClubs : [];
   const displayedDepartment = displayUser.department ?? "학과 정보 없음";
   const displayedEmail = displayUser.email ?? "로그인이 필요합니다";
   const displayedGrade = displayUser.grade ?? "학번 정보 없음";
   const displayedJoinDate = formatDate(displayUser.createdAt ?? displayUser.joinDate);
-  const displayedWishlistCount = displayUser.wishlistCount ?? 0;
+  const displayedWishlistCount = Math.max(
+    wishlistCount ?? 0,
+    displayedWishlistClubs.length
+  );
 
   return (
     <div className="mypage">
@@ -171,6 +212,39 @@ export default function MyPage({
                         <div className="mypage__club-role">{club.role}</div>
                         <div className="mypage__club-name">{club.name}</div>
                         <div className="mypage__club-member">👥 {club.memberCount}명</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            {/* 관심 목록 */}
+            <section className="mypage__section">
+              <h3 className="mypage__section-title">관심 목록</h3>
+              <div className="mypage__club-list">
+                {wishlistLoading ? (
+                  <p>관심 목록을 불러오는 중입니다.</p>
+                ) : wishlistError ? (
+                  <p>{wishlistError}</p>
+                ) : displayedWishlistClubs.length === 0 ? (
+                  <p>관심 목록에 추가한 모임이 없습니다.</p>
+                ) : (
+                  displayedWishlistClubs.map((club) => (
+                    <div
+                      key={club.id}
+                      className="mypage__club-card"
+                      onClick={() => onClubClick && onClubClick(club.id)}
+                    >
+                      <div className="mypage__club-thumb">♡</div>
+                      <div className="mypage__club-info">
+                        <div className="mypage__club-role">
+                          {club.typeLabel || "관심 모임"}
+                        </div>
+                        <div className="mypage__club-name">{club.name}</div>
+                        <div className="mypage__club-member">
+                          👥 {club.memberCount}명 · 추가일 {formatDate(club.wishlistedAt)}
+                        </div>
                       </div>
                     </div>
                   ))

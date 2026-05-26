@@ -7,32 +7,37 @@
 //   - onApproveMember  : 멤버 승인 → 승인 API 연결
 //   - onRejectMember   : 멤버 거절 → 거절 API 연결
 //   - onRemoveMember   : 멤버 내보내기 → 내보내기 API 연결
-//   - onAddActivity    : 활동 추가 → 활동 생성 API 연결
-//   - onDeleteActivity : 활동 삭제 → 활동 삭제 API 연결
+//   - 활동 관리       : 활동 추가 / 수정 / 삭제 API 연결
 //   - onToggleRecruit  : 모집 상태 변경 → 상태 변경 API 연결
 //   - onGoPublic       : 공개 페이지 보기 → 상세 페이지 이동
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {
+  createMeetingActivity,
+  deleteMeetingActivity,
+  getMeetingActivities,
   getMeetingJoinRequests,
   getMeetingMembers,
+  updateMeetingActivity,
 } from "../api/meetings";
-
-const MOCK_ACTIVITIES = [
-  { id: 1, title: "알고리즘 스터디 Week 12", date: "2024.03.20", type: "정기모임" },
-  { id: 2, title: "해커톤 참가",             date: "2024.03.15", type: "특별활동" },
-  { id: 3, title: "신입생 환영회",            date: "2024.03.10", type: "행사" },
-  { id: 4, title: "코드 리뷰 세션",           date: "2024.03.05", type: "정기모임" },
-];
 
 const ACTIVITY_TYPE_COLORS = {
   정기모임:  { bg: "#eff6ff",  color: "#1d4ed8" },
   특별활동:  { bg: "#fef3c7",  color: "#92400e" },
   행사:      { bg: "#d1fae5",  color: "#065f46" },
 };
+
+const ACTIVITY_TYPES = Object.keys(ACTIVITY_TYPE_COLORS);
+function getEmptyActivityForm() {
+  return {
+    title: "",
+    type: "정기모임",
+    date: new Date().toISOString().slice(0, 10),
+  };
+}
 
 const TABS = ["기본 정보", "멤버 관리", "활동 관리", "모집 설정"];
 
@@ -55,10 +60,29 @@ function mapMember(member) {
   };
 }
 
+function normalizeActivityDate(value) {
+  if (!value) return new Date().toISOString().slice(0, 10);
+  return String(value).slice(0, 10);
+}
+
+function formatActivityDate(value) {
+  return normalizeActivityDate(value).replace(/-/g, ".");
+}
+
+function mapActivity(activity) {
+  return {
+    id: activity.activityId,
+    title: activity.title,
+    type: activity.activityType,
+    date: normalizeActivityDate(activity.activityDate),
+  };
+}
+
 export default function ClubManagePage({
   searchQuery,
   onSearchChange,
   isLoggedIn,
+  authLoading = false,
   user,
   onLoginClick,
   clubs = [],
@@ -69,12 +93,12 @@ export default function ClubManagePage({
   onApproveMember,
   onRejectMember,
   onRemoveMember,
-  onAddActivity,
-  onDeleteActivity,
+  onTransferLeader,
   onToggleRecruit,
   onGoPublic,
 }) {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("기본 정보");
   const matchedClub = clubs.find((item) => String(item.id) === String(id));
   const club = matchedClub
@@ -82,9 +106,6 @@ export default function ClubManagePage({
         meetingTime: matchedClub.meetingDay || "일정 조율중",
         maxMembers: matchedClub.maxMembers ?? null,
         joinCondition: matchedClub.joinCondition ?? "등록된 조건 없음",
-        rating: matchedClub.rating ?? "-",
-        activityCount: matchedClub.activityCount ?? 0,
-        reviewCount: matchedClub.reviewCount ?? 0,
         ...matchedClub,
       }
     : null;
@@ -94,14 +115,26 @@ export default function ClubManagePage({
   const [pendingMembers, setPendingMembers] = useState([]);
   const [pendingMembersLoading, setPendingMembersLoading] = useState(false);
   const [pendingMembersError, setPendingMembersError] = useState("");
+  const [activities, setActivities] = useState([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const [activitiesError, setActivitiesError] = useState("");
+  const [activityForm, setActivityForm] = useState(getEmptyActivityForm);
+  const [editingActivityId, setEditingActivityId] = useState(null);
+  const [activitySaving, setActivitySaving] = useState(false);
 
   // 기본 정보 수정 상태
   const [name,        setName]        = useState("");
   const [description, setDescription] = useState("");
   const [location,    setLocation]    = useState("");
   const [meetingTime, setMeetingTime] = useState("");
+  const [maxMembers,  setMaxMembers]  = useState("");
+  const [joinCondition, setJoinCondition] = useState("");
   const [tags,        setTags]        = useState([]);
   const [tagInput,    setTagInput]    = useState("");
+  const currentUserId = user?.id ?? user?.userId;
+  const isLeader = Boolean(
+    club && currentUserId && String(currentUserId) === String(club.hostUserId)
+  );
 
   const handleTagKeyDown = (e) => {
     if (e.key === "Enter" && tagInput.trim()) {
@@ -119,8 +152,18 @@ export default function ClubManagePage({
     setDescription(club.description);
     setLocation(club.location);
     setMeetingTime(club.meetingTime);
+    setMaxMembers(club.maxMembers ?? "");
+    setJoinCondition(club.joinCondition ?? "");
     setTags(club.tags || []);
   }, [matchedClub]);
+
+  useEffect(() => {
+    if (loading || authLoading || !club) return;
+
+    if (!isLoggedIn || !isLeader) {
+      navigate(`/clubs/${id}`, { replace: true });
+    }
+  }, [authLoading, club, id, isLeader, isLoggedIn, loading, navigate]);
 
   useEffect(() => {
     async function loadMembers() {
@@ -137,10 +180,10 @@ export default function ClubManagePage({
       }
     }
 
-    if (id) {
+    if (id && isLeader) {
       loadMembers();
     }
-  }, [id]);
+  }, [id, isLeader]);
 
   useEffect(() => {
     async function loadPendingMembers() {
@@ -157,10 +200,30 @@ export default function ClubManagePage({
       }
     }
 
-    if (id) {
+    if (id && isLeader) {
       loadPendingMembers();
     }
-  }, [id]);
+  }, [id, isLeader]);
+
+  useEffect(() => {
+    async function loadActivities() {
+      try {
+        setActivitiesLoading(true);
+        setActivitiesError("");
+
+        const data = await getMeetingActivities(id);
+        setActivities(data.map(mapActivity));
+      } catch (error) {
+        setActivitiesError(error.message);
+      } finally {
+        setActivitiesLoading(false);
+      }
+    }
+
+    if (id && isLeader) {
+      loadActivities();
+    }
+  }, [id, isLeader]);
 
   const handleApproveMember = async (memberId) => {
     await onApproveMember?.(id, memberId);
@@ -176,7 +239,113 @@ export default function ClubManagePage({
     setPendingMembers((prev) => prev.filter((member) => member.id !== memberId));
   };
 
-  if (loading) {
+  const handleRemoveMember = async (memberId) => {
+    await onRemoveMember?.(id, memberId);
+    setMembers((prev) => prev.filter((member) => member.id !== memberId));
+  };
+
+  const handleTransferLeader = async (memberId) => {
+    const targetMember = members.find((member) => member.id === memberId);
+    await onTransferLeader?.(id, memberId, targetMember?.name);
+    setMembers((prev) =>
+      prev.map((member) => {
+        if (member.id === memberId) {
+          return { ...member, role: "리더" };
+        }
+        if (member.role === "리더") {
+          return { ...member, role: "멤버" };
+        }
+        return member;
+      })
+    );
+  };
+
+  const handleActivityFormChange = (field, value) => {
+    setActivityForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const resetActivityForm = () => {
+    setActivityForm(getEmptyActivityForm());
+    setEditingActivityId(null);
+  };
+
+  const handleSubmitActivity = async (event) => {
+    event.preventDefault();
+
+    const title = activityForm.title.trim();
+    const activityType = activityForm.type.trim();
+    const activityDate = activityForm.date;
+
+    if (!title || !activityType || !activityDate) {
+      window.alert("활동 제목, 유형, 날짜는 필수입니다.");
+      return;
+    }
+
+    try {
+      setActivitySaving(true);
+
+      if (editingActivityId) {
+        const data = await updateMeetingActivity(id, editingActivityId, {
+          title,
+          activityType,
+          activityDate,
+        });
+        const updatedActivity = mapActivity(data.activity ?? data);
+        setActivities((prev) =>
+          prev.map((activity) =>
+            String(activity.id) === String(editingActivityId)
+              ? updatedActivity
+              : activity
+          )
+        );
+      } else {
+        const data = await createMeetingActivity(id, {
+          title,
+          activityType,
+          activityDate,
+        });
+        const createdActivity = mapActivity(data.activity ?? data);
+        setActivities((prev) => [createdActivity, ...prev]);
+      }
+
+      resetActivityForm();
+    } catch (error) {
+      window.alert(error.message || "활동 내역 저장 중 오류가 발생했습니다.");
+    } finally {
+      setActivitySaving(false);
+    }
+  };
+
+  const handleEditActivity = (activity) => {
+    setEditingActivityId(activity.id);
+    setActivityForm({
+      title: activity.title,
+      type: activity.type,
+      date: normalizeActivityDate(activity.date),
+    });
+    setActiveTab("활동 관리");
+  };
+
+  const handleDeleteActivity = async (activityId) => {
+    if (!window.confirm("이 활동 내역을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      await deleteMeetingActivity(id, activityId);
+      setActivities((prev) => prev.filter((activity) => activity.id !== activityId));
+      if (String(editingActivityId) === String(activityId)) {
+        resetActivityForm();
+      }
+    } catch (error) {
+      window.alert(error.message || "활동 삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  if (loading || authLoading) {
     return <div>불러오는 중...</div>;
   }
 
@@ -186,6 +355,10 @@ export default function ClubManagePage({
 
   if (!club) {
     return <div>해당 모임을 찾을 수 없습니다.</div>;
+  }
+
+  if (!isLeader) {
+    return <div>접근 권한을 확인하는 중입니다.</div>;
   }
 
   return (
@@ -217,7 +390,7 @@ export default function ClubManagePage({
             <button
               className="btn btn--primary"
               // 🔧 [기능] 수정 API 연결
-              onClick={() => onSave && onSave({ name, description, location, meetingTime, tags })}
+              onClick={() => onSave && onSave(club.id, { name, description, location, meetingTime, maxMembers, joinCondition, tags, tagId: club.tagId, displayCategory: club.displayCategory })}
             >
               변경사항 저장
             </button>
@@ -271,6 +444,16 @@ export default function ClubManagePage({
                   <div className="form-field">
                     <label className="form-field__label">정기 모임 시간</label>
                     <input className="form-field__input" value={meetingTime} onChange={(e) => setMeetingTime(e.target.value)} />
+                  </div>
+                </div>
+                <div className="create-box__two-col">
+                  <div className="form-field">
+                    <label className="form-field__label">최대 인원</label>
+                    <input className="form-field__input" type="number" value={maxMembers} onChange={(e) => setMaxMembers(e.target.value)} />
+                  </div>
+                  <div className="form-field">
+                    <label className="form-field__label">가입 조건</label>
+                    <input className="form-field__input" value={joinCondition} onChange={(e) => setJoinCondition(e.target.value)} />
                   </div>
                 </div>
                 <div className="form-field">
@@ -360,14 +543,14 @@ export default function ClubManagePage({
                             <button
                               className="manage-btn"
                               // 🔧 [기능] 리더 위임 API 연결
-                              onClick={() => console.log("TODO: 리더 위임")}
+                              onClick={() => handleTransferLeader(member.id)}
                             >
                               위임
                             </button>
                             <button
                               className="manage-btn manage-btn--danger"
                               // 🔧 [기능] 내보내기 API 연결
-                              onClick={() => onRemoveMember && onRemoveMember(member.id)}
+                              onClick={() => handleRemoveMember(member.id)}
                             >
                               내보내기
                             </button>
@@ -385,42 +568,121 @@ export default function ClubManagePage({
               <div className="manage-card">
                 <div className="manage-section__header">
                   <h3 className="manage-section__title">활동 내역</h3>
-                  <button
-                    className="btn btn--primary manage-add-btn"
-                    // 🔧 [기능] 활동 추가 폼 열기 또는 API 연결
-                    onClick={() => onAddActivity && onAddActivity()}
-                  >
-                    + 활동 추가
-                  </button>
+                  {editingActivityId && (
+                    <button
+                      className="btn btn--secondary manage-add-btn"
+                      onClick={resetActivityForm}
+                    >
+                      새 활동 입력
+                    </button>
+                  )}
                 </div>
-                {MOCK_ACTIVITIES.map((act) => {
-                  const color = ACTIVITY_TYPE_COLORS[act.type] || { bg: "#f3f4f6", color: "#374151" };
-                  return (
-                    <div key={act.id} className="manage-activity-item">
-                      <div className="manage-activity-thumb" />
-                      <div className="manage-activity-info">
-                        <div className="manage-activity-title">{act.title}</div>
-                        <div className="manage-activity-date">{act.date}</div>
-                      </div>
-                      <span
-                        className="manage-activity-type"
-                        style={{ background: color.bg, color: color.color }}
+
+                <form className="manage-activity-form" onSubmit={handleSubmitActivity}>
+                  <div className="form-field">
+                    <label className="form-field__label">활동 제목</label>
+                    <input
+                      className="form-field__input"
+                      value={activityForm.title}
+                      onChange={(event) =>
+                        handleActivityFormChange("title", event.target.value)
+                      }
+                      placeholder="예: 알고리즘 스터디 Week 12"
+                    />
+                  </div>
+                  <div className="create-box__two-col">
+                    <div className="form-field">
+                      <label className="form-field__label">활동 유형</label>
+                      <select
+                        className="form-field__input form-field__select"
+                        value={activityForm.type}
+                        onChange={(event) =>
+                          handleActivityFormChange("type", event.target.value)
+                        }
                       >
-                        {act.type}
-                      </span>
-                      <div className="manage-member-actions">
-                        <button className="manage-btn">수정</button>
-                        <button
-                          className="manage-btn manage-btn--danger"
-                          // 🔧 [기능] 활동 삭제 API 연결
-                          onClick={() => onDeleteActivity && onDeleteActivity(act.id)}
-                        >
-                          삭제
-                        </button>
-                      </div>
+                        {ACTIVITY_TYPES.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  );
-                })}
+                    <div className="form-field">
+                      <label className="form-field__label">활동 날짜</label>
+                      <input
+                        className="form-field__input"
+                        type="date"
+                        value={activityForm.date}
+                        onChange={(event) =>
+                          handleActivityFormChange("date", event.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="manage-activity-form__actions">
+                    <button
+                      className="btn btn--primary manage-add-btn"
+                      type="submit"
+                      disabled={activitySaving}
+                    >
+                      {activitySaving
+                        ? "저장 중..."
+                        : editingActivityId
+                          ? "활동 수정"
+                          : "+ 활동 추가"}
+                    </button>
+                    {editingActivityId && (
+                      <button
+                        className="btn btn--outline"
+                        type="button"
+                        onClick={resetActivityForm}
+                      >
+                        취소
+                      </button>
+                    )}
+                  </div>
+                </form>
+
+                {activitiesLoading ? (
+                  <p>활동 내역을 불러오는 중입니다.</p>
+                ) : activitiesError ? (
+                  <p>{activitiesError}</p>
+                ) : activities.length === 0 ? (
+                  <p>등록된 활동 내역이 없습니다.</p>
+                ) : (
+                  activities.map((act) => {
+                    const color = ACTIVITY_TYPE_COLORS[act.type] || { bg: "#f3f4f6", color: "#374151" };
+                    return (
+                      <div key={act.id} className="manage-activity-item">
+                        <div className="manage-activity-thumb" />
+                        <div className="manage-activity-info">
+                          <div className="manage-activity-title">{act.title}</div>
+                          <div className="manage-activity-date">{formatActivityDate(act.date)}</div>
+                        </div>
+                        <span
+                          className="manage-activity-type"
+                          style={{ background: color.bg, color: color.color }}
+                        >
+                          {act.type}
+                        </span>
+                        <div className="manage-member-actions">
+                          <button
+                            className="manage-btn"
+                            onClick={() => handleEditActivity(act)}
+                          >
+                            수정
+                          </button>
+                          <button
+                            className="manage-btn manage-btn--danger"
+                            onClick={() => handleDeleteActivity(act.id)}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             )}
 
@@ -432,23 +694,31 @@ export default function ClubManagePage({
                   <ul className="manage-recruit-list">
                     <li className="manage-recruit-item">
                       <span className="manage-recruit-label">모집 상태</span>
-                      <span className="club-detail__badge club-detail__badge--recruiting">모집중</span>
+                      <span
+                        className={
+                          club.isRecruiting
+                            ? "club-detail__badge club-detail__badge--recruiting"
+                            : "club-detail__badge club-detail__badge--closed"
+                        }
+                      >
+                        {club.isRecruiting ? "모집중" : "모집 마감"}
+                      </span>
                     </li>
                     <li className="manage-recruit-item">
                       <span className="manage-recruit-label">현재 인원</span>
-                      <span>{members.length}{club.maxMembers ? ` / ${club.maxMembers}` : ""}명</span>
+                      <span>{members.length}{maxMembers ? ` / ${maxMembers}` : ""}명</span>
                     </li>
                     <li className="manage-recruit-item">
                       <span className="manage-recruit-label">가입 조건</span>
-                      <span>{club.joinCondition}</span>
+                      <span>{joinCondition || "등록된 조건 없음"}</span>
                     </li>
                   </ul>
                   <button
                     className="manage-recruit-close-btn"
                     // 🔧 [기능] 모집 상태 변경 API 연결
-                    onClick={() => onToggleRecruit && onToggleRecruit(club.id)}
+                    onClick={() => onToggleRecruit && onToggleRecruit(club.id, !club.isRecruiting)}
                   >
-                    모집 마감하기
+                    {club.isRecruiting ? "모집 마감하기" : "모집 재개하기"}
                   </button>
                 </div>
 
@@ -461,16 +731,18 @@ export default function ClubManagePage({
                       <span className="manage-stat-label">멤버 수</span>
                     </div>
                     <div className="manage-stat-item">
-                      <span className="manage-stat-value">{club.rating}</span>
-                      <span className="manage-stat-label">평균 평점</span>
+                      <span className="manage-stat-value">{pendingMembers.length}</span>
+                      <span className="manage-stat-label">가입 대기</span>
                     </div>
                     <div className="manage-stat-item">
-                      <span className="manage-stat-value">{club.activityCount}</span>
+                      <span className="manage-stat-value">{activities.length}</span>
                       <span className="manage-stat-label">총 활동</span>
                     </div>
                     <div className="manage-stat-item">
-                      <span className="manage-stat-value">{club.reviewCount}</span>
-                      <span className="manage-stat-label">후기 수</span>
+                      <span className="manage-stat-value">
+                        {club.isRecruiting ? "진행" : "마감"}
+                      </span>
+                      <span className="manage-stat-label">모집 상태</span>
                     </div>
                   </div>
                 </div>
@@ -492,12 +764,14 @@ export default function ClubManagePage({
                   <span className="manage-stat-label">대기중</span>
                 </div>
                 <div className="manage-stat-item">
-                  <span className="manage-stat-value">{club.activityCount}</span>
+                  <span className="manage-stat-value">{activities.length}</span>
                   <span className="manage-stat-label">활동</span>
                 </div>
                 <div className="manage-stat-item">
-                  <span className="manage-stat-value">{club.rating}</span>
-                  <span className="manage-stat-label">평점</span>
+                  <span className="manage-stat-value">
+                    {club.isRecruiting ? "진행" : "마감"}
+                  </span>
+                  <span className="manage-stat-label">모집</span>
                 </div>
               </div>
             </div>
