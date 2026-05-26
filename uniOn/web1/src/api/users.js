@@ -59,8 +59,20 @@ export function removeUserWishlistMeeting(userId, meetingId) {
 }
 
 export async function getUserInterestVectors(userId) {
-  if (!userId) {
-    console.warn("userId가 없어 데이터를 가져올 수 없습니다.");
+  if (!userId) return null;
+
+  try {
+    const url = `/api/users/vectors/${encodeURIComponent(userId.trim())}`;
+    const response = await fetch(`http://localhost:4000${url}`);
+    
+    if (!response.ok) {
+      console.error(`서버 응답 오류: ${response.status}`);
+      return null;
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("getUserInterestVectors Error:", error);
     return null;
   }
 

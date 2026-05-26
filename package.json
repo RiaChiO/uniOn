@@ -10,7 +10,7 @@
     "start": "npm run generate && npm run recommend",
     "dashboard": "cd frontend && npm start",
     "api": "node backend/app.js",
-    "api:test": "powershell -NoProfile -Command \"$env:ALLOW_TEST_LOGIN='true'; node backend/app.js\"",
+    "api:test": "cross-env ALLOW_TEST_LOGIN=true VITE_ALLOW_TEST_LOGIN=true node backend/app.js",
     "demo": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/run-demo.ps1",
     "demo:reset": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/run-demo.ps1 -ResetData",
     "demo:bat": "scripts\\run-demo.bat keep",
@@ -29,5 +29,8 @@
     "dashboard"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "cross-env": "^10.1.0"
+  }
 }

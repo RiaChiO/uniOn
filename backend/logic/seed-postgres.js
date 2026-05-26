@@ -265,6 +265,18 @@ async function main() {
       );
     }
 
+    await client.query(`
+      INSERT INTO users (user_id, name, email, created_at) 
+      VALUES ('1ZTgGPmwvrVMsNeOvBRhNuVmWxE3', 'gnu_test01', 'gnutest011@gmail.com', '2026-04-06 07:04:21')
+      ON CONFLICT (user_id) DO NOTHING;
+    `);
+    await client.query(`
+      INSERT INTO user_interest_vectors (user_id, study, exercise, culture, game, religion, volunteer)
+      VALUES ('1ZTgGPmwvrVMsNeOvBRhNuVmWxE3', 8, 5, 2, 9, 0, 4)
+      ON CONFLICT (user_id) DO UPDATE SET 
+        study = 8, exercise = 5, culture = 2, game = 9, religion = 0, volunteer = 4;
+    `);
+
     for (const [meetingId, meeting] of Object.entries(meetings)) {
       await client.query(
         `

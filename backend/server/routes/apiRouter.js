@@ -35,7 +35,9 @@ import {
 } from "../services/userService.js";
 
 const ALLOWED_EMAIL_DOMAIN = "@gnu.ac.kr";
-const ALLOW_TEST_LOGIN = process.env.ALLOW_TEST_LOGIN === "true";
+const ALLOW_TEST_LOGIN = 
+  (typeof process !== 'undefined' && process.env.ALLOW_TEST_LOGIN === "true") || 
+  (typeof import.meta.env !== 'undefined' && import.meta.env.VITE_ALLOW_TEST_LOGIN === "true");
 
 export async function handleApiRoute(req, res, pathname) {
   if (req.method === "GET" && pathname === "/api/health") {
