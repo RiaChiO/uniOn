@@ -68,11 +68,7 @@ img    { max-width: 100%; display: block; }
 .hero__heading-line { display: block; }
 .hero__heading-highlight { font-style: normal; color: var(--color-primary); }
 .hero__description { font-size: 16px; color: var(--color-text-sub); margin-bottom: 40px; line-height: 1.7; }
-.hero__actions { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 80px; }
-.hero__stats { display: flex; gap: 40px; flex-wrap: wrap; }
-.hero__stat-item { display: flex; flex-direction: column; gap: 4px; }
-.hero__stat-value { font-size: 28px; font-weight: 700; color: var(--color-primary); }
-.hero__stat-label { font-size: 13px; color: var(--color-text-sub); }
+.hero__actions { display: flex; gap: 16px; flex-wrap: wrap; }
 
 /* Search Section */
 .search-section { padding: 80px 0; background: var(--color-bg); }
@@ -225,7 +221,7 @@ img    { max-width: 100%; display: block; }
 .mypage__stat-value { display: block; font-size: 24px; font-weight: 700; color: var(--color-primary); }
 .mypage__stat-label { font-size: 12px; color: var(--color-text-sub); }
 .mypage__content { flex: 1; display: flex; flex-direction: column; gap: 24px; }
-.mypage__section { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 28px; }
+.mypage__section { min-height: 248px; background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 32px; }
 .mypage__section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
 .mypage__club-list { display: flex; flex-direction: column; gap: 12px; }
 .mypage__club-card { display: flex; align-items: center; gap: 16px; padding: 16px; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm); cursor: pointer; transition: border-color .2s; }
@@ -234,10 +230,6 @@ img    { max-width: 100%; display: block; }
 .mypage__club-role { font-size: 11px; font-weight: 600; color: var(--color-primary); background: var(--color-primary-light); padding: 3px 8px; border-radius: var(--radius-full); display: inline-block; margin-bottom: 4px; }
 .mypage__club-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
 .mypage__club-member { font-size: 13px; color: var(--color-text-sub); }
-.mypage__notification-list { display: flex; flex-direction: column; gap: 12px; }
-.mypage__notification-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--color-bg-sub); border-radius: var(--radius-sm); }
-.mypage__notification-msg { font-size: 14px; }
-.mypage__notification-date { font-size: 12px; color: var(--color-text-sub); flex-shrink: 0; margin-left: 16px; }
 
 /* ===========================
    Create Page
@@ -322,6 +314,7 @@ img    { max-width: 100%; display: block; }
 
 .club-detail__actions { display: flex; flex-direction: column; gap: 8px; }
 .club-detail__join-btn { justify-content: center; padding: 14px; font-size: 15px; }
+.club-detail__join-btn--pending { color: var(--color-text-sub); border-color: var(--color-border); }
 .club-detail__action-btn { justify-content: center; }
 
 .club-detail__sidebar-card { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 20px; display: flex; flex-direction: column; gap: 16px; }

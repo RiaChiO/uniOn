@@ -9,6 +9,8 @@
     "recommend": "node backend/logic/export-dashboard-data.js",
     "start": "npm run generate && npm run recommend",
     "dashboard": "cd frontend && npm start",
+    "dev": "npm --prefix ./uniOn/web1 run dev",
+    "dev:test": "npm --prefix ./uniOn/web1 run dev:test",
     "api": "node backend/app.js",
     "api:test": "cross-env ALLOW_TEST_LOGIN=true VITE_ALLOW_TEST_LOGIN=true node backend/app.js",
     "demo": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/run-demo.ps1",

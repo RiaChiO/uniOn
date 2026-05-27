@@ -11,23 +11,10 @@ export default function Footer() {
             </div>
           </div>
           <p className="footer__tagline">
-            경상국립대학교 학생들을 위한<br />
+            경상국립대학교 학생들을 위한
+            <br />
             소모임 매칭 플랫폼
           </p>
-          <div className="footer__social">
-            <a href="#" className="footer__social-link" aria-label="인스타그램">📷</a>
-            <a href="#" className="footer__social-link" aria-label="카카오">💬</a>
-            <a href="#" className="footer__social-link" aria-label="유튜브">▶️</a>
-          </div>
-        </div>
-        <div className="footer__links">
-          <h4 className="footer__links-title">바로가기</h4>
-          <ul className="footer__links-list">
-            <li><a href="#search">소모임 찾기</a></li>
-            <li><a href="#create">소모임 개설</a></li>
-            <li><a href="#categories">카테고리</a></li>
-            <li><a href="#guide">이용가이드</a></li>
-          </ul>
         </div>
         <div className="footer__contact">
           <h4 className="footer__links-title">문의하기</h4>

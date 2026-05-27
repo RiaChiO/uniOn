@@ -3,15 +3,13 @@
 //   - club            : 더미 데이터 → API 응답으로 교체 (useParams로 id 받아서 fetch)
 //   - onJoin          : 가입 신청하기 → 가입 신청 API 연결
 //   - onWishlist      : 관심 목록 추가 → 관심 목록 API 연결
-//   - onShare         : 공유하기 → 공유 기능 연결
-//   - onContactLeader : 문의하기 → 리더에게 메시지 기능 연결
 //   - onRelatedClick  : 관련 모임 클릭 → 해당 소모임 상세 페이지 이동
 
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { getMeetingActivities, getMeetingMembers } from "../api/meetings";
+import { getMeetingActivities, getMeetingJoinStatus, getMeetingMembers } from "../api/meetings";
 
 const DEFAULT_DETAIL_INFO = {
   meetingDay: "일정 조율중",
@@ -171,8 +169,6 @@ export default function ClubDetailPage({
   onWishlist,
   wishlistMeetingIds = [],
   wishlistUpdatingMeetingId = "",
-  onShare,
-  onContactLeader,
   onRelatedClick,
   onManageClick,
 }) {
@@ -182,10 +178,44 @@ export default function ClubDetailPage({
   const [membersError, setMembersError] = useState("");
   const [activities, setActivities] = useState([]);
   const [activitiesError, setActivitiesError] = useState("");
+  const [joinStatus, setJoinStatus] = useState({ isPending: false, isMember: false });
+  const [joinStatusLoading, setJoinStatusLoading] = useState(false);
   const matchedClub = clubs.find(
     (item) => String(item.id) === String(id)
   );
   const currentUserId = user?.id ?? user?.userId;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!id || !isLoggedIn || !currentUserId) {
+      setJoinStatus({ isPending: false, isMember: false });
+      setJoinStatusLoading(false);
+      return undefined;
+    }
+
+    setJoinStatusLoading(true);
+    getMeetingJoinStatus(id, currentUserId)
+      .then((status) => {
+        if (!cancelled) {
+          setJoinStatus(status);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setJoinStatus({ isPending: false, isMember: false });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setJoinStatusLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUserId, id, isLoggedIn]);
 
   useEffect(() => {
     async function loadMembers() {
@@ -281,7 +311,8 @@ export default function ClubDetailPage({
     .map((meetingId) => String(meetingId))
     .includes(String(club.id));
   const isWishlistUpdating = String(wishlistUpdatingMeetingId) === String(club.id);
-  const isJoinDisabled = isJoining || !club.isRecruiting;
+  const isJoinDisabled =
+    isJoining || joinStatusLoading || joinStatus.isPending || joinStatus.isMember || !club.isRecruiting;
   const recruitBadgeClass = club.isRecruiting
     ? "club-detail__badge club-detail__badge--recruiting"
     : "club-detail__badge club-detail__badge--closed";
@@ -399,18 +430,31 @@ export default function ClubDetailPage({
           <aside className="club-detail-page__sidebar">
             {/* 액션 버튼 */}
             <div className="club-detail__actions">
-              <button
-                className="btn btn--primary club-detail__join-btn"
-                disabled={isJoinDisabled}
-                // 🔧 [기능] 로그인 확인 후 가입 신청 API 연결
-                onClick={() => onJoin && onJoin(club.id)}
-              >
-                {isJoining
-                  ? "가입 신청 중..."
-                  : club.isRecruiting
-                    ? "가입 신청하기"
-                    : "모집 마감"}
-              </button>
+              {!joinStatus.isMember && (
+                <button
+                  className={`btn club-detail__join-btn ${
+                    joinStatus.isPending ? "btn--outline club-detail__join-btn--pending" : "btn--primary"
+                  }`}
+                  disabled={isJoinDisabled}
+                  // 🔧 [기능] 로그인 확인 후 가입 신청 API 연결
+                  onClick={async () => {
+                    const submitted = await onJoin?.(club.id);
+                    if (submitted) {
+                      setJoinStatus({ isPending: true, isMember: false });
+                    }
+                  }}
+                >
+                  {isJoining
+                    ? "가입 신청 중..."
+                    : joinStatusLoading
+                      ? "신청 상태 확인 중..."
+                      : joinStatus.isPending
+                        ? "신청 대기중"
+                        : club.isRecruiting
+                          ? "가입 신청하기"
+                          : "모집 마감"}
+                </button>
+              )}
               <button
                 className="btn btn--outline club-detail__action-btn"
                 disabled={isWishlistUpdating}
@@ -422,13 +466,6 @@ export default function ClubDetailPage({
                   : isWishlisted
                     ? "♥ 관심 목록에서 제거"
                     : "♡ 관심 목록 추가"}
-              </button>
-              <button
-                className="btn btn--outline club-detail__action-btn"
-                // 🔧 [기능] 공유 기능 연결
-                onClick={() => onShare && onShare(club.id)}
-              >
-                공유하기
               </button>
               {/* 🔧 [기능] 로그인한 유저가 리더인 경우에만 표시 */}
               {!authLoading && isLoggedIn && isLeader && (
@@ -493,13 +530,6 @@ export default function ClubDetailPage({
                   </div>
                 </div>
               </div>
-              <button
-                className="btn btn--outline club-detail__action-btn"
-                // 🔧 [기능] 리더에게 메시지 기능 연결
-                onClick={() => onContactLeader && onContactLeader(club.leader)}
-              >
-                문의하기
-              </button>
             </div>
 
             {/* 관련 모임 */}

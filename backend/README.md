@@ -1,300 +1,191 @@
-# Backend Guide
+# GNU Club Matching Backend
 
-## 개요
+Node.js HTTP 서버와 PostgreSQL 기반의 API 영역입니다. 공식/보조 JSON 데이터 시드, 모임 관리, 사용자 동기화, 추천 계산을 담당합니다.
 
-이 폴더는 `project`의 백엔드 영역입니다.
+## 실행
 
-역할은 크게 3가지입니다.
+명령은 `project` 루트에서 실행합니다.
 
-1. Node.js HTTP API 서버 실행
-2. 공식/보조 JSON 데이터를 PostgreSQL 시드로 적재
-3. 유저 관심 벡터 + 모임 참여자 + 모임 태그를 기반으로 추천 계산
+```powershell
+npm install
+npm run db:up
+npm run db:seed
+npm run api
+```
 
-기본 API 서버 주소는 `http://localhost:4000` 입니다.
+API 주소:
 
----
+```text
+http://localhost:4000
+```
 
-## 폴더 구조
+`db:seed`는 현재 DB 데이터를 초기 시드 데이터로 다시 구성합니다. 사용자가 생성한 모임과 수정 내용이 필요하면 다시 실행하지 않습니다.
+
+### 테스트 Google 로그인 허용
+
+일반 모드에서 사용자 동기화는 `@gnu.ac.kr` 이메일만 허용합니다. 테스트 계정을 사용할 때는:
+
+```powershell
+npm run api:test
+```
+
+이 명령은 `ALLOW_TEST_LOGIN=true` 환경변수를 적용하여 일반 Google 계정 동기화를 허용합니다. 프론트도 `npm run dev:test`로 실행해야 합니다.
+
+## 구조
 
 ```text
 backend/
-├─ app.js
-├─ data/
+├─ app.js                         # HTTP 서버 진입점, CORS, 에러 처리
+├─ data/                          # PostgreSQL 시드용 JSON
 ├─ logic/
-├─ postgres/
+│  ├─ recommendation.js           # 추천 점수 계산 함수
+│  └─ seed-postgres.js            # JSON -> PostgreSQL 적재
+├─ postgres/init/01_schema.sql    # Docker 최초 초기화 스키마
 └─ server/
+   ├─ db/pool.js                  # PostgreSQL pool
+   ├─ http/                       # body 및 응답 헬퍼
+   ├─ routes/apiRouter.js         # API 라우팅/요청 검증
+   └─ services/                   # DB 조회 및 mutation
 ```
 
-### `app.js`
+## 데이터베이스
 
-백엔드 진입점입니다.
-
-- Node 기본 `http` 모듈로 서버 실행
-- CORS preflight 처리
-- `/api/*` 요청을 라우터로 전달
-- 최상위 에러 처리
-
-### `data/`
-
-시드용 JSON 데이터 폴더입니다.
-
-주요 파일:
-
-- `users.json`
-  - 공식 모임 참여자에 포함된 `user1` 계열 임시 참여자 정보
-- `official_users.json`
-  - 공식 동아리 호스트 유저 정보
-- `official_meetings.json`
-  - 공식 동아리 모임 정보
-- `official_extra_users.json`
-  - 소모임/일회성 모임용 추가 호스트 유저 정보
-- `official_extra_meetings.json`
-  - 소모임/일회성 모임 추가 데이터
-
-현재 DB 시드의 핵심 입력은 위 5개 파일입니다.
-
-### `logic/`
-
-추천 로직과 데이터 가공 스크립트 모음입니다.
-
-- `generator.js`
-  - 레거시 더미 유저/모임 데이터 생성
-  - 현재 공식 데이터 기반 시드 흐름에서는 보조 스크립트
-- `recommendation.js`
-  - 추천 핵심 함수
-  - 유저 관심 벡터
-  - 모임 태그 벡터
-  - 모임 참여자 평균 벡터를 기반으로 점수 계산
-- `export-dashboard-data.js`
-  - 생성된 JSON 데이터 기준으로 추천 결과를 계산해 파일로 출력
-  - 현재는 레거시 대시보드용 보조 스크립트 성격이 강함
-- `seed-postgres.js`
-  - 공식/추가 JSON 데이터를 PostgreSQL에 적재
-  - 현재 DB 구조에 맞게 `users`, `tags`, `meetings`, `meeting_participants`, `recommendations` 등을 채움
-
-### `postgres/`
-
-PostgreSQL 초기 스키마 파일이 있습니다.
-
-- `init/01_schema.sql`
-  - Docker PostgreSQL 최초 실행 시 적용되는 스키마
-  - `meetings.tag_id`, `meetings.meeting_type` 포함
-  - 예전 구조의 `meeting_tags`, `meeting_tag_vectors`, `meeting_participant_vectors`는 제거 대상
-
-### `server/`
-
-실제 API 서버 코드입니다.
+기본 접속 정보:
 
 ```text
-server/
-├─ db/
-├─ http/
-├─ routes/
-└─ services/
+host: 127.0.0.1
+port: 5432
+database: gnumatchclub
+user: gnu_DB
+password: gnublank4898
 ```
 
-#### `server/db/`
+주요 테이블:
 
-- `pool.js`
-  - PostgreSQL 연결 풀 설정
+| 테이블 | 역할 |
+| --- | --- |
+| `users` | Firebase 사용자 기본 정보 |
+| `user_interest_vectors` | 추천용 관심 벡터 6개 |
+| `meeting_types` | `club`, `small-group`, `one-time` |
+| `tags` | 알고리즘 대분류 마스터 |
+| `meetings` | 모임 정보, 모집 상태, 카테고리, 리더 |
+| `meeting_participants` | 참여자 관계 |
+| `meeting_join_requests` | 가입 신청 |
+| `meeting_activities` | 활동 내역 CRUD |
+| `user_wishlist_meetings` | 관심 목록 |
+| `recommendations` | 저장 추천 결과 테이블 |
 
-#### `server/http/`
+### 카테고리 필드
 
-- `request.js`
-  - 요청 body 파싱
-- `response.js`
-  - JSON 응답, 404 응답, CORS/preflight 처리
+`meetings`는 두 종류의 카테고리를 가집니다.
 
-#### `server/routes/`
+| 컬럼 | 역할 | 예시 |
+| --- | --- | --- |
+| `tag_id` | 추천 계산용 대분류 | `culture` |
+| `display_category` | 프론트 표시/필터용 소분류 | `music` |
 
-- `apiRouter.js`
-  - URL, HTTP method 기준으로 서비스 함수 연결
+추천 대분류는 `study`, `exercise`, `culture`, `game`, `religion`, `volunteer` 여섯 가지입니다.
 
-#### `server/services/`
+## API
 
-- `userService.js`
-  - 유저 목록 조회
-- `meetingService.js`
-  - 모임 목록 조회
-  - 모임 생성
-- `recommendationService.js`
-  - 특정 유저의 추천 목록 계산
-  - 현재는 DB에 저장된 추천 테이블을 읽기보다, 현재 DB 데이터로 실시간 계산
+### 상태 및 사용자
 
----
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| `GET` | `/api/health` | 서버 및 DB 연결 상태 |
+| `GET` | `/api/users` | 사용자 목록 |
+| `POST` | `/api/users/sync` | Firebase 로그인 사용자를 DB에 upsert |
+| `GET` | `/api/users/:userId/meetings` | 참여 중인 모임 |
+| `GET` | `/api/users/vectors/:userId` | 사용자 관심 벡터 |
 
-## 현재 백엔드 데이터 구조
+### 관심 목록
 
-현재 설계 핵심은 아래와 같습니다.
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| `GET` | `/api/users/:userId/wishlist` | 관심 모임 목록 |
+| `POST` | `/api/users/:userId/wishlist` | 관심 모임 추가 |
+| `DELETE` | `/api/users/:userId/wishlist/:meetingId` | 관심 모임 제거 |
 
-- `users`
-  - 유저 기본 정보
-- `user_interest_vectors`
-  - 유저 관심 벡터
-- `tags`
-  - 태그 마스터
-- `meetings`
-  - 모임 기본 정보
-  - `meeting_type`
-  - `tag_id`
-  - `host_user_id`
-- `meeting_participants`
-  - 모임 참여자 관계
+### 모임
 
-중요한 설계 포인트:
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| `GET` | `/api/meetings` | 모임 목록 |
+| `POST` | `/api/meetings` | 모임 생성 |
+| `PATCH` | `/api/meetings/:meetingId` | 기본 정보 수정 |
+| `DELETE` | `/api/meetings/:meetingId` | 모임 삭제 |
+| `GET` | `/api/meeting-types` | 모임 유형 목록 |
+| `PATCH` | `/api/meetings/:meetingId/recruitment` | 모집 상태 변경 |
+| `PATCH` | `/api/meetings/:meetingId/leader` | 리더 위임 |
 
-- `meeting_tags`는 사용하지 않고, `meetings.tag_id` 하나로 관리
-- `meeting_participant_vectors`는 저장하지 않음
-- 참여자 평균 벡터는 추천 계산 시점에 동적으로 계산
-
----
-
-## API 목록
-
-### `GET /api/health`
-
-서버/DB 연결 상태 확인
-
-예시 응답:
-
-```json
-{
-  "status": "ok",
-  "database": "connected"
-}
-```
-
-### `GET /api/users`
-
-유저 목록 조회
-
-### `GET /api/meetings`
-
-모임 목록 조회
-
-주요 응답 필드:
-
-- `meetingId`
-- `title`
-- `meetingType`
-- `tagId`
-- `description`
-- `hostUserId`
-- `createdAt`
-- `tags`
-- `participantCount`
-
-### `POST /api/meetings`
-
-모임 생성
-
-요청 body:
+모임 생성 요청 예시:
 
 ```json
 {
   "title": "GNU 코딩 스터디",
   "meetingType": "small-group",
   "tagId": "study",
-  "description": "알고리즘과 웹 개발을 함께 공부하는 모임",
-  "hostUserId": "user1"
+  "displayCategory": "it",
+  "description": "웹 개발과 알고리즘을 공부합니다.",
+  "hostUserId": "firebase-user-id",
+  "location": "공학관 301호",
+  "meetingTime": "매주 수요일 19:00",
+  "maxMembers": 10,
+  "joinCondition": "승인 필요"
 }
 ```
 
-`meetingType` 허용값:
+### 가입 신청 및 멤버
 
-- `club`
-- `small-group`
-- `one-time`
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| `GET` | `/api/meetings/:meetingId/members` | 참여 멤버 |
+| `DELETE` | `/api/meetings/:meetingId/members/:userId` | 멤버 내보내기 |
+| `GET` | `/api/meetings/:meetingId/join-requests` | 가입 대기 목록 |
+| `POST` | `/api/meetings/:meetingId/join-requests` | 가입 신청 |
+| `PATCH` | `/api/meetings/:meetingId/join-requests/:userId` | 신청 승인 또는 거절 |
 
-### `GET /api/recommendations/:userId`
+가입 신청 결정 body:
 
-특정 유저 기준 추천 목록 조회
-
-현재 동작 방식:
-
-- `user_interest_vectors` 조회
-- 모든 모임의 참여자 목록 조회
-- 참여자 평균 벡터를 실시간 계산
-- 모임 `tag_id`를 태그 벡터로 변환
-- 최종 추천 점수 계산 후 응답
-
----
-
-## 실행 방법
-
-아래 명령은 `project` 루트에서 실행합니다.
-
-### 1. DB 컨테이너 실행
-
-```powershell
-npm run db:up
+```json
+{ "action": "approve" }
 ```
 
-### 2. PostgreSQL 시드 적재
+또는:
 
-```powershell
-npm run db:seed
+```json
+{ "action": "reject" }
 ```
 
-### 3. API 서버 실행
+### 활동 내역
 
-```powershell
-npm run api
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| `GET` | `/api/meetings/:meetingId/activities` | 활동 목록 |
+| `POST` | `/api/meetings/:meetingId/activities` | 활동 추가 |
+| `PATCH` | `/api/meetings/:meetingId/activities/:activityId` | 활동 수정 |
+| `DELETE` | `/api/meetings/:meetingId/activities/:activityId` | 활동 삭제 |
+
+활동 생성/수정 body:
+
+```json
+{
+  "title": "신입생 환영회",
+  "activityType": "행사",
+  "activityDate": "2026-05-27"
+}
 ```
 
-실행 후:
+### 추천
 
-```text
-http://localhost:4000
-```
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| `GET` | `/api/recommendations/:userId` | 사용자 기준 추천 목록 |
 
----
-
-## 가장 자주 쓰는 순서
-
-처음부터 다시 준비할 때:
-
-```powershell
-npm run db:up
-npm run db:seed
-npm run api
-```
-
-DB만 켜고 API만 다시 띄울 때:
-
-```powershell
-npm run api
-```
-
-현재 JSON 데이터를 DB에 다시 넣고 싶을 때:
-
-```powershell
-npm run db:seed
-```
-
----
-
-## 추천 로직 요약
-
-현재 추천 점수는 아래 두 값을 합쳐 계산합니다.
-
-1. `cosine similarity`
-   - 유저 관심 벡터 vs 모임 참여자 평균 벡터
-2. `jaccard similarity`
-   - 유저 관심 벡터 vs 모임 태그 벡터
-
-최종 점수:
-
-```text
-hybrid = cosine + jaccard
-finalScore = Math.round(hybrid * 50)
-```
-
----
+추천은 사용자 관심 벡터, 모임 참여자의 평균 벡터, 모임 `tag_id` 대분류를 사용합니다.
 
 ## 참고 사항
 
-- 프론트는 DB에 직접 연결하지 않고 반드시 이 백엔드 API를 통해 접근해야 합니다.
-- 모임 생성 시 `meetingType`, `tagId`, `hostUserId`가 반드시 필요합니다.
-- 추천은 현재 DB 데이터를 기준으로 계산되므로, 참여자가 바뀌면 다음 조회 시 새로운 결과가 반영됩니다.
-- `recommendations` 테이블은 현재 실시간 추천 API의 필수 의존성은 아닙니다. 필요하면 나중에 더 정리할 수 있습니다.
+- 프론트엔드는 반드시 API를 통해 데이터에 접근합니다.
+- `meeting_activities`, `meeting_join_requests`, `display_category`는 기존 DB에서도 관련 API 호출 시 필요한 구조가 생성/보완됩니다.
+- Firebase 인증 도메인은 프론트 호스트인 `localhost`를 허용해야 합니다.

@@ -9,6 +9,7 @@ export function createMeeting({
   meetingType,
   tagId,
   displayCategory,
+  tags,
   description,
   hostUserId,
   location,
@@ -28,6 +29,7 @@ export function createMeeting({
         meetingType,
         tagId,
         displayCategory,
+        tags,
         description,
         hostUserId,
         location,
@@ -99,6 +101,14 @@ export function getMeetingJoinRequests(meetingId) {
     `/api/meetings/${encodeURIComponent(meetingId)}/join-requests`,
     {},
     "가입 신청 목록을 불러오지 못했습니다."
+  );
+}
+
+export function getMeetingJoinStatus(meetingId, userId) {
+  return requestJson(
+    `/api/meetings/${encodeURIComponent(meetingId)}/join-requests/${encodeURIComponent(userId)}`,
+    {},
+    "가입 신청 상태를 불러오지 못했습니다."
   );
 }
 

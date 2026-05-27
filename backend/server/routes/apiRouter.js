@@ -11,6 +11,7 @@ import {
   getMeetingsByParticipant,
   getMeetingMembers,
   getMeetingJoinRequests,
+  getMeetingJoinStatus,
   createMeetingJoinRequest,
   approveMeetingJoinRequest,
   rejectMeetingJoinRequest,
@@ -383,6 +384,25 @@ export async function handleApiRoute(req, res, pathname) {
     }
   }
 
+  if (req.method === "GET" && pathname.startsWith("/api/meetings/") && pathname.includes("/join-requests/")) {
+    const [meetingIdPart, userIdPart] = pathname
+      .replace("/api/meetings/", "")
+      .split("/join-requests/");
+    const meetingId = decodeURIComponent(meetingIdPart ?? "");
+    const userId = decodeURIComponent(userIdPart ?? "");
+
+    if (!meetingId || !userId) {
+      sendJson(res, 400, {
+        message: "meetingId와 userId는 필수입니다.",
+      });
+      return;
+    }
+
+    const status = await getMeetingJoinStatus({ meetingId, userId });
+    sendJson(res, 200, status);
+    return;
+  }
+
   if (req.method === "PATCH" && pathname.startsWith("/api/meetings/") && pathname.includes("/join-requests/")) {
     const [meetingIdPart, userIdPart] = pathname
       .replace("/api/meetings/", "")
@@ -448,6 +468,7 @@ export async function handleApiRoute(req, res, pathname) {
     const hostUserId = String(body.hostUserId ?? "").trim();
     const tagId = String(body.tagId ?? "").trim();
     const displayCategory = String(body.displayCategory ?? "").trim();
+    const tags = Array.isArray(body.tags) ? body.tags : [];
     const location = body.location == null ? null : String(body.location).trim();
     const meetingTime = body.meetingTime == null ? null : String(body.meetingTime).trim();
     const maxMembers = body.maxMembers == null || body.maxMembers === "" ? null : Number(body.maxMembers);
@@ -474,6 +495,7 @@ export async function handleApiRoute(req, res, pathname) {
       hostUserId,
       tagId,
       displayCategory,
+      tags,
       location,
       meetingTime,
       maxMembers,
@@ -495,6 +517,7 @@ export async function handleApiRoute(req, res, pathname) {
     const meetingTime = body.meetingTime == null ? null : String(body.meetingTime).trim();
     const tagId = body.tagId == null ? null : String(body.tagId).trim();
     const displayCategory = body.displayCategory == null ? null : String(body.displayCategory).trim();
+    const tags = body.tags == null ? null : Array.isArray(body.tags) ? body.tags : [];
     const joinCondition = body.joinCondition == null ? null : String(body.joinCondition).trim();
     const maxMembers = body.maxMembers == null || body.maxMembers === "" ? null : Number(body.maxMembers);
 
@@ -515,6 +538,7 @@ export async function handleApiRoute(req, res, pathname) {
         maxMembers,
         tagId,
         displayCategory,
+        tags,
         joinCondition,
       });
       sendJson(res, 200, {

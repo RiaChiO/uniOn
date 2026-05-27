@@ -1,123 +1,96 @@
-# GNU Club Matching — 팀원 개발 가이드
+# GNU Club Matching Frontend
 
-## 시작하기
+React와 Vite로 구현된 모임 탐색 UI입니다. 데이터 변경은 PostgreSQL에 직접 접근하지 않고 `/api` 프록시를 통해 백엔드 API로 처리합니다.
 
-처음 받았을 때 딱 한 번만 실행
+## 실행
 
-```bash
+```powershell
 npm install
-npm install react-router-dom
-```
-
-매번 실행할 때
-
-```bash
 npm run dev
 ```
 
-브라우저에서 확인 → http://localhost:5173
+개발 서버:
 
----
-
-## 📁 프로젝트 구조
-
-```
-web/
-├── package.json
-├── vite.config.js
-├── index.html
-└── src/
-    ├── main.jsx                  # React 진입점 + 라우터 설정
-    ├── App.jsx                   # 전체 라우터 + 전역 상태 허브
-    ├── styles/
-    │   └── global.css            # 전체 스타일 (디자인 토큰 포함)
-    ├── data/
-    │   └── mockData.js           # 더미 데이터 (API 연동 전까지 사용)
-    ├── components/               # 공통 컴포넌트
-    │   ├── Navbar.jsx
-    │   ├── HeroSection.jsx
-    │   ├── SearchSection.jsx
-    │   ├── ClubListSection.jsx
-    │   ├── ClubCard.jsx
-    │   └── Footer.jsx
-    └── pages/                    # 각 페이지
-        ├── LoginPage.jsx
-        ├── SignupPage.jsx
-        ├── SearchPage.jsx
-        ├── MyPage.jsx
-        └── CreatePage.jsx
+```text
+http://localhost:5273
 ```
 
----
+Vite는 `/api` 요청을 `http://localhost:4000`으로 프록시합니다. 따라서 화면 기능을 확인하려면 백엔드 API도 실행되어 있어야 합니다.
 
-## 🌐 페이지 주소
+## 테스트 로그인
 
-| 주소                           | 화면        |
-| ------------------------------ | ----------- |
-| `http://localhost:5173/`       | 메인        |
-| `http://localhost:5173/login`  | 로그인      |
-| `http://localhost:5173/signup` | 회원가입    |
-| `http://localhost:5173/search` | 검색        |
-| `http://localhost:5173/mypage` | 마이페이지  |
-| `http://localhost:5173/create` | 모임 만들기 |
+일반 실행은 `@gnu.ac.kr` 계정만 허용합니다. 테스트 Google 계정을 사용할 때는:
 
----
-
-## 🔧 기능 추가 방법
-
-코드에서 `TODO` 주석을 검색하면 기능 붙여야 할 위치가 전부 나와요.
-
-### 로그인
-
-`App.jsx`에서 `/login` Route 찾아서 `onLogin` 부분에 API 연결
-
-```jsx
-onLogin={() => console.log("TODO: 로그인 API 연결")}
-// ↓ 교체
-onLogin={async ({ email, password }) => {
-  const res = await fetch("/api/login", { ... });
-  setIsLoggedIn(true);
-  setUser(res.data);
-}}
+```powershell
+npm run dev:test
 ```
 
-### 회원가입
+그리고 백엔드는 프로젝트 루트에서 다음 명령으로 실행해야 합니다.
 
-`App.jsx`에서 `/signup` Route 찾아서 `onSignup` 부분에 API 연결
-
-### 실제 데이터 연동
-
-`src/data/mockData.js` 더미 데이터를 API 응답으로 교체
-`ClubListSection.jsx`의 `useMemo` 필터링 부분을 아래로 교체
-
-```jsx
-useEffect(() => {
-  fetch(
-    `/api/clubs?q=${searchQuery}&type=${selectedType}&category=${selectedCategory}`,
-  )
-    .then((res) => res.json())
-    .then((data) => setClubs(data));
-}, [searchQuery, selectedType, selectedCategory]);
+```powershell
+npm run api:test
 ```
 
-### 페이지 이동
+`dev:test`는 [.env.test](./.env.test)의 `VITE_ALLOW_TEST_LOGIN=true`를 읽습니다. Firebase Authentication 설정에는 `localhost`가 Authorized domain으로 등록되어 있어야 하며, 접속 주소도 `http://localhost:5273`을 사용합니다.
 
-현재 `window.location.href` 로 되어있는 부분을 `useNavigate` 로 교체 권장
+## 화면 경로
 
-```jsx
-import { useNavigate } from "react-router-dom";
-const navigate = useNavigate();
-navigate("/login");
+| 경로 | 화면 |
+| --- | --- |
+| `/` | 메인 및 인기 모임 목록 |
+| `/login` | Google 로그인 |
+| `/search` | 검색, 필터, 추천 정렬 |
+| `/clubs/:id` | 모임 상세, 활동/멤버, 가입/관심 목록 |
+| `/clubs/:id/manage` | 리더 전용 관리, 활동 CRUD, 멤버/모집 관리 |
+| `/mypage` | 내 모임 및 관심 목록 |
+| `/create` | 모임 생성 |
+
+## 주요 구조
+
+```text
+src/
+├─ App.jsx                       # 라우트 구성 및 전역 훅 연결
+├─ api/                          # 백엔드 API 클라이언트
+├─ components/                   # Navbar, ClubCard 등 공통 UI
+├─ data/
+│  └─ categoryOptions.js         # 표시 소분류와 알고리즘 대분류 매핑
+├─ hooks/
+│  ├─ useAuthSession.js          # Firebase 로그인/유저 동기화
+│  ├─ useMeetingCatalog.js       # 모임 및 유형 목록
+│  ├─ useMeetingActions.js       # 모임 관리 액션
+│  ├─ useRecommendations.js      # 추천 조회
+│  └─ useWishlist.js             # 관심 목록
+├─ lib/
+│  ├─ firebase.js                # Firebase Auth 설정
+│  └─ meetingMapper.js           # API 모임 응답 -> 화면 모델 변환
+├─ pages/                        # 화면 단위 컴포넌트
+└─ styles/global.css             # 공통 및 화면 스타일
 ```
 
----
+## 카테고리 설계
 
-## 🎨 디자인 수정
+사용자가 보는 소분류와 추천 알고리즘의 대분류는 분리됩니다.
 
-`src/styles/global.css` 상단 `:root` 의 CSS 변수만 바꾸면 전체 색상이 바뀌어요
+| 화면 소분류 | 알고리즘 대분류 |
+| --- | --- |
+| 학술/교육, IT/개발, 언어/국제, 창업/경영 | `study` |
+| 운동/스포츠 | `exercise` |
+| 음악/공연, 미술/공예, 사진/영상, 네트워킹, 문화/취미 | `culture` |
+| 게임/e스포츠 | `game` |
+| 봉사/사회 | `volunteer` |
+| 종교 | `religion` |
 
-```css
---color-primary: #3b82f6; /* 메인 컬러 */
---color-text: #111827; /* 본문 텍스트 */
---max-width: 1200px; /* 레이아웃 최대 너비 */
+`categoryOptions.js`가 이 대응을 정의하고, `meetingMapper.js`는 API의 `tagId`와 `displayCategory`를 카드/상세 화면용 필드로 변환합니다.
+
+## 인증 동작
+
+- Google 팝업 로그인 사용
+- 로그인 시 항상 Google 계정 선택 화면 표시
+- 일반 모드는 학교 이메일 도메인 확인 후 `/api/users/sync` 호출
+- 테스트 모드는 `.env.test`가 활성화된 경우 일반 Google 계정 허용
+
+## 빌드
+
+```powershell
+npm run build
 ```

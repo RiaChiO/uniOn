@@ -205,8 +205,6 @@ export default function App() {
             onWishlist={toggleWishlist}
             wishlistMeetingIds={wishlistMeetingIds}
             wishlistUpdatingMeetingId={wishlistUpdatingMeetingId}
-            onShare={(id) => console.log(`TODO: 소모임 ${id} 공유`)}
-            onContactLeader={(leader) => console.log("TODO: 리더 문의", leader)}
             onRelatedClick={(id) => navigate(`/clubs/${id}`)}
             onManageClick={(id) => navigate(`/clubs/${id}/manage`)}
           />

@@ -27,6 +27,7 @@ export function mapMeetingToClub(meeting) {
     description: meeting.description,
     location: meeting.location || "장소 협의 예정",
     meetingTime: meeting.meetingTime || "일정 조율중",
+    createdAt: meeting.createdAt,
     maxMembers: meeting.maxMembers ?? null,
     isRecruiting: meeting.isRecruiting ?? true,
     joinCondition: meeting.joinCondition || "등록된 조건 없음",

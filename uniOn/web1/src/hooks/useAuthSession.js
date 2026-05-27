@@ -66,11 +66,7 @@ export function useAuthSession() {
 
   async function loginWithGoogle() {
     try {
-      const result = await signInWithPopup(auth, provider);
-      const syncedUser = await syncFirebaseUser(result.user);
-      setIsLoggedIn(true);
-      setUser(syncedUser);
-      return syncedUser;
+      await signInWithPopup(auth, provider);
     } catch (error) {
       console.error("로그인 실패", error);
       if (error?.code !== "auth/popup-closed-by-user") {

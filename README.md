@@ -1,231 +1,132 @@
-# 📊 Hybrid Recommendation Dashboard (PostgreSQL Version)
+# GNU Club Matching
 
----
+경상국립대학교 학생을 위한 모임 탐색 및 추천 서비스입니다. React/Vite 프론트엔드, Node.js API 서버, PostgreSQL 데이터베이스로 구성되어 있습니다.
 
-# 🚀 1. 프로젝트 개요
+## 주요 기능
 
-이 프로젝트는 **하이브리드 추천 시스템 (User-based + Item-based)**을 기반으로
-로컬 환경에서 데이터를 생성하고, 추천 결과를 계산하며, **PostgreSQL + API + React 프론트엔드**로 조회하는 시스템입니다.
+- 동아리, 소모임, 일회성 모임 탐색 및 필터링
+- Google 로그인 및 사용자 동기화
+- 모임 생성, 수정, 삭제 및 모집 상태 관리
+- 가입 신청 승인/거절, 멤버 관리, 리더 위임
+- 관심 목록 관리
+- 모임 활동 내역 추가, 수정, 삭제
+- 사용자 관심 벡터와 모임 데이터를 이용한 추천 조회
 
----
+## 구조
 
-# 📁 2. 폴더 구조
-
-```
-C:\project
-│
-├── backend
-│   ├── app.js
-│   ├── data
-│   │   ├── users.json
-│   │   └── meetings.json
-│   ├── logic
-│   │   ├── generator.js
-│   │   └── recommendation.js
-│   ├── server
-│   └── postgres
-│
-├── uniOn
-│   └── web1
-│       ├── src
-│       └── public
-│
-├── package.json
+```text
+project/
+├─ backend/
+│  ├─ app.js                    # API 서버 진입점
+│  ├─ data/                     # 시드 입력 JSON
+│  ├─ logic/                    # 시드/추천 보조 스크립트
+│  ├─ postgres/init/            # PostgreSQL 초기 스키마
+│  └─ server/                   # 라우터, 서비스, DB 연결
+├─ uniOn/web1/
+│  ├─ src/                      # React 앱
+│  └─ vite.config.js            # 개발 서버 및 API 프록시
+├─ docker-compose.yml
+└─ package.json
 ```
 
----
+## 설치
 
-# ⚙️ 3. 초기 설치
+루트와 프론트엔드의 의존성을 각각 설치합니다.
 
-## 1️⃣ 루트 프로젝트
+```powershell
+cd C:\Users\blank\Desktop\DB\project
+npm install
 
-```bash
+cd .\uniOn\web1
 npm install
 ```
 
-## 2️⃣ 프론트엔드(React)
+## 실행
 
-```bash
-cd uniOn/web1
-npm install
-```
+### 일반 실행
 
----
+일반 모드에서는 `@gnu.ac.kr` Google 계정만 로그인할 수 있습니다.
 
-# 🧠 4. 실행 방법 (중요)
-
-## ✅ 1단계: 데이터 생성
-
-```bash
-npm run generate
-```
-
-👉 users / meetings / 벡터 데이터 생성
-
----
-
-## ✅ 2단계: 추천 결과 생성
-
-```bash
-npm run recommend
-```
-
-👉 추천 계산 로직 점검 및 시드 준비용 데이터 생성
-
----
-
-## ✅ 3단계: API 서버 실행
-
-```bash
+```powershell
+cd C:\Users\blank\Desktop\DB\project
+npm run db:up
+npm run db:seed
 npm run api
 ```
 
-## ✅ 4단계: 프론트엔드 실행
+`db:seed`는 데이터베이스를 초기 데이터로 다시 채우므로, 직접 만든 모임을 보존하려면 최초 적재 이후에는 생략합니다.
 
-```bash
-npm run web
-```
+별도 터미널:
 
-또는
-
-```bash
-cd uniOn/web1
+```powershell
+cd C:\Users\blank\Desktop\DB\project
 npm run dev
 ```
 
----
+접속 주소:
 
-# 🎯 5. 사용 방법
-
-1. 브라우저에서 프론트엔드 접속
-2. API 서버와 연결된 모임 목록/상세 확인
-3. 이후 추천/생성/유저 기능을 순차적으로 연동
-
----
-
-# 📊 6. 추천 점수 구성
-
-각 모임은 다음 3가지 점수로 평가됩니다.
-
-* Cosine Similarity (사용자 vs 참여자 평균)
-* Jaccard Similarity (사용자 vs 태그)
-* Hybrid Score (최종 점수)
-
----
-
-# 🔥 7. 핵심 기능
-
-✔ 랜덤 대량 데이터 생성
-✔ 협업 필터링 기반 추천
-✔ PostgreSQL 기반 모임/추천 데이터 조회
-
----
-
-# ⚠️ 8. 주의사항
-
-* Docker DB가 실행 중이어야 함
-* `db:seed` 후 `api`와 프론트엔드를 실행해야 함
-
----
-
-# 🎯 9. 한 줄 요약
-
-👉 "PostgreSQL 데이터를 API로 읽고 React 프론트엔드에 연결하는 프로젝트"
-
----
-
-# 🐘 10. PostgreSQL + Docker 실행
-
-## ✅ 1단계: DB 컨테이너 실행
-
-```bash
-npm run db:up
+```text
+http://localhost:5273
 ```
 
-## ✅ 2단계: (기존 로직) 데이터/추천 결과 생성
+### 테스트 Google 계정으로 실행
 
-```bash
-npm run generate
-npm run recommend
+학교 계정이 아닌 테스트 Google 계정으로 로그인하려면 백엔드와 프론트엔드를 모두 테스트 모드로 실행합니다.
+
+```powershell
+cd C:\Users\blank\Desktop\DB\project
+npm run api:test
 ```
 
-## ✅ 3단계: PostgreSQL 시드 적재
+별도 터미널:
 
-```bash
-npm run db:seed
+```powershell
+cd C:\Users\blank\Desktop\DB\project
+npm run dev:test
 ```
 
-## ✅ 4단계: API 서버 실행
+Firebase Authentication의 Authorized domains에 `localhost`가 등록되어 있어야 합니다. `127.0.0.1`이 아니라 `http://localhost:5273`으로 접속합니다.
 
-```bash
-npm run api
+## 데이터 모델
+
+`meetings`에는 추천 계산용 대분류와 화면 표시용 소분류가 분리되어 있습니다.
+
+| 필드 | 용도 | 예시 |
+| --- | --- | --- |
+| `tag_id` | 추천 알고리즘의 6개 대분류 | `culture` |
+| `display_category` | 검색/카드에 표시하는 소분류 | `music` |
+
+예를 들어 `음악/공연` 모임은 화면에서 소분류로 표시되지만 추천 계산에서는 `culture` 벡터를 사용합니다.
+
+알고리즘 대분류:
+
+```text
+study, exercise, culture, game, religion, volunteer
 ```
 
-## ✅ 5단계: 프론트엔드 실행
+## 추천 방식
 
-```bash
-npm run web
+추천은 다음 값을 사용합니다.
+
+- 사용자 관심 벡터와 참여자 평균 벡터의 cosine similarity
+- 사용자 관심 벡터와 모임 `tag_id` 벡터의 jaccard similarity
+
+프론트엔드는 API가 반환한 추천 결과를 우선 사용하고, 추천 결과가 없을 때 로컬 점수 계산을 fallback으로 사용합니다.
+
+## 기본 주소
+
+| 서비스 | 주소 |
+| --- | --- |
+| 프론트엔드 | `http://localhost:5273` |
+| API 서버 | `http://localhost:4000` |
+| PostgreSQL | `127.0.0.1:5432` |
+
+PostgreSQL 기본 설정:
+
+```text
+database: gnumatchclub
+user: gnu_DB
+password: gnublank4898
 ```
 
-또는 한 번에:
-
-```bash
-npm run db:init
-```
-
-시연 모드 한 번에 실행:
-
-```bash
-npm run demo
-```
-
-CMD 배치 파일로 실행:
-
-```bat
-npm run demo:bat
-```
-
-`demo` 명령은 아래를 자동 실행:
-- DB 컨테이너 실행
-- API 서버 창 실행
-- 대시보드 창 실행
-
-중요: `demo`는 기존 DB 데이터를 보존합니다 (seed 실행 안 함).
-
-데이터를 처음 상태로 초기화해서 시연하려면:
-
-```bash
-npm run demo:reset
-```
-
-`demo:reset`은 `generate -> recommend -> db:seed`를 다시 실행하므로
-직접 추가한 모임/데이터가 초기화됩니다.
-
-배치 파일 reset 모드:
-
-```bat
-npm run demo:bat:reset
-```
-
-DB 접속 기본값:
-
-- Host: `127.0.0.1`
-- Port: `5432`
-- DB: `gnumatchclub`
-- User: `gnu_DB`
-- Password: `gnublank4898`
-
-환경변수는 `.env.example`을 참고.
-
----
-
-# 💻 11. 시연 컴퓨터로 옮기기
-
-1. 프로젝트 폴더 전체 복사
-2. 시연 PC에 Docker 설치
-3. 루트에서 `npm install`
-4. `npm run db:up`
-5. `npm run generate && npm run recommend && npm run db:seed`
-6. `npm run api`
-7. `npm run web`
-
+세부 프론트 문서는 [uniOn/web1/README.md](./uniOn/web1/README.md), API 및 DB 문서는 [backend/README.md](./backend/README.md)를 참고합니다.

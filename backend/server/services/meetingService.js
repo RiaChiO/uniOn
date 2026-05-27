@@ -38,6 +38,45 @@ async function ensureMeetingDisplayCategoryColumn(client = pool) {
   `);
 }
 
+async function ensureMeetingCustomTagsTable(client = pool) {
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS meeting_custom_tags (
+      meeting_id TEXT NOT NULL REFERENCES meetings(meeting_id) ON DELETE CASCADE,
+      tag TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (meeting_id, tag)
+    )
+  `);
+}
+
+function normalizeCustomTags(tags) {
+  if (!Array.isArray(tags)) return [];
+
+  return [...new Set(
+    tags
+      .map((tag) => String(tag ?? "").replace(/^#/, "").trim())
+      .filter(Boolean)
+  )];
+}
+
+async function replaceMeetingCustomTags(client, meetingId, tags) {
+  const normalizedTags = normalizeCustomTags(tags);
+
+  await client.query("DELETE FROM meeting_custom_tags WHERE meeting_id = $1", [meetingId]);
+
+  for (const [index, tag] of normalizedTags.entries()) {
+    await client.query(
+      `
+      INSERT INTO meeting_custom_tags (meeting_id, tag, sort_order)
+      VALUES ($1, $2, $3)
+      `,
+      [meetingId, tag, index]
+    );
+  }
+
+  return normalizedTags;
+}
+
 function inferDisplayCategory({ displayCategory, tagId, description }) {
   if (displayCategory) return displayCategory;
 
@@ -62,6 +101,7 @@ function inferDisplayCategory({ displayCategory, tagId, description }) {
 
 export async function getMeetings() {
   await ensureMeetingDisplayCategoryColumn();
+  await ensureMeetingCustomTagsTable();
 
   const result = await pool.query(
     `
@@ -93,10 +133,17 @@ export async function getMeetings() {
       m.host_user_id AS "hostUserId",
       host.name AS "leaderName",
       m.created_at AS "createdAt",
-      CASE
-        WHEN m.tag_id IS NULL THEN ARRAY[]::text[]
-        ELSE ARRAY[m.tag_id]
-      END AS tags,
+      COALESCE(
+        (
+          SELECT array_agg(mct.tag ORDER BY mct.sort_order, mct.tag)
+          FROM meeting_custom_tags mct
+          WHERE mct.meeting_id = m.meeting_id
+        ),
+        CASE
+          WHEN m.tag_id IS NULL THEN ARRAY[]::text[]
+          ELSE ARRAY[m.tag_id]
+        END
+      ) AS tags,
       COALESCE(mp_count.participant_count, 0)::INT AS "participantCount",
       -- [추가] 참여자 평균 벡터 계산
       ARRAY[
@@ -325,6 +372,29 @@ export async function getMeetingJoinRequests(meetingId) {
   return result.rows;
 }
 
+export async function getMeetingJoinStatus({ meetingId, userId }) {
+  await ensureJoinRequestsTable();
+
+  const result = await pool.query(
+    `
+    SELECT
+      EXISTS (
+        SELECT 1
+        FROM meeting_join_requests
+        WHERE meeting_id = $1 AND user_id = $2
+      ) AS "isPending",
+      EXISTS (
+        SELECT 1
+        FROM meeting_participants
+        WHERE meeting_id = $1 AND user_id = $2
+      ) AS "isMember"
+    `,
+    [meetingId, userId]
+  );
+
+  return result.rows[0];
+}
+
 export async function createMeetingJoinRequest({ meetingId, userId }) {
   await ensureJoinRequestsTable();
 
@@ -446,6 +516,7 @@ export async function createMeeting({
   hostUserId,
   tagId,
   displayCategory,
+  tags,
   location,
   meetingTime,
   maxMembers,
@@ -456,6 +527,7 @@ export async function createMeeting({
   try {
     await client.query("BEGIN");
     await ensureMeetingDisplayCategoryColumn(client);
+    await ensureMeetingCustomTagsTable(client);
 
     const nextIdResult = await client.query(
       `
@@ -507,6 +579,7 @@ export async function createMeeting({
       `,
       [meetingId, hostUserId]
     );
+    const customTags = await replaceMeetingCustomTags(client, meetingId, tags);
 
     const hostResult = await client.query(
       `
@@ -516,6 +589,14 @@ export async function createMeeting({
       `,
       [hostUserId]
     );
+    const meetingTypeResult = await client.query(
+      `
+      SELECT label
+      FROM meeting_types
+      WHERE type_id = $1
+      `,
+      [meetingType]
+    );
 
     await client.query("COMMIT");
 
@@ -523,7 +604,9 @@ export async function createMeeting({
       meetingId,
       title,
       meetingType,
+      meetingTypeLabel: meetingTypeResult.rows[0]?.label ?? meetingType,
       tagId,
+      tags: customTags.length > 0 ? customTags : [tagId],
       displayCategory: inferDisplayCategory({ displayCategory, tagId, description }),
       description,
       location,
@@ -551,63 +634,87 @@ export async function updateMeeting({
   maxMembers,
   tagId,
   displayCategory,
+  tags,
   joinCondition,
 }) {
-  await ensureMeetingDisplayCategoryColumn();
+  const client = await pool.connect();
 
-  const result = await pool.query(
-    `
-    UPDATE meetings AS m
-    SET
-      title = $2,
-      description = $3,
-      location = $4,
-      meeting_time = $5,
-      max_members = $6,
-      tag_id = $7,
-      join_condition = $8,
-      display_category = COALESCE($9, m.display_category)
-    FROM users host
-    WHERE m.meeting_id = $1
-      AND host.user_id = m.host_user_id
-    RETURNING
-      m.meeting_id AS "meetingId",
-      m.title,
-      m.meeting_type AS "meetingType",
-      m.tag_id AS "tagId",
-      COALESCE(m.display_category, m.tag_id) AS "displayCategory",
-      m.description,
-      m.location,
-      m.meeting_time AS "meetingTime",
-      m.max_members AS "maxMembers",
-      m.is_recruiting AS "isRecruiting",
-      m.join_condition AS "joinCondition",
-      m.host_user_id AS "hostUserId",
-      host.name AS "leaderName",
-      m.created_at AS "createdAt"
-    `,
-    [
-      meetingId,
-      title,
-      description,
-      location,
-      meetingTime,
-      maxMembers,
-      tagId,
-      joinCondition,
-      displayCategory == null
-        ? null
-        : inferDisplayCategory({ displayCategory, tagId, description }),
-    ]
-  );
+  try {
+    await client.query("BEGIN");
+    await ensureMeetingDisplayCategoryColumn(client);
+    await ensureMeetingCustomTagsTable(client);
 
-  if (result.rowCount === 0) {
-    const error = new Error("모임을 찾을 수 없습니다.");
-    error.statusCode = 404;
+    const result = await client.query(
+      `
+      UPDATE meetings AS m
+      SET
+        title = $2,
+        description = $3,
+        location = $4,
+        meeting_time = $5,
+        max_members = $6,
+        tag_id = $7,
+        join_condition = $8,
+        display_category = COALESCE($9, m.display_category)
+      FROM users host
+      WHERE m.meeting_id = $1
+        AND host.user_id = m.host_user_id
+      RETURNING
+        m.meeting_id AS "meetingId",
+        m.title,
+        m.meeting_type AS "meetingType",
+        m.tag_id AS "tagId",
+        COALESCE(m.display_category, m.tag_id) AS "displayCategory",
+        m.description,
+        m.location,
+        m.meeting_time AS "meetingTime",
+        m.max_members AS "maxMembers",
+        m.is_recruiting AS "isRecruiting",
+        m.join_condition AS "joinCondition",
+        m.host_user_id AS "hostUserId",
+        host.name AS "leaderName",
+        m.created_at AS "createdAt"
+      `,
+      [
+        meetingId,
+        title,
+        description,
+        location,
+        meetingTime,
+        maxMembers,
+        tagId,
+        joinCondition,
+        displayCategory == null
+          ? null
+          : inferDisplayCategory({ displayCategory, tagId, description }),
+      ]
+    );
+
+    if (result.rowCount === 0) {
+      const error = new Error("모임을 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    let customTags = null;
+    if (tags != null) {
+      customTags = await replaceMeetingCustomTags(client, meetingId, tags);
+    }
+
+    await client.query("COMMIT");
+
+    return {
+      ...result.rows[0],
+      tags: customTags == null
+        ? undefined
+        : customTags.length > 0 ? customTags : [result.rows[0].tagId],
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
     throw error;
+  } finally {
+    client.release();
   }
-
-  return result.rows[0];
 }
 
 export async function deleteMeeting(meetingId) {

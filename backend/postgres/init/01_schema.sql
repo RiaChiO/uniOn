@@ -94,6 +94,13 @@ CREATE TABLE IF NOT EXISTS meeting_participants (
   PRIMARY KEY (meeting_id, user_id)
 );
 
+CREATE TABLE IF NOT EXISTS meeting_custom_tags (
+  meeting_id TEXT NOT NULL REFERENCES meetings(meeting_id) ON DELETE CASCADE,
+  tag TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (meeting_id, tag)
+);
+
 CREATE TABLE IF NOT EXISTS meeting_join_requests (
   meeting_id TEXT NOT NULL REFERENCES meetings(meeting_id) ON DELETE CASCADE,
   user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,

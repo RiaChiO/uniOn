@@ -26,21 +26,66 @@ export async function getUsers() {
   return result.rows;
 }
 
-export async function upsertUser({ userId, name, email }) {
-  const result = await pool.query(
-    `
-    INSERT INTO users (user_id, name, email, created_at)
-    VALUES ($1, $2, $3, NOW())
-    ON CONFLICT (user_id)
-    DO UPDATE SET
-      name = EXCLUDED.name,
-      email = EXCLUDED.email
-    RETURNING user_id, name, email, created_at
-    `,
-    [userId, name, email]
-  );
+function createTemporaryInterestVector() {
+  const randomScore = () => Math.floor(Math.random() * 11);
 
-  return result.rows[0];
+  return {
+    study: randomScore(),
+    exercise: randomScore(),
+    culture: randomScore(),
+    game: randomScore(),
+    religion: randomScore(),
+    volunteer: randomScore(),
+  };
+}
+
+export async function upsertUser({ userId, name, email }) {
+  const vector = createTemporaryInterestVector();
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const result = await client.query(
+      `
+      INSERT INTO users (user_id, name, email, created_at)
+      VALUES ($1, $2, $3, NOW())
+      ON CONFLICT (user_id)
+      DO UPDATE SET
+        name = EXCLUDED.name,
+        email = EXCLUDED.email
+      RETURNING user_id, name, email, created_at
+      `,
+      [userId, name, email]
+    );
+
+    await client.query(
+      `
+      INSERT INTO user_interest_vectors
+        (user_id, study, exercise, culture, game, religion, volunteer)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (user_id)
+      DO NOTHING
+      `,
+      [
+        userId,
+        vector.study,
+        vector.exercise,
+        vector.culture,
+        vector.game,
+        vector.religion,
+        vector.volunteer,
+      ]
+    );
+
+    await client.query("COMMIT");
+    return result.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function getUserWishlistMeetings(userId) {

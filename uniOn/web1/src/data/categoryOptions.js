@@ -30,9 +30,3 @@ export const ALGORITHM_CATEGORY_FALLBACKS = {
   religion: { id: "religion", label: "종교" },
   volunteer: { id: "volunteer", label: "봉사/사회" },
 };
-
-export const HERO_STATS = [
-  { value: "120+", label: "활동 중인 소모임" },
-  { value: "2,500+", label: "참여 학생" },
-  { value: "15+", label: "카테고리" },
-];

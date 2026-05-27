@@ -9,7 +9,7 @@
 //   - onRemoveMember   : 멤버 내보내기 → 내보내기 API 연결
 //   - 활동 관리       : 활동 추가 / 수정 / 삭제 API 연결
 //   - onToggleRecruit  : 모집 상태 변경 → 상태 변경 API 연결
-//   - onGoPublic       : 공개 페이지 보기 → 상세 페이지 이동
+//   - onGoPublic       : 돌아가기 → 상세 페이지 이동
 
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -240,13 +240,17 @@ export default function ClubManagePage({
   };
 
   const handleRemoveMember = async (memberId) => {
-    await onRemoveMember?.(id, memberId);
+    const removed = await onRemoveMember?.(id, memberId);
+    if (!removed) return;
+
     setMembers((prev) => prev.filter((member) => member.id !== memberId));
   };
 
   const handleTransferLeader = async (memberId) => {
     const targetMember = members.find((member) => member.id === memberId);
-    await onTransferLeader?.(id, memberId, targetMember?.name);
+    const transferred = await onTransferLeader?.(id, memberId, targetMember?.name);
+    if (!transferred) return;
+
     setMembers((prev) =>
       prev.map((member) => {
         if (member.id === memberId) {
@@ -385,7 +389,7 @@ export default function ClubManagePage({
               // 🔧 [기능] 상세 페이지로 이동
               onClick={() => onGoPublic && onGoPublic(club.id)}
             >
-              공개 페이지 보기
+              돌아가기
             </button>
             <button
               className="btn btn--primary"
@@ -776,16 +780,6 @@ export default function ClubManagePage({
               </div>
             </div>
 
-            <div className="manage-sidebar-card">
-              <h3 className="manage-sidebar-title">공개 페이지</h3>
-              <p className="manage-sidebar-desc">일반 사용자에게 보이는 페이지를 확인해보세요</p>
-              <button
-                className="btn btn--outline"
-                onClick={() => onGoPublic && onGoPublic(club.id)}
-              >
-                공개 페이지 보기 →
-              </button>
-            </div>
           </aside>
 
         </div>
