@@ -11,6 +11,8 @@ import CreatePage from "./pages/CreatePage";
 import GoogleLoginPage from "./pages/GoogleLoginPage";
 import ClubDetailPage from "./pages/ClubDetailPage";
 import ClubManagePage from "./pages/ClubManagePage";
+import ProfileEditPage from "./pages/ProfileEditPage";
+import RecommendationPreferencePage from "./pages/RecommendationPreferencePage";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useMeetingActions } from "./hooks/useMeetingActions";
 import { useMeetingCatalog } from "./hooks/useMeetingCatalog";
@@ -241,11 +243,22 @@ export default function App() {
           <MyPage
             {...commonProps}
             onLogout={handleLogout}
-            onEditProfile={() => console.log("TODO: 프로필 수정")}
+            onEditProfile={() => navigate("/mypage/edit")}
             onClubClick={(id) => navigate(`/clubs/${id}`)}
             wishlistCount={wishlistMeetingIds.length}
           />
         }
+      />
+
+      <Route
+        path="/mypage/edit"
+        element={<ProfileEditPage {...commonProps} />}
+      />
+
+      {/* 관심분야 설정은 /mypage/edit 한 페이지에 통합됨 - 구 URL 호환 유지 */}
+      <Route
+        path="/mypage/preferences"
+        element={<RecommendationPreferencePage {...commonProps} />}
       />
 
       <Route
