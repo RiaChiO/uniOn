@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
 
 :root {
   --color-primary:       #3b82f6;
@@ -68,7 +68,11 @@ img    { max-width: 100%; display: block; }
 .hero__heading-line { display: block; }
 .hero__heading-highlight { font-style: normal; color: var(--color-primary); }
 .hero__description { font-size: 16px; color: var(--color-text-sub); margin-bottom: 40px; line-height: 1.7; }
-.hero__actions { display: flex; gap: 16px; flex-wrap: wrap; }
+.hero__actions { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 80px; }
+.hero__stats { display: flex; gap: 40px; flex-wrap: wrap; }
+.hero__stat-item { display: flex; flex-direction: column; gap: 4px; }
+.hero__stat-value { font-size: 28px; font-weight: 700; color: var(--color-primary); }
+.hero__stat-label { font-size: 13px; color: var(--color-text-sub); }
 
 /* Search Section */
 .search-section { padding: 80px 0; background: var(--color-bg); }
@@ -221,7 +225,7 @@ img    { max-width: 100%; display: block; }
 .mypage__stat-value { display: block; font-size: 24px; font-weight: 700; color: var(--color-primary); }
 .mypage__stat-label { font-size: 12px; color: var(--color-text-sub); }
 .mypage__content { flex: 1; display: flex; flex-direction: column; gap: 24px; }
-.mypage__section { min-height: 248px; background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 32px; }
+.mypage__section { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 28px; }
 .mypage__section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
 .mypage__club-list { display: flex; flex-direction: column; gap: 12px; }
 .mypage__club-card { display: flex; align-items: center; gap: 16px; padding: 16px; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm); cursor: pointer; transition: border-color .2s; }
@@ -230,6 +234,10 @@ img    { max-width: 100%; display: block; }
 .mypage__club-role { font-size: 11px; font-weight: 600; color: var(--color-primary); background: var(--color-primary-light); padding: 3px 8px; border-radius: var(--radius-full); display: inline-block; margin-bottom: 4px; }
 .mypage__club-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
 .mypage__club-member { font-size: 13px; color: var(--color-text-sub); }
+.mypage__notification-list { display: flex; flex-direction: column; gap: 12px; }
+.mypage__notification-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--color-bg-sub); border-radius: var(--radius-sm); }
+.mypage__notification-msg { font-size: 14px; }
+.mypage__notification-date { font-size: 12px; color: var(--color-text-sub); flex-shrink: 0; margin-left: 16px; }
 
 /* ===========================
    Create Page
@@ -314,7 +322,6 @@ img    { max-width: 100%; display: block; }
 
 .club-detail__actions { display: flex; flex-direction: column; gap: 8px; }
 .club-detail__join-btn { justify-content: center; padding: 14px; font-size: 15px; }
-.club-detail__join-btn--pending { color: var(--color-text-sub); border-color: var(--color-border); }
 .club-detail__action-btn { justify-content: center; }
 
 .club-detail__sidebar-card { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 20px; display: flex; flex-direction: column; gap: 16px; }
@@ -563,4 +570,248 @@ img    { max-width: 100%; display: block; }
 [data-theme="dark"] .category-chip--active {
   background: var(--color-primary);
   color: #fff;
+}
+
+/* ===========================
+   Profile Edit Page (Figma 시안)
+=========================== */
+.profile-edit-page__main { background: var(--color-bg-sub); min-height: calc(100vh - 64px); padding: 40px 16px 60px; }
+.profile-edit-page__inner { max-width: 760px; margin: 0 auto; }
+
+.profile-edit-page__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.profile-edit-page__title { font-size: 24px; font-weight: 700; color: var(--color-text); }
+.profile-edit-page__close {
+  width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; color: var(--color-text-sub);
+  font-size: 22px; line-height: 1; cursor: pointer; border-radius: 50%;
+  transition: background .2s, color .2s;
+}
+.profile-edit-page__close:hover { background: var(--color-bg-sub); color: var(--color-text); }
+
+.profile-edit-card {
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 32px;
+  margin-bottom: 20px;
+}
+.profile-edit-card__avatar-wrap { display: flex; justify-content: center; margin-bottom: 28px; }
+.profile-edit-card__avatar {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: linear-gradient(to bottom right, #3b82f6, #2563eb);
+  color: #ffffff;
+  display: flex; align-items: center; justify-content: center;
+}
+.profile-edit-card__form { display: flex; flex-direction: column; gap: 16px; }
+
+/* 학년 select 의 커스텀 chevron */
+.profile-edit-card__select-wrap { position: relative; }
+.profile-edit-card__select {
+  padding-right: 44px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none;
+  cursor: pointer;
+}
+.profile-edit-card__select-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-sub);
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 액션 버튼 (공용) - 시안: 취소(흰배경/회색보더/검정글씨), 저장하기(파란배경/흰글씨/💾) */
+.profile-edit-page__actions,
+.recommend-pref-page__actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+/* button 요소에 직접 적용하기 위해 selector 강화 (전역 reset 회피) */
+button.btn-action {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color .2s, border-color .2s, color .2s;
+  -webkit-appearance: none;
+  appearance: none;
+  line-height: 1;
+}
+
+button.btn-action--cancel {
+  background-color: #ffffff;
+  color: #111827;
+  border: 1.5px solid #e5e7eb;
+}
+button.btn-action--cancel:hover {
+  background-color: #f8fafc;
+  border-color: #9ca3af;
+}
+
+button.btn-action--save {
+  background-color: #2563eb;
+  color: #ffffff;
+  border: 1.5px solid #2563eb;
+  flex: 1;
+}
+button.btn-action--save:hover {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.btn-action__icon { font-size: 16px; line-height: 1; }
+
+/* 다크 모드에서도 동일하게 보이도록 */
+[data-theme="dark"] button.btn-action--cancel {
+  background-color: #1f2937;
+  color: #f3f4f6;
+  border-color: #374151;
+}
+[data-theme="dark"] button.btn-action--cancel:hover {
+  background-color: #111827;
+  border-color: #4b5563;
+}
+[data-theme="dark"] button.btn-action--save {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+/* ===========================
+   Recommendation Preference Page (Figma 시안)
+=========================== */
+.recommend-pref-page__main { background: var(--color-bg-sub); min-height: calc(100vh - 64px); padding: 40px 16px 60px; }
+.recommend-pref-page__inner { max-width: 760px; margin: 0 auto; }
+
+.recommend-pref-card {
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 32px;
+}
+.recommend-pref-card__header { margin-bottom: 24px; }
+.recommend-pref-card__title { font-size: 20px; font-weight: 700; color: var(--color-text); margin-bottom: 6px; }
+.recommend-pref-card__subtitle { font-size: 14px; color: var(--color-text-sub); }
+.recommend-pref-card__list { display: flex; flex-direction: column; gap: 24px; }
+
+/* 한 분야 = 평평한 행 (카드 X, 보더 X) */
+.recommend-pref-item { display: flex; flex-direction: column; gap: 10px; }
+.recommend-pref-item__header { display: flex; justify-content: space-between; align-items: center; }
+.recommend-pref-item__label { font-size: 15px; font-weight: 500; color: var(--color-text); }
+.recommend-pref-item__value { font-size: 16px; font-weight: 600; color: var(--color-primary); min-width: 24px; text-align: right; }
+
+/* 트랙 3겹 구조 (배경 + 채움 + 슬라이더) */
+.recommend-pref-item__track-wrap {
+  position: relative;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+.recommend-pref-item__track-bg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 10px;
+  background: #e5e7eb;
+  border-radius: var(--radius-full);
+  pointer-events: none;
+}
+.recommend-pref-item__track-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 10px;
+  background: #0f172a;
+  border-radius: var(--radius-full);
+  pointer-events: none;
+  transition: width .15s;
+}
+
+/* range input - 투명, thumb 만 보임 */
+.recommend-pref-item__range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  margin: 0;
+}
+.recommend-pref-item__range::-webkit-slider-runnable-track {
+  height: 10px;
+  background: transparent;
+  border-radius: var(--radius-full);
+  border: none;
+}
+.recommend-pref-item__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  cursor: pointer;
+  margin-top: -4px;
+  transition: transform .15s, box-shadow .2s;
+}
+.recommend-pref-item__range::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+}
+.recommend-pref-item__range::-moz-range-track {
+  height: 10px;
+  background: transparent;
+  border-radius: var(--radius-full);
+  border: none;
+}
+.recommend-pref-item__range::-moz-range-progress {
+  height: 10px;
+  background: transparent;
+  border-radius: var(--radius-full);
+}
+.recommend-pref-item__range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  cursor: pointer;
+  transition: transform .15s, box-shadow .2s;
+}
+.recommend-pref-item__range::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+}
+.recommend-pref-item__range:focus { outline: none; }
+
+/* 양 끝 눈금 (0, 10) */
+.recommend-pref-item__scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--color-text-sub);
+  padding: 0 2px;
 }
