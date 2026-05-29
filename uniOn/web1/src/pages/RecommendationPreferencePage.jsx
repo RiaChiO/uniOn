@@ -6,14 +6,15 @@
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useNavigate } from "react-router-dom";
 
 const PREFERENCE_FIELDS = [
   { key: "study",     label: "학술/교육" },
   { key: "exercise",  label: "운동/스포츠" },
-  { key: "culture",   label: "문화/예술" },
-  { key: "game",      label: "게임/오락" },
-  { key: "religion",  label: "종교/봉사" },
-  { key: "volunteer", label: "자원봉사" },
+  { key: "culture",   label: "문화/취미" },
+  { key: "game",      label: "게임/e스포츠" },
+  { key: "religion",  label: "종교" },
+  { key: "volunteer", label: "봉사/사회" },
 ];
 
 export default function RecommendationPreferencePage({
@@ -23,6 +24,18 @@ export default function RecommendationPreferencePage({
   user,
   onLoginClick,
 }) {
+  const navigate = useNavigate();
+
+  function handleSaveClick() {
+    if (
+      window.confirm(
+        "관심 분야 설정은 프로필 수정 페이지에서 저장됩니다. 프로필 수정 페이지로 이동하시겠습니까?",
+      )
+    ) {
+      navigate("/mypage/edit");
+    }
+  }
+
   return (
     <div className="recommend-pref-page">
       <Navbar
@@ -87,7 +100,7 @@ export default function RecommendationPreferencePage({
           {/* 액션 버튼 (기능 없음 - UI만) */}
           <div className="recommend-pref-page__actions">
             <button className="btn-action btn-action--cancel">취소</button>
-            <button className="btn-action btn-action--save">
+            <button className="btn-action btn-action--save" onClick={handleSaveClick}>
               <span className="btn-action__icon" aria-hidden="true">💾</span>
               저장하기
             </button>

@@ -1,39 +1,70 @@
-// 📌 ProfileEditPage - 프로필 수정 + 관심 분야 설정 (UI 전용 / Figma 시안)
-// 🔧 [디자인 담당이 추후 기능 연결 예정]
-//   - 슬라이더 useState 는 시각적 표시(채움 너비 + 값)를 위한 UI 상태일 뿐, 저장 로직 없음
-//   - 취소/저장하기 클릭 시 /mypage 로 단순 이동만 함 (실제 저장 API 는 별도 연결)
-//   - 우측 상단 X 클릭 시에도 /mypage 로 이동
+// 📌 ProfileEditPage - 프로필 수정 + 관심 분야 설정
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import {
+  getUserInterestVectors,
+  updateUserInterestVector,
+  updateUserProfile,
+} from "../api/users";
 
 const INTEREST_LABELS = {
-  study:     "학술/교육",
-  exercise:  "운동/스포츠",
-  culture:   "문화/예술",
-  game:      "게임/오락",
-  religion:  "종교/봉사",
-  volunteer: "자원봉사",
+  study: "학술/교육",
+  exercise: "운동/스포츠",
+  culture: "문화/취미",
+  game: "게임/e스포츠",
+  religion: "종교",
+  volunteer: "봉사/사회",
 };
 
 // 시안 기본값 (피그마와 동일)
 const DEFAULT_INTERESTS = {
-  study:     5,
-  exercise:  3,
-  culture:   7,
-  game:      4,
-  religion:  2,
+  study: 5,
+  exercise: 3,
+  culture: 7,
+  game: 4,
+  religion: 2,
   volunteer: 6,
 };
+
+const INTEREST_KEYS = Object.keys(DEFAULT_INTERESTS);
+
+function normalizeGrade(value) {
+  const grade = String(value ?? "").trim();
+  if (!grade) return "";
+  return /^[1-4]$/.test(grade) ? `${grade}학년` : grade;
+}
+
+function normalizeInterestVector(vector) {
+  return Object.fromEntries(
+    INTEREST_KEYS.map((key) => {
+      const score = Number(vector?.[key]);
+      const normalizedScore = Number.isFinite(score)
+        ? Math.min(10, Math.max(0, Math.round(score)))
+        : DEFAULT_INTERESTS[key];
+
+      return [key, normalizedScore];
+    }),
+  );
+}
 
 // 인라인 SVG 아이콘 (lucide-react 대체)
 function IconX(props) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true" {...props}>
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
@@ -42,9 +73,18 @@ function IconX(props) {
 
 function IconUser(props) {
   return (
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true" {...props}>
+    <svg
+      width="48"
+      height="48"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
@@ -53,9 +93,18 @@ function IconUser(props) {
 
 function IconChevronDown(props) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true" {...props}>
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
       <polyline points="6 9 12 15 18 9" />
     </svg>
   );
@@ -63,9 +112,18 @@ function IconChevronDown(props) {
 
 function IconSave(props) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true" {...props}>
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
       <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
       <polyline points="17 21 17 13 7 13 7 21" />
       <polyline points="7 3 7 8 15 8" />
@@ -79,15 +137,129 @@ export default function ProfileEditPage({
   isLoggedIn,
   user,
   onLoginClick,
+  onUserUpdate,
 }) {
   const navigate = useNavigate();
+  const currentUserId = user?.userId ?? user?.id;
 
+  const [name, setName] = useState(user?.name ?? "");
+  const [department, setDepartment] = useState(user?.department ?? "");
+  const [grade, setGrade] = useState(normalizeGrade(user?.grade));
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [loadingInterests, setLoadingInterests] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [initialInterests, setInitialInterests] = useState(DEFAULT_INTERESTS);
   // 슬라이더 시각적 상태 (0~10)
   const [interests, setInterests] = useState(DEFAULT_INTERESTS);
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setName("");
+      setDepartment("");
+      setGrade("");
+      return;
+    }
+
+    setName(user?.name ?? "");
+    setDepartment(user?.department ?? "");
+    setGrade(normalizeGrade(user?.grade));
+    setProfileError("");
+  }, [currentUserId, user?.name, user?.department, user?.grade]);
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setInterests(DEFAULT_INTERESTS);
+      setInitialInterests(DEFAULT_INTERESTS);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadInterests() {
+      try {
+        setLoadingInterests(true);
+        const vector = await getUserInterestVectors(currentUserId);
+
+        if (cancelled || !vector) return;
+
+        const normalizedVector = normalizeInterestVector(vector);
+        setInterests(normalizedVector);
+        setInitialInterests(normalizedVector);
+      } catch (error) {
+        if (!cancelled) {
+          setProfileError(error.message);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingInterests(false);
+        }
+      }
+    }
+
+    loadInterests();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUserId]);
 
   const handleInterestChange = (field, value) => {
     setInterests((prev) => ({ ...prev, [field]: Number(value) }));
   };
+
+  const hasInterestChanges = INTEREST_KEYS.some(
+    (key) => interests[key] !== initialInterests[key],
+  );
+
+  async function handleSaveProfile() {
+    if (!currentUserId) {
+      window.alert("로그인 후 프로필을 수정할 수 있습니다.");
+      return;
+    }
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setProfileError("이름은 필수입니다.");
+      return;
+    }
+
+    if (!window.confirm("프로필과 관심 분야 설정을 저장하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      setSavingProfile(true);
+      setProfileError("");
+      const data = await updateUserProfile(currentUserId, {
+        name: trimmedName,
+        department: department.trim(),
+        grade,
+      });
+
+      if (hasInterestChanges) {
+        const vectorData = await updateUserInterestVector(currentUserId, interests);
+        const savedVector = normalizeInterestVector(vectorData.vector);
+        setInterests(savedVector);
+        setInitialInterests(savedVector);
+      }
+
+      const profile = data.user;
+      onUserUpdate?.({
+        id: profile.userId,
+        userId: profile.userId,
+        name: profile.name,
+        email: profile.email,
+        department: profile.department,
+        grade: profile.grade,
+        createdAt: profile.createdAt,
+      });
+      navigate("/mypage");
+    } catch (error) {
+      setProfileError(error.message);
+    } finally {
+      setSavingProfile(false);
+    }
+  }
 
   return (
     <div className="profile-edit-page">
@@ -101,7 +273,6 @@ export default function ProfileEditPage({
 
       <main className="profile-edit-page__main">
         <div className="profile-edit-page__inner">
-
           {/* 상단 헤더 */}
           <div className="profile-edit-page__header">
             <h1 className="profile-edit-page__title">프로필 수정</h1>
@@ -117,7 +288,6 @@ export default function ProfileEditPage({
 
           {/* 프로필 카드 */}
           <div className="profile-edit-card">
-
             <div className="profile-edit-card__avatar-wrap">
               <div className="profile-edit-card__avatar">
                 <IconUser stroke="#ffffff" />
@@ -125,13 +295,13 @@ export default function ProfileEditPage({
             </div>
 
             <div className="profile-edit-card__form">
-
               <div className="form-field">
                 <label className="form-field__label">이름</label>
                 <input
                   className="form-field__input"
                   type="text"
-                  defaultValue="김경상"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   placeholder="이름을 입력하세요"
                 />
               </div>
@@ -141,7 +311,8 @@ export default function ProfileEditPage({
                 <input
                   className="form-field__input"
                   type="text"
-                  defaultValue="컴퓨터과학과"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
                   placeholder="학과를 입력하세요"
                 />
               </div>
@@ -151,20 +322,21 @@ export default function ProfileEditPage({
                 <div className="profile-edit-card__select-wrap">
                   <select
                     className="form-field__input form-field__select profile-edit-card__select"
-                    defaultValue="3"
+                    value={grade}
+                    onChange={(e) => setGrade(e.target.value)}
                   >
-                    <option value="1">1학년</option>
-                    <option value="2">2학년</option>
-                    <option value="3">3학년</option>
-                    <option value="4">4학년</option>
+                    <option value="">학년을 선택하세요</option>
+                    <option value="1학년">1학년</option>
+                    <option value="2학년">2학년</option>
+                    <option value="3학년">3학년</option>
+                    <option value="4학년">4학년</option>
                   </select>
-                  <span className="profile-edit-card__select-icon">
-                    <IconChevronDown />
-                  </span>
                 </div>
               </div>
-
             </div>
+            {profileError && (
+              <p className="form-field__error">{profileError}</p>
+            )}
           </div>
 
           {/* 관심 분야 설정 카드 */}
@@ -177,13 +349,20 @@ export default function ProfileEditPage({
             </div>
 
             <div className="recommend-pref-card__list">
+              {loadingInterests && (
+                <p className="form-field__hint">관심도 정보를 불러오는 중입니다.</p>
+              )}
               {Object.entries(INTEREST_LABELS).map(([field, label]) => {
                 const value = interests[field];
                 return (
                   <div key={field} className="recommend-pref-item">
                     <div className="recommend-pref-item__header">
-                      <span className="recommend-pref-item__label">{label}</span>
-                      <span className="recommend-pref-item__value">{value}</span>
+                      <span className="recommend-pref-item__label">
+                        {label}
+                      </span>
+                      <span className="recommend-pref-item__value">
+                        {value}
+                      </span>
                     </div>
                     <div className="recommend-pref-item__track-wrap">
                       <div className="recommend-pref-item__track-bg" />
@@ -198,7 +377,9 @@ export default function ProfileEditPage({
                         max="10"
                         step="1"
                         value={value}
-                        onChange={(e) => handleInterestChange(field, e.target.value)}
+                        onChange={(e) =>
+                          handleInterestChange(field, e.target.value)
+                        }
                       />
                     </div>
                     <div className="recommend-pref-item__scale">
@@ -223,13 +404,13 @@ export default function ProfileEditPage({
             <button
               type="button"
               className="btn-action btn-action--save"
-              onClick={() => navigate("/mypage")}
+              disabled={savingProfile}
+              onClick={handleSaveProfile}
             >
               <IconSave />
-              저장하기
+              {savingProfile ? "저장 중..." : "저장하기"}
             </button>
           </div>
-
         </div>
       </main>
 

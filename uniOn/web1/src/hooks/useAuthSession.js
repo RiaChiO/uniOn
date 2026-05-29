@@ -27,6 +27,8 @@ async function syncFirebaseUser(firebaseUser) {
     userId: data.user.userId,
     name: data.user.name,
     email: data.user.email,
+    department: data.user.department,
+    grade: data.user.grade,
     createdAt: data.user.createdAt,
   };
 }
@@ -82,11 +84,16 @@ export function useAuthSession() {
     setUser(null);
   }
 
+  function updateUser(partialUser) {
+    setUser((prev) => (prev ? { ...prev, ...partialUser } : prev));
+  }
+
   return {
     authLoading,
     isLoggedIn,
     loginWithGoogle,
     logout,
+    updateUser,
     user,
   };
 }

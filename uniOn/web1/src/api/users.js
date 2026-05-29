@@ -18,6 +18,38 @@ export function syncUser({ userId, name, email }) {
   );
 }
 
+export function updateUserProfile(userId, { name, department, grade }) {
+  return requestJson(
+    `/api/users/${encodeURIComponent(userId)}/profile`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        department,
+        grade,
+      }),
+    },
+    "프로필 저장에 실패했습니다."
+  );
+}
+
+export function updateUserInterestVector(userId, vector) {
+  return requestJson(
+    `/api/users/vectors/${encodeURIComponent(userId.trim())}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(vector),
+    },
+    "관심도 저장에 실패했습니다."
+  );
+}
+
 export function getUserMeetings(userId) {
   return requestJson(
     `/api/users/${encodeURIComponent(userId)}/meetings`,
@@ -62,23 +94,8 @@ export async function getUserInterestVectors(userId) {
   if (!userId) return null;
 
   try {
-    const url = `/api/users/vectors/${encodeURIComponent(userId.trim())}`;
-    const response = await fetch(`http://localhost:4000${url}`);
-    
-    if (!response.ok) {
-      console.error(`서버 응답 오류: ${response.status}`);
-      return null;
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error("getUserInterestVectors Error:", error);
-    return null;
-  }
-
-  try {
     return await requestJson(
-      `/api/users/vectors/${encodeURIComponent(userId)}`,
+      `/api/users/vectors/${encodeURIComponent(userId.trim())}`,
       {},
       "관심도 데이터를 가져오는데 실패했습니다."
     );

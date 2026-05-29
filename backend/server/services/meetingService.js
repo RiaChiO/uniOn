@@ -81,11 +81,18 @@ function inferDisplayCategory({ displayCategory, tagId, description }) {
   if (displayCategory) return displayCategory;
 
   const text = String(description ?? "");
-  if (text.includes("공연분과") || text.includes("공연 관련")) return "music";
-  if (text.includes("체육분과")) return "sports";
-  if (text.includes("학술분과")) return "academic";
-  if (text.includes("봉사")) return "volunteer";
-  if (text.includes("종교분과")) return "religion";
+  if (/창업|경영|마케팅|투자|브랜딩|스타트업|비즈니스|경제|공모전/.test(text)) return "startup";
+  if (/영어|일본어|중국어|외국어|회화|토익|언어|국제/.test(text)) return "language";
+  if (/네트워킹|커뮤니티|토론|발표|교류|친목|취업|면접|포트폴리오/.test(text)) return "networking";
+  if (/알고리즘|코딩|개발|프로그래밍|웹|앱|IT|컴활|파이썬|자바|데이터|AI|인공지능|머신러닝|해커톤|백준/.test(text)) return "it";
+  if (/사진|영상|필름|카메라|촬영|편집|미디어/.test(text)) return "photo";
+  if (/미술|공예|드로잉|그림|캘리|디자인|일러스트/.test(text)) return "art";
+  if (/공연|음악|밴드|보컬|기타|연극|극예술|합창|댄스|스트링|오케스트라|풍물|노래|메아리|로망스/.test(text)) return "music";
+  if (/운동|스포츠|체육|러닝|축구|농구|배드민턴|배드|테니스|탁구|야구|볼링|등산|헬스|요가|수영|자전거|풋살|검도|태권도|유도|족구/.test(text)) return "sports";
+  if (/봉사|사회|플로깅|환경|나눔/.test(text)) return "volunteer";
+  if (/종교|기독|불교|가톨릭|성경|기도|선교/.test(text)) return "religion";
+  if (/게임|e스포츠|롤|리그 오브 레전드|보드게임|내전/.test(text)) return "game";
+  if (/학술|스터디|공부|교육|자격증|시험|기출/.test(text)) return "academic";
 
   const fallbackByTag = {
     study: "academic",

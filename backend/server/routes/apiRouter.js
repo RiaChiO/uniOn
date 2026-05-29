@@ -29,9 +29,12 @@ import {
 import { getRecommendationsByUserId } from "../services/recommendationService.js";
 import {
   addUserWishlistMeeting,
+  getUserInterestVector,
   getUserWishlistMeetings,
   getUsers,
   removeUserWishlistMeeting,
+  updateUserInterestVector,
+  updateUserProfile,
   upsertUser,
 } from "../services/userService.js";
 
@@ -84,25 +87,103 @@ export async function handleApiRoute(req, res, pathname) {
         userId: user.user_id,
         name: user.name,
         email: user.email,
+        department: user.department,
+        grade: user.grade,
         createdAt: user.created_at,
       },
     });
     return;
   }
 
-  if (req.method === "GET" && pathname.startsWith("/api/users/vectors/")) {
-    const userId = decodeURIComponent(pathname.replace("/api/users/vectors/", ""));
-    const result = await pool.query(
-      "SELECT * FROM user_interest_vectors WHERE TRIM(user_id) = TRIM($1)", 
-      [userId]
+  if (pathname.startsWith("/api/users/") && pathname.endsWith("/profile")) {
+    const userId = decodeURIComponent(
+      pathname.replace("/api/users/", "").replace("/profile", "")
     );
-    
-    if (result.rows.length === 0) {
-      sendJson(res, 404, { message: "유저 벡터 정보를 찾을 수 없습니다." });
+
+    if (!userId) {
+      sendJson(res, 400, {
+        message: "userId는 필수입니다.",
+      });
       return;
     }
-    sendJson(res, 200, result.rows[0]);
-    return;
+
+    if (req.method === "PATCH") {
+      const body = await readJsonBody(req);
+      const name = String(body.name ?? "").trim();
+      const department = String(body.department ?? "").trim();
+      const grade = String(body.grade ?? "").trim();
+
+      if (!name) {
+        sendJson(res, 400, {
+          message: "이름은 필수입니다.",
+        });
+        return;
+      }
+
+      try {
+        const user = await updateUserProfile({
+          userId,
+          name,
+          department,
+          grade,
+        });
+        sendJson(res, 200, {
+          message: "프로필이 저장되었습니다.",
+          user: {
+            userId: user.user_id,
+            name: user.name,
+            email: user.email,
+            department: user.department,
+            grade: user.grade,
+            createdAt: user.created_at,
+          },
+        });
+      } catch (error) {
+        sendJson(res, error.statusCode ?? 500, {
+          message: error.message || "프로필 저장 중 오류가 발생했습니다.",
+        });
+      }
+      return;
+    }
+  }
+
+  if (pathname.startsWith("/api/users/vectors/")) {
+    const userId = decodeURIComponent(pathname.replace("/api/users/vectors/", ""));
+
+    if (!userId) {
+      sendJson(res, 400, {
+        message: "userId는 필수입니다.",
+      });
+      return;
+    }
+
+    if (req.method === "GET") {
+      try {
+        const vector = await getUserInterestVector(userId);
+        sendJson(res, 200, vector);
+      } catch (error) {
+        sendJson(res, error.statusCode ?? 500, {
+          message: error.message || "유저 벡터 정보를 불러오지 못했습니다.",
+        });
+      }
+      return;
+    }
+
+    if (req.method === "PATCH") {
+      try {
+        const body = await readJsonBody(req);
+        const vector = await updateUserInterestVector({ userId, vector: body });
+        sendJson(res, 200, {
+          message: "관심 벡터가 저장되었습니다.",
+          vector,
+        });
+      } catch (error) {
+        sendJson(res, error.statusCode ?? 500, {
+          message: error.message || "관심 벡터 저장 중 오류가 발생했습니다.",
+        });
+      }
+      return;
+    }
   }
 
   if (pathname.startsWith("/api/users/") && pathname.endsWith("/wishlist")) {

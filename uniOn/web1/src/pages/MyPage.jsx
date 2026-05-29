@@ -112,7 +112,7 @@ export default function MyPage({
   const displayedWishlistClubs = user ? wishlistClubs : [];
   const displayedDepartment = displayUser.department ?? "학과 정보 없음";
   const displayedEmail = displayUser.email ?? "로그인이 필요합니다";
-  const displayedGrade = displayUser.grade ?? "학번 정보 없음";
+  const displayedGrade = displayUser.grade ?? "학년 정보 없음";
   const displayedJoinDate = formatDate(
     displayUser.createdAt ?? displayUser.joinDate,
   );

@@ -12,10 +12,20 @@ async function ensureWishlistTable(client = pool) {
   `);
 }
 
+async function ensureUserProfileColumns(client = pool) {
+  await client.query(`
+    ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS department TEXT,
+      ADD COLUMN IF NOT EXISTS grade TEXT
+  `);
+}
+
 export async function getUsers() {
+  await ensureUserProfileColumns();
+
   const result = await pool.query(
     `
-    SELECT user_id, name, email, created_at
+    SELECT user_id, name, email, department, grade, created_at
     FROM users
     ORDER BY
       NULLIF(regexp_replace(user_id, '[^0-9]', '', 'g'), '')::INT,
@@ -39,12 +49,36 @@ function createTemporaryInterestVector() {
   };
 }
 
+function normalizeVectorScore(value, field) {
+  const score = Number(value);
+
+  if (!Number.isInteger(score) || score < 0 || score > 10) {
+    const error = new Error(`${field} 값은 0부터 10까지의 정수여야 합니다.`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return score;
+}
+
+function normalizeInterestVector(vector) {
+  return {
+    study: normalizeVectorScore(vector.study, "study"),
+    exercise: normalizeVectorScore(vector.exercise, "exercise"),
+    culture: normalizeVectorScore(vector.culture, "culture"),
+    game: normalizeVectorScore(vector.game, "game"),
+    religion: normalizeVectorScore(vector.religion, "religion"),
+    volunteer: normalizeVectorScore(vector.volunteer, "volunteer"),
+  };
+}
+
 export async function upsertUser({ userId, name, email }) {
   const vector = createTemporaryInterestVector();
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
+    await ensureUserProfileColumns(client);
 
     const result = await client.query(
       `
@@ -52,9 +86,8 @@ export async function upsertUser({ userId, name, email }) {
       VALUES ($1, $2, $3, NOW())
       ON CONFLICT (user_id)
       DO UPDATE SET
-        name = EXCLUDED.name,
         email = EXCLUDED.email
-      RETURNING user_id, name, email, created_at
+      RETURNING user_id, name, email, department, grade, created_at
       `,
       [userId, name, email]
     );
@@ -86,6 +119,82 @@ export async function upsertUser({ userId, name, email }) {
   } finally {
     client.release();
   }
+}
+
+export async function getUserInterestVector(userId) {
+  const result = await pool.query(
+    `
+    SELECT user_id, study, exercise, culture, game, religion, volunteer
+    FROM user_interest_vectors
+    WHERE TRIM(user_id) = TRIM($1)
+    `,
+    [userId]
+  );
+
+  if (result.rows.length === 0) {
+    const error = new Error("유저 벡터 정보를 찾을 수 없습니다.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return result.rows[0];
+}
+
+export async function updateUserInterestVector({ userId, vector }) {
+  const normalizedVector = normalizeInterestVector(vector);
+
+  const result = await pool.query(
+    `
+    INSERT INTO user_interest_vectors
+      (user_id, study, exercise, culture, game, religion, volunteer)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    ON CONFLICT (user_id)
+    DO UPDATE SET
+      study = EXCLUDED.study,
+      exercise = EXCLUDED.exercise,
+      culture = EXCLUDED.culture,
+      game = EXCLUDED.game,
+      religion = EXCLUDED.religion,
+      volunteer = EXCLUDED.volunteer
+    RETURNING user_id, study, exercise, culture, game, religion, volunteer
+    `,
+    [
+      userId,
+      normalizedVector.study,
+      normalizedVector.exercise,
+      normalizedVector.culture,
+      normalizedVector.game,
+      normalizedVector.religion,
+      normalizedVector.volunteer,
+    ]
+  );
+
+  return result.rows[0];
+}
+
+export async function updateUserProfile({ userId, name, department, grade }) {
+  await ensureUserProfileColumns();
+
+  const result = await pool.query(
+    `
+    UPDATE users
+    SET
+      name = $2,
+      department = NULLIF($3, ''),
+      grade = NULLIF($4, '')
+    WHERE TRIM(user_id) = TRIM($1)
+    RETURNING user_id, name, email, department, grade, created_at
+    `,
+    [userId, name, department, grade]
+  );
+
+  if (result.rows.length === 0) {
+    const error = new Error("사용자 정보를 찾을 수 없습니다.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return result.rows[0];
 }
 
 export async function getUserWishlistMeetings(userId) {

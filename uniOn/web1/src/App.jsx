@@ -87,6 +87,7 @@ export default function App() {
     isLoggedIn,
     loginWithGoogle,
     logout,
+    updateUser,
     user,
   } = useAuthSession();
   const userVector = useUserVector({ isLoggedIn, user });
@@ -142,6 +143,7 @@ export default function App() {
     authLoading,
     user,
     onLoginClick: () => navigate("/login"),
+    onUserUpdate: updateUser,
   };
 
   return (
