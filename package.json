@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node backend/app.js",
-    "dev": "npm --prefix ./uniOn/web1 run dev",
-    "dev:test": "npm --prefix ./uniOn/web1 run dev:test",
+    "dev": "npm --prefix ./frontend run dev",
+    "dev:test": "npm --prefix ./frontend run dev:test",
     "api": "node backend/app.js",
     "api:test": "cross-env ALLOW_TEST_LOGIN=true VITE_ALLOW_TEST_LOGIN=true node backend/app.js",
     "demo": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/run-demo.ps1",

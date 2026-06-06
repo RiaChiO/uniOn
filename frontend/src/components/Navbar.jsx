@@ -65,10 +65,10 @@ export default function Navbar({
         </div>
         <nav className="navbar__nav">
           <Link to="/search" className="navbar__nav-link">
-            소모임 찾기
+            모임 찾기
           </Link>
           <Link to="/create" className="navbar__nav-link">
-            소모임 개설
+            모임 개설
           </Link>
           {isLoggedIn ? (
             <button

@@ -1,4 +1,5 @@
 // Role: API server bootstrap and top-level error boundary.
+import "./server/config/loadEnv.js";
 import express from "express";
 import cors from "cors";
 import { apiRouter } from "./server/routes/apiRouter.js";

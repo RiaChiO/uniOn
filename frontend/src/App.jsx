@@ -31,14 +31,12 @@ function MainPage({
   onViewAll,
   onDetailClick,
   clubs,
-  meetingTypes,
-  meetingTypesLoading,
   loading,
   error,
+  userVector,
+  recommendationsByMeetingId,
+  recommendationsLoading,
 }) {
-  const [selectedType, setSelectedType] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-
   return (
     <div className="app">
       <Navbar
@@ -54,15 +52,16 @@ function MainPage({
           onCreateClick={onCreateClick}
         />
         {/* 🔧 [기능] Gemini 자기소개서 키워드 매칭 기반 추천 */}
-        <IntroRecommendSection onDetailClick={onDetailClick} />
+        <IntroRecommendSection user={user} onDetailClick={onDetailClick} />
         <ClubListSection
           clubs={clubs}
           limit={6}
           loading={loading}
           error={error}
           searchQuery={searchQuery}
-          selectedType={selectedType}
-          selectedCategory={selectedCategory}
+          userVector={userVector}
+          recommendationsByMeetingId={recommendationsByMeetingId}
+          recommendationsLoading={recommendationsLoading}
           onViewAll={onViewAll}
           onDetailClick={onDetailClick}
         />
@@ -151,10 +150,11 @@ export default function App() {
             onViewAll={() => navigate("/search")}
             onDetailClick={(id) => navigate(`/clubs/${id}`)}
             clubs={clubs}
-            meetingTypes={meetingTypes}
-            meetingTypesLoading={meetingTypesLoading}
             loading={loading}
             error={loadError}
+            userVector={userVector}
+            recommendationsByMeetingId={recommendationsByMeetingId}
+            recommendationsLoading={recommendationsLoading}
           />
         }
       />

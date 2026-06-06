@@ -9,6 +9,7 @@ import {
   updateMeetingJoinRequest,
   updateMeetingRecruitment,
 } from "../api/meetings";
+import { uploadMeetingImage } from "../api/uploads";
 import { CATEGORY_TO_TAG_ID } from "../data/categoryOptions";
 import { mapMeetingToClub } from "../lib/meetingMapper";
 
@@ -30,6 +31,7 @@ export function useMeetingActions({ navigate, setClubs, user }) {
     }
 
     try {
+      const imageUrl = await uploadMeetingImage(formData?.image);
       const data = await createMeeting({
         title,
         meetingType,
@@ -52,6 +54,7 @@ export function useMeetingActions({ navigate, setClubs, user }) {
           ]
             .filter(Boolean)
             .join(", ") || null,
+        imageUrl,
       });
 
       const createdMeeting = data.meeting ?? data;
@@ -119,6 +122,9 @@ export function useMeetingActions({ navigate, setClubs, user }) {
     }
 
     try {
+      const imageUrl = formData?.image
+        ? await uploadMeetingImage(formData.image)
+        : formData?.imageUrl ?? null;
       const data = await updateMeeting(meetingId, {
         title,
         description,
@@ -129,6 +135,7 @@ export function useMeetingActions({ navigate, setClubs, user }) {
         displayCategory: formData?.displayCategory,
         tags: formData?.tags ?? [],
         joinCondition,
+        imageUrl,
       });
 
       const updatedMeeting = data.meeting ?? data;

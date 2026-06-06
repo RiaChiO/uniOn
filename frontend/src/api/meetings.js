@@ -16,6 +16,7 @@ export function createMeeting({
   meetingTime,
   maxMembers,
   joinCondition,
+  imageUrl,
 }) {
   return requestJson(
     "/api/meetings",
@@ -36,6 +37,7 @@ export function createMeeting({
         meetingTime,
         maxMembers,
         joinCondition,
+        imageUrl,
       }),
     },
     "모임 생성에 실패했습니다."

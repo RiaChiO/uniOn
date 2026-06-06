@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import ClubCard from "./ClubCard";
+import { scoreAndSortClubs } from "../lib/recommendationScoring";
 
 export default function ClubListSection({
   clubs = [],
@@ -9,6 +10,9 @@ export default function ClubListSection({
   searchQuery,
   selectedType,
   selectedCategory,
+  userVector = null,
+  recommendationsByMeetingId = {},
+  recommendationsLoading = false,
   onViewAll,
   onDetailClick,
 }) {
@@ -19,7 +23,7 @@ export default function ClubListSection({
       return [];
     }
 
-    return clubs.filter((club) => {
+    const matchedClubs = clubs.filter((club) => {
       const matchesSearch =
         !searchQuery ||
         club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -33,7 +37,21 @@ export default function ClubListSection({
 
       return matchesSearch && matchesType && matchesCategory;
     });
-  }, [clubs, searchQuery, selectedType, selectedCategory]);
+
+    return scoreAndSortClubs({
+      clubs: matchedClubs,
+      userVector,
+      recommendationsByMeetingId,
+      sortBy: "recommend",
+    });
+  }, [
+    clubs,
+    searchQuery,
+    selectedType,
+    selectedCategory,
+    userVector,
+    recommendationsByMeetingId,
+  ]);
   const visibleClubs = filteredClubs.slice(0, displayLimit);
   const hiddenClubCount = Math.max(
     filteredClubs.length - visibleClubs.length,
@@ -52,7 +70,8 @@ export default function ClubListSection({
           <div>
             <h2 className="club-list-section__title">인기 소모임</h2>
             <p className="club-list-section__subtitle">
-              지금 가장 활발하게 활동 중인 소모임을 먼저 보여드려요
+              추천 알고리즘이 맞춤 점수를 반영해 먼저 보여드려요
+              {recommendationsLoading ? " · 계산 반영 중" : ""}
             </p>
           </div>
           <button className="btn btn--text" onClick={onViewAll}>
@@ -69,7 +88,7 @@ export default function ClubListSection({
           </div>
         ) : filteredClubs.length === 0 ? (
           <div className="club-list-section__empty">
-            <p>조건에 맞는 소모임이 없습니다.</p>
+            <p>조건에 맞는 모임이 없습니다.</p>
           </div>
         ) : (
           <>

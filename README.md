@@ -22,7 +22,7 @@ project/
 │  ├─ logic/                    # 시드/추천 보조 스크립트
 │  ├─ postgres/init/            # PostgreSQL 초기 스키마
 │  └─ server/                   # 라우터, 서비스, DB 연결
-├─ uniOn/web1/
+├─ frontend/
 │  ├─ src/                      # React 앱
 │  └─ vite.config.js            # 개발 서버 및 API 프록시
 ├─ docker-compose.yml
@@ -37,7 +37,7 @@ project/
 cd C:\Users\blank\Desktop\DB\project
 npm install
 
-cd .\uniOn\web1
+cd .\frontend
 npm install
 ```
 
@@ -129,4 +129,4 @@ user: gnu_DB
 password: gnublank4898
 ```
 
-세부 프론트 문서는 [uniOn/web1/README.md](./uniOn/web1/README.md), API 및 DB 문서는 [backend/README.md](./backend/README.md)를 참고합니다.
+세부 프론트 문서는 [frontend/README.md](./frontend/README.md), API 및 DB 문서는 [backend/README.md](./backend/README.md)를 참고합니다.

@@ -137,6 +137,8 @@ export default function ClubManagePage({
   const [meetingTime, setMeetingTime] = useState("");
   const [maxMembers,  setMaxMembers]  = useState("");
   const [joinCondition, setJoinCondition] = useState("");
+  const [image, setImage] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [tags,        setTags]        = useState([]);
   const [tagInput,    setTagInput]    = useState("");
   const currentUserId = user?.id ?? user?.userId;
@@ -162,8 +164,18 @@ export default function ClubManagePage({
     setMeetingTime(club.meetingTime);
     setMaxMembers(club.maxMembers ?? "");
     setJoinCondition(club.joinCondition ?? "");
+    setImage(null);
+    setImagePreviewUrl(club.imageUrl ?? "");
     setTags(club.tags || []);
   }, [matchedClub]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
 
   useEffect(() => {
     if (loading || authLoading || !club) return;
@@ -402,7 +414,7 @@ export default function ClubManagePage({
             <button
               className="btn btn--primary"
               // 🔧 [기능] 수정 API 연결
-              onClick={() => onSave && onSave(club.id, { name, description, location, meetingTime, maxMembers, joinCondition, tags, tagId: club.tagId, displayCategory: club.displayCategory })}
+              onClick={() => onSave && onSave(club.id, { name, description, location, meetingTime, maxMembers, joinCondition, image, imageUrl: imagePreviewUrl || club.imageUrl || null, tags, tagId: club.tagId, displayCategory: club.displayCategory })}
             >
               변경사항 저장
             </button>
@@ -437,8 +449,28 @@ export default function ClubManagePage({
             {/* 기본 정보 탭 */}
             {activeTab === "기본 정보" && (
               <div className="manage-card">
-                <div className="manage-card__image-upload">
-                  + 대표 이미지 변경
+                <div
+                  className="manage-card__image-upload"
+                  onClick={() => document.getElementById("manageImageInput").click()}
+                >
+                  <input
+                    id="manageImageInput"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const selectedImage = e.target.files?.[0] ?? null;
+                      setImage(selectedImage);
+                      if (selectedImage) {
+                        setImagePreviewUrl(URL.createObjectURL(selectedImage));
+                      }
+                    }}
+                  />
+                  {imagePreviewUrl ? (
+                    <img className="manage-card__image-preview" src={imagePreviewUrl} alt="" />
+                  ) : (
+                    "+ 대표 이미지 변경"
+                  )}
                 </div>
                 <div className="form-field">
                   <label className="form-field__label">모임명</label>

@@ -106,12 +106,13 @@ img    { max-width: 100%; display: block; }
 .club-card { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .2s, transform .2s; }
 .club-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
 .club-card__thumbnail { position: relative; height: 120px; background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
-.club-card__classification { position: absolute; top: 8px; left: 8px; max-width: calc(100% - 104px); display: inline-flex; align-items: center; gap: 7px; min-width: 0; background: rgba(255,255,255,.92); color: var(--color-primary); font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-full); line-height: 1.25; box-shadow: 0 1px 2px rgba(15, 23, 42, .08); }
+.club-card__image { width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.club-card__classification { position: absolute; z-index: 1; top: 8px; left: 8px; max-width: calc(100% - 104px); display: inline-flex; align-items: center; gap: 7px; min-width: 0; background: rgba(255,255,255,.92); color: var(--color-primary); font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-full); line-height: 1.25; box-shadow: 0 1px 2px rgba(15, 23, 42, .08); }
 .club-card__category-text,
 .club-card__type-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .club-card__type-text { color: var(--color-text-sub); font-weight: 600; }
 .club-card__classification-divider { width: 1px; height: 12px; background: var(--color-border); flex-shrink: 0; }
-.club-card__recruiting-badge { position: absolute; top: 8px; right: 8px; background: var(--color-recruiting); color: #fff; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-full); line-height: 1.25; box-shadow: 0 1px 2px rgba(15, 23, 42, .08); }
+.club-card__recruiting-badge { position: absolute; z-index: 1; top: 8px; right: 8px; background: var(--color-recruiting); color: #fff; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-full); line-height: 1.25; box-shadow: 0 1px 2px rgba(15, 23, 42, .08); }
 .club-card__recruiting-badge--closed { background: #64748b; }
 .club-card__body { padding: 20px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
 .club-card__name { font-size: 17px; font-weight: 700; }
@@ -195,7 +196,6 @@ img    { max-width: 100%; display: block; }
 .search-filter__group { margin-bottom: 28px; }
 .search-filter__group-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
 .search-filter__check-label { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 8px; cursor: pointer; }
-.search-filter__apply { width: 100%; justify-content: center; margin-top: 8px; }
 
 .search-results { flex: 1; }
 .search-results__header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
@@ -285,7 +285,8 @@ img    { max-width: 100%; display: block; }
 .club-detail-page__sidebar { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
 
 .club-detail__hero { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
-.club-detail__hero-img { height: 240px; background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+.club-detail__hero-img { height: 240px; background: linear-gradient(135deg, #dbeafe, #bfdbfe); overflow: hidden; }
+.club-detail__hero-image { width: 100%; height: 100%; object-fit: contain; object-position: center; }
 .club-detail__hero-info { padding: 24px; }
 .club-detail__badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .club-detail__badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: var(--radius-full); background: var(--color-bg-sub); color: var(--color-text-sub); border: 1px solid var(--color-border); }
@@ -418,6 +419,7 @@ img    { max-width: 100%; display: block; }
 .manage-card { background: var(--color-bg); border: 1px solid var(--color-border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); padding: 28px; display: flex; flex-direction: column; gap: 20px; }
 .manage-card__image-upload { border: 2px dashed var(--color-border); border-radius: var(--radius-sm); padding: 24px; text-align: center; cursor: pointer; color: var(--color-text-sub); font-size: 14px; transition: border-color .2s; }
 .manage-card__image-upload:hover { border-color: var(--color-primary); }
+.manage-card__image-preview { width: 100%; height: 180px; object-fit: contain; object-position: center; border-radius: var(--radius-sm); }
 
 .manage-section { display: flex; flex-direction: column; gap: 0; }
 .manage-section__title { font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--color-text); }
@@ -955,37 +957,31 @@ button.intro-card__submit:disabled {
   border-radius: var(--radius-full);
 }
 
-/* 추천 소모임 리스트 */
-.intro-rec-list {
+.intro-rec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+.intro-rec-card {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
-.intro-rec-item {
-  padding: 18px 4px;
-  border-bottom: 1px solid var(--color-border);
-  cursor: pointer;
-  transition: background-color .15s;
-}
-.intro-rec-item:last-child {
-  border-bottom: none;
-}
-.intro-rec-item:hover {
-  background-color: var(--color-bg-sub);
-}
-.intro-rec-item__top {
+.intro-rec-card__summary {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 10px;
+  align-items: center;
   flex-wrap: wrap;
+  gap: 8px;
 }
-.intro-rec-item__name {
-  font-size: 16px;
+.intro-rec-card__rank {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--color-primary);
-  margin: 0;
-  line-height: 1.4;
 }
 .intro-rec-item__match {
   display: inline-flex;
@@ -999,19 +995,6 @@ button.intro-card__submit:disabled {
   border-radius: var(--radius-full);
   flex-shrink: 0;
   white-space: nowrap;
-}
-.intro-rec-item__desc {
-  font-size: 14px;
-  color: var(--color-text);
-  line-height: 1.6;
-  margin-bottom: 10px;
-}
-.intro-rec-item__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  font-size: 13px;
-  color: var(--color-text-sub);
 }
 .intro-rec-item__meta-item {
   display: inline-flex;
@@ -1032,10 +1015,5 @@ button.intro-card__submit:disabled {
   .intro-card,
   .intro-result-card {
     padding: 20px 18px;
-  }
-  .intro-rec-item__top {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
   }
 }

@@ -26,6 +26,8 @@ import {
   meetingTypeExists,
 } from "../services/meetingTypeService.js";
 import { getRecommendationsByUserId } from "../services/recommendationService.js";
+import { getIntroRecommendations } from "../services/introRecommendationService.js";
+import { createMeetingImageUploadSignature } from "../services/cloudinaryUploadService.js";
 import {
   addUserWishlistMeeting,
   getUserInterestVector,
@@ -367,6 +369,55 @@ apiRouter.get("/api/meetings", asyncRoute(async (req, res) => {
   res.status(200).json(meetings);
 }));
 
+apiRouter.post("/api/uploads/meeting-image-signature", asyncRoute(async (req, res) => {
+  const body = req.body ?? {};
+  const result = createMeetingImageUploadSignature({
+    contentType: body.contentType,
+    size: body.size,
+  });
+
+  res.status(200).json(result);
+}));
+
+apiRouter.post("/api/intro-recommendations", asyncRoute(async (req, res) => {
+  const body = req.body ?? {};
+  const introText = String(body.introText ?? "").trim();
+  const userId = body.userId == null ? null : String(body.userId).trim();
+  const limit = body.limit == null ? undefined : Number(body.limit);
+
+  try {
+    const result = await getIntroRecommendations({ introText, userId, limit });
+    res.status(200).json(result);
+  } catch (error) {
+    sendServiceError(res, error, "자기소개서 기반 추천을 불러오지 못했습니다.");
+  }
+}));
+
+apiRouter.post("/api/recommend/clubs", asyncRoute(async (req, res) => {
+  const body = req.body ?? {};
+  const introText = String(body.introduction ?? body.introText ?? "").trim();
+  const userId = body.userId == null ? null : String(body.userId).trim();
+  const limit = body.limit == null ? 3 : Number(body.limit);
+
+  try {
+    const result = await getIntroRecommendations({ introText, userId, limit });
+    res.status(200).json({
+      user_extracted_keywords: result.keywords,
+      recommended_meetings: result.recommendations.map((meeting) => ({
+        meeting_id: meeting.meetingId,
+        title: meeting.title,
+        tag_id: meeting.tagId,
+        description: meeting.description,
+        location: meeting.location,
+        max_members: meeting.maxMembers,
+        match_score: meeting.matchScore,
+      })),
+    });
+  } catch (error) {
+    sendServiceError(res, error, "AI 문맥 추천을 처리하는 중 서버 내부 오류가 발생했습니다.");
+  }
+}));
+
 apiRouter.post("/api/meetings", asyncRoute(async (req, res) => {
   const body = req.body ?? {};
   const title = String(body.title ?? "").trim();
@@ -380,6 +431,7 @@ apiRouter.post("/api/meetings", asyncRoute(async (req, res) => {
   const meetingTime = body.meetingTime == null ? null : String(body.meetingTime).trim();
   const maxMembers = body.maxMembers == null || body.maxMembers === "" ? null : Number(body.maxMembers);
   const joinCondition = body.joinCondition == null ? null : String(body.joinCondition).trim();
+  const imageUrl = body.imageUrl == null ? null : String(body.imageUrl).trim();
 
   if (!title || !meetingType || !description || !hostUserId || !tagId) {
     res.status(400).json({
@@ -407,6 +459,7 @@ apiRouter.post("/api/meetings", asyncRoute(async (req, res) => {
     meetingTime,
     maxMembers,
     joinCondition,
+    imageUrl,
   });
   res.status(201).json({
     message: "모임이 생성되었습니다.",
@@ -716,6 +769,7 @@ apiRouter.patch("/api/meetings/:meetingId", asyncRoute(async (req, res) => {
   const tags = body.tags == null ? null : Array.isArray(body.tags) ? body.tags : [];
   const joinCondition = body.joinCondition == null ? null : String(body.joinCondition).trim();
   const maxMembers = body.maxMembers == null || body.maxMembers === "" ? null : Number(body.maxMembers);
+  const imageUrl = body.imageUrl == null ? null : String(body.imageUrl).trim();
 
   if (!meetingId || !title || !description) {
     res.status(400).json({
@@ -736,6 +790,7 @@ apiRouter.patch("/api/meetings/:meetingId", asyncRoute(async (req, res) => {
       displayCategory,
       tags,
       joinCondition,
+      imageUrl,
     });
     res.status(200).json({
       message: "모임 정보가 수정되었습니다.",

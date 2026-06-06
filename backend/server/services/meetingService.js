@@ -38,6 +38,13 @@ async function ensureMeetingDisplayCategoryColumn(client = pool) {
   `);
 }
 
+async function ensureMeetingImageUrlColumn(client = pool) {
+  await client.query(`
+    ALTER TABLE meetings
+    ADD COLUMN IF NOT EXISTS image_url TEXT
+  `);
+}
+
 async function ensureMeetingCustomTagsTable(client = pool) {
   await client.query(`
     CREATE TABLE IF NOT EXISTS meeting_custom_tags (
@@ -118,6 +125,7 @@ function inferDisplayCategory({ displayCategory, tagId, description }) {
 
 export async function getMeetings() {
   await ensureMeetingDisplayCategoryColumn();
+  await ensureMeetingImageUrlColumn();
   await ensureMeetingCustomTagsTable();
 
   const result = await pool.query(
@@ -147,6 +155,7 @@ export async function getMeetings() {
       m.max_members AS "maxMembers",
       m.is_recruiting AS "isRecruiting",
       m.join_condition AS "joinCondition",
+      m.image_url AS "imageUrl",
       m.host_user_id AS "hostUserId",
       host.name AS "leaderName",
       host.department AS "leaderDepartment",
@@ -188,7 +197,7 @@ export async function getMeetings() {
     GROUP BY 
       m.meeting_id, m.title, m.meeting_type, mt.label, m.tag_id, m.display_category,
       m.description, m.location, m.meeting_time, m.max_members, m.is_recruiting,
-      m.join_condition, m.host_user_id, host.name, host.department, host.grade,
+      m.join_condition, m.image_url, m.host_user_id, host.name, host.department, host.grade,
       m.created_at, mp_count.participant_count
     ORDER BY
       NULLIF(regexp_replace(m.meeting_id, '[^0-9]', '', 'g'), '')::INT,
@@ -545,12 +554,14 @@ export async function createMeeting({
   meetingTime,
   maxMembers,
   joinCondition,
+  imageUrl,
 }) {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
     await ensureMeetingDisplayCategoryColumn(client);
+    await ensureMeetingImageUrlColumn(client);
     await ensureMeetingCustomTagsTable(client);
 
     const nextIdResult = await client.query(
@@ -576,10 +587,11 @@ export async function createMeeting({
         max_members,
         is_recruiting,
         join_condition,
+        image_url,
         host_user_id,
         created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10, $11, NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10, $11, $12, NOW())
       `,
       [
         meetingId,
@@ -592,6 +604,7 @@ export async function createMeeting({
         meetingTime,
         maxMembers,
         joinCondition,
+        imageUrl,
         hostUserId,
       ]
     );
@@ -638,6 +651,7 @@ export async function createMeeting({
       maxMembers,
       isRecruiting: true,
       joinCondition,
+      imageUrl,
       hostUserId,
       leaderName: hostResult.rows[0]?.name,
       leaderDepartment: hostResult.rows[0]?.department,
@@ -662,12 +676,14 @@ export async function updateMeeting({
   displayCategory,
   tags,
   joinCondition,
+  imageUrl,
 }) {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
     await ensureMeetingDisplayCategoryColumn(client);
+    await ensureMeetingImageUrlColumn(client);
     await ensureMeetingCustomTagsTable(client);
 
     const result = await client.query(
@@ -681,7 +697,8 @@ export async function updateMeeting({
         max_members = $6,
         tag_id = $7,
         join_condition = $8,
-        display_category = COALESCE($9, m.display_category)
+        display_category = COALESCE($9, m.display_category),
+        image_url = COALESCE($10, m.image_url)
       FROM users host
       WHERE m.meeting_id = $1
         AND host.user_id = m.host_user_id
@@ -697,6 +714,7 @@ export async function updateMeeting({
         m.max_members AS "maxMembers",
         m.is_recruiting AS "isRecruiting",
         m.join_condition AS "joinCondition",
+        m.image_url AS "imageUrl",
         m.host_user_id AS "hostUserId",
         host.name AS "leaderName",
         host.department AS "leaderDepartment",
@@ -715,6 +733,7 @@ export async function updateMeeting({
         displayCategory == null
           ? null
           : inferDisplayCategory({ displayCategory, tagId, description }),
+        imageUrl,
       ]
     );
 

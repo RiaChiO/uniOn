@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS meetings (
   max_members INTEGER,
   is_recruiting BOOLEAN NOT NULL DEFAULT TRUE,
   join_condition TEXT,
+  image_url TEXT,
   host_user_id TEXT NOT NULL REFERENCES users(user_id),
   created_at TIMESTAMPTZ NOT NULL
 );
@@ -75,6 +76,8 @@ ALTER TABLE meetings
   ADD COLUMN IF NOT EXISTS is_recruiting BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE meetings
   ADD COLUMN IF NOT EXISTS join_condition TEXT;
+ALTER TABLE meetings
+  ADD COLUMN IF NOT EXISTS image_url TEXT;
 
 DO $$
 BEGIN

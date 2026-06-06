@@ -2,6 +2,14 @@ export default function ClubCard({ club, onDetailClick }) {
   return (
     <article className="club-card">
       <div className="club-card__thumbnail">
+        {club.imageUrl && (
+          <img
+            className="club-card__image"
+            src={club.imageUrl}
+            alt=""
+            loading="lazy"
+          />
+        )}
         <div className="club-card__classification">
           <span className="club-card__category-text">{club.categoryLabel}</span>
           <span className="club-card__classification-divider" />

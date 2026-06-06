@@ -25,6 +25,7 @@ export function mapMeetingToClub(meeting) {
     type: meeting.meetingType,
     typeLabel: meeting.meetingTypeLabel ?? meeting.meetingType,
     description: meeting.description,
+    imageUrl: meeting.imageUrl ?? null,
     location: meeting.location || "장소 협의 예정",
     meetingTime: meeting.meetingTime || "일정 조율중",
     createdAt: meeting.createdAt,

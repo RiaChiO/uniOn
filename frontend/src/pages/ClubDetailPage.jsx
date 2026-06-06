@@ -311,7 +311,15 @@ export default function ClubDetailPage({
           <div className="club-detail-page__content">
             {/* 헤더 이미지 + 기본 정보 */}
             <div className="club-detail__hero">
-              <div className="club-detail__hero-img" />
+              <div className="club-detail__hero-img">
+                {club.imageUrl && (
+                  <img
+                    className="club-detail__hero-image"
+                    src={club.imageUrl}
+                    alt=""
+                  />
+                )}
+              </div>
               <div className="club-detail__hero-info">
                 <div className="club-detail__badges">
                   <span className="club-detail__badge">
