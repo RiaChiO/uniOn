@@ -3,6 +3,7 @@ import "./server/config/loadEnv.js";
 import express from "express";
 import cors from "cors";
 import { apiRouter } from "./server/routes/apiRouter.js";
+import { getGeminiIntroModelName } from "./server/services/introRecommendationService.js";
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -34,4 +35,5 @@ app.use((error, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`API server listening on http://localhost:${PORT}`);
+  console.log(`Gemini intro model: ${getGeminiIntroModelName()}`);
 });

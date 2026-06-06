@@ -97,7 +97,7 @@ export default function IntroRecommendSection({ user, onDetailClick }) {
             disabled={!introText.trim() || isSubmitting}
           >
             <span aria-hidden="true">🎯</span>
-            {isSubmitting ? "추천 찾는 중..." : "나의 맞춤 소모임 찾기"}
+            {isSubmitting ? "자기소개를 바탕으로 어울리는 소모임을 찾는 중입니다..." : "나의 맞춤 소모임 찾기"}
           </button>
         </div>
 

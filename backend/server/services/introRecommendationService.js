@@ -1,5 +1,5 @@
 // Role: recommend meetings from free-form intro text; Gemini can replace local analysis.
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { pool } from "../db/pool.js";
 import { getMeetings } from "./meetingService.js";
 
@@ -8,11 +8,33 @@ const DEFAULT_LIMIT = 6;
 const MAX_LIMIT = 20;
 const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite";
 const GEMINI_ANALYSIS_INSTRUCTIONS = [
-  "You extract Korean university club recommendation signals.",
-  "Return only JSON with keys: keywords, tagIds, displayCategories.",
-  "tagIds must use only: study, exercise, culture, game, religion, volunteer.",
-  "displayCategories should be concise category ids such as academic, it, sports, music, art, photo, networking, language, startup, culture, game, religion, volunteer.",
+  "Return ONLY valid JSON. No markdown. No explanation.",
+  'Schema: {"keywords":[string],"tagIds":[string],"displayCategories":[string]}.',
+  "tagIds must only contain: study, exercise, culture, game, religion, volunteer.",
+  "displayCategories should use concise ids such as academic, it, sports, music, art, photo, networking, language, startup, culture, game, religion, volunteer.",
 ];
+const GEMINI_RESPONSE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    keywords: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+    },
+    tagIds: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.STRING,
+        enum: ["study", "exercise", "culture", "game", "religion", "volunteer"],
+      },
+    },
+    displayCategories: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+    },
+  },
+  required: ["keywords", "tagIds", "displayCategories"],
+  propertyOrdering: ["keywords", "tagIds", "displayCategories"],
+};
 
 const CATEGORY_RULES = [
   {
@@ -83,6 +105,10 @@ const TAG_VECTOR_INDEX = {
 const EMPTY_TAG_VECTOR = [0, 0, 0, 0, 0, 0];
 let geminiClient = null;
 
+export function getGeminiIntroModelName() {
+  return process.env.GEMINI_INTRO_MODEL || DEFAULT_GEMINI_MODEL;
+}
+
 function createHttpError(message, statusCode) {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -115,10 +141,17 @@ function extractGeminiResponseText(response) {
 }
 
 function parseJsonObject(text) {
-  const trimmed = String(text ?? "").trim();
-  const jsonText = trimmed.startsWith("{")
-    ? trimmed
-    : trimmed.slice(trimmed.indexOf("{"), trimmed.lastIndexOf("}") + 1);
+  const trimmed = String(text ?? "")
+    .replace(/```json|```/gi, "")
+    .trim();
+  const startIndex = trimmed.indexOf("{");
+  const endIndex = trimmed.lastIndexOf("}");
+
+  if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+    throw createHttpError("Gemini 응답을 JSON으로 해석할 수 없습니다.", 502);
+  }
+
+  const jsonText = trimmed.slice(startIndex, endIndex + 1);
 
   return JSON.parse(jsonText);
 }
@@ -144,15 +177,16 @@ async function analyzeIntroTextWithGemini(introText) {
   const client = getGeminiClient();
   if (!client) return null;
 
-  const model = process.env.GEMINI_INTRO_MODEL ?? DEFAULT_GEMINI_MODEL;
+  const model = getGeminiIntroModelName();
   try {
     const response = await client.models.generateContent({
       model,
       contents: buildGeminiPrompt(introText),
       config: {
         responseMimeType: "application/json",
-        maxOutputTokens: 300,
-        temperature: 0.2,
+        responseJsonSchema: GEMINI_RESPONSE_SCHEMA,
+        maxOutputTokens: 800,
+        temperature: 0.1,
       },
     });
 
