@@ -60,7 +60,6 @@ export function scoreClubRecommendation({
   userVector = null,
   recommendationsByMeetingId = {},
 }) {
-  const serverRecommendation = recommendationsByMeetingId[String(club.id)];
   const activeUserVector = userVector ?? DEFAULT_USER_VECTOR;
   const userVectorArray = VECTOR_KEYS.map(
     (key) => Number(activeUserVector[key]) || 0,
@@ -81,17 +80,12 @@ export function scoreClubRecommendation({
   const rawJaccard = getJaccard(userVectorArray, tagVector);
   
   const fallbackScore = Math.round(((rawCosine + 1) + (rawJaccard * 2)) * 25);
-  const hasServerScore = Number.isFinite(serverRecommendation?.finalScore);
 
   return {
     ...club,
-    recommendationScore: hasServerScore
-      ? serverRecommendation.finalScore
-      : fallbackScore,
-    tagWeightScore: hasServerScore
-      ? Math.round(Number(serverRecommendation.jaccard ?? 0) * 50)
-      : Math.round(rawJaccard * 2 * 25),
-    recommendationSource: hasServerScore ? "server" : "hybrid_fallback",
+    recommendationScore: fallbackScore,
+    tagWeightScore: Math.round(rawJaccard * 2 * 25),
+    recommendationSource: "hybrid_forced",
   };
 }
 
