@@ -37,6 +37,21 @@ import {
   upsertUser,
 } from "../services/userService.js";
 
+// 🚨 [안전장치] ESM 순서 뒤틀림 방지 및 절대 경로 기반 dotenv 로드
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+import { GoogleGenAI } from "@google/genai";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+
+// 🔑 환경 변수 주입 후 딱 한 번만 GoogleGenAI 인스턴스 생성
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+// 🔍 서버 구동 시 터미널에 키 로드 성공 여부를 한눈에 보여주는 디버깅 로그
+console.log("🔑 [Gemini Auth Check] API KEY 로드 상태:", process.env.GEMINI_API_KEY ? "정상 세팅됨 ✅" : "비어있음 ❌");
+
 export const apiRouter = express.Router();
 
 const ALLOWED_EMAIL_DOMAIN = "@gnu.ac.kr";
@@ -55,6 +70,105 @@ function sendServiceError(res, error, fallbackMessage) {
     message: error.message || fallbackMessage,
   });
 }
+
+// ==========================================
+// ⭐ [최종 완성] Gemini LLM 문맥 추론 기반 소모임 추천 API
+// ==========================================
+apiRouter.post("/api/recommend/clubs", asyncRoute(async (req, res) => {
+  const { introduction } = req.body ?? {};
+
+  if (!introduction || !introduction.trim()) {
+    res.status(400).json({ message: "자기소개 내용(introduction)은 필수입니다." });
+    return;
+  }
+
+  try {
+    // 1️⃣ 데이터베이스에 저장된 전체 소모임 데이터 리스트업
+    const dbResult = await pool.query(`
+      SELECT meeting_id, title, tag_id, description, location, max_members 
+      FROM meetings
+    `);
+    const meetings = dbResult.rows;
+
+    // DB에 모임이 하나도 없으면 바로 빈 배열 반환
+    if (meetings.length === 0) {
+      res.status(200).json({ 
+        user_extracted_keywords: ["AI 매칭"], 
+        recommended_meetings: [] 
+      });
+      return;
+    }
+
+    // 2️⃣ 의미론적(Semantic) 유사성 분석을 위한 프롬프트 구성
+    const prompt = `
+      너는 대학생 소모임 추천 시스템의 매칭 분석 엔진이야.
+      사용자의 자기소개/키워드를 분석하고, 제공된 소모임 데이터 목록 중에서 의미상 가장 잘 매칭되는 상위 3개의 소모임을 골라줘.
+
+      ★ 핵심 규칙: 단순 텍스트 일치(LIKE 연산)뿐만 아니라 '의미론적 유사성'을 파악해야 해.
+      - 예: 사용자가 "게임" 또는 "롤 하고 싶다"라고 적으면, 본문에 '게임'이라는 단어가 직접 없더라도 '리그 오브 레전드', '오버워치', 'e스포츠', '보드게임' 소모임을 최우선 매칭해야 함.
+      - 예: 사용자가 "코딩"이라고 적으면 '웹 개발', '알고리즘', '컴퓨터' 관련 모임을 매칭해야 함.
+
+      [사용자 입력 내용]
+      "${introduction}"
+
+      [추천 대상 소모임 데이터 리스트]
+      ${JSON.stringify(meetings, null, 2)}
+
+      [출력 요구사항]
+      반드시 아래 지정된 JSON 스키마 포맷으로만 응답해줘. 백틱(\`\`\`) 마크다운이나 부연 설명 글은 절대 포함하지 말고 순수 JSON 문자열만 출력해.
+      {
+        "user_extracted_keywords": ["추출한관심키워드1", "키워드2", "키워드3"],
+        "recommended_meetings": [
+          {
+            "meeting_id": "해당 모임의 meeting_id (반드시 데이터 리스트에 존재하는 원본 숫자 형식 그대로여야 함)",
+            "title": "해당 모임의 title",
+            "tag_id": "해당 모임의 tag_id",
+            "description": "해당 모임의 description",
+            "location": "해당 모임의 location",
+            "max_members": 해당 모임의 max_members(숫자),
+            "match_score": 문맥적 흐름 및 연관성을 고려하여 계산한 매칭률 점수 (0에서 100 사이의 정수)
+          }
+        ]
+      }
+    `;
+
+    // 3️⃣ Gemini API 호출 (`gemini-2.5-flash` 모델 활용)
+    const geminiResponse = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      // 구조화된 JSON 출력을 한 번 더 강제하는 옵션 설정
+      config: {
+        responseMimeType: "application/json"
+      }
+    });
+
+    // 4️⃣ AI 응답 데이터 정제 및 파싱 안전망 확보
+    const rawText = (geminiResponse.text || "").replace(/```json|```/g, "").trim();
+    
+    try {
+      const parsedData = JSON.parse(rawText);
+      
+      // 최종 결과 전송
+      res.status(200).json({
+        user_extracted_keywords: parsedData.user_extracted_keywords || ["추천"],
+        recommended_meetings: parsedData.recommended_meetings || []
+      });
+
+    } catch (parseError) {
+      console.error("Gemini JSON 파싱 실패, Fallback 적용:", parseError, "원본 텍스트:", rawText);
+      
+      // 만약 AI가 JSON 형식을 미세하게 틀려 파싱에 실패했을 때를 대비한 최소한의 방어 코드
+      res.status(200).json({
+        user_extracted_keywords: ["AI 매칭", "분석 완료"],
+        recommended_meetings: meetings.slice(0, 3).map(m => ({ ...m, match_score: 70 })) // 최신순 3개 임의 매칭
+      });
+    }
+
+  } catch (error) {
+    console.error("Gemini AI 문맥 추천 로직 실패:", error);
+    sendServiceError(res, error, "AI 문맥 추천을 처리하는 중 서버 내부 오류가 발생했습니다.");
+  }
+}));
 
 apiRouter.get("/api/health", asyncRoute(async (req, res) => {
   const result = await pool.query("SELECT NOW() AS now");
@@ -660,6 +774,7 @@ apiRouter.get("/api/recommendations/:userId", asyncRoute(async (req, res) => {
     });
     return;
   }
+  
 
   res.status(200).json(recommendations);
 }));

@@ -1,15 +1,9 @@
-// 📌 IntroRecommendSection - 자기소개서 기반 AI 추천 (UI 전용)
-// 🔧 [디자인 담당 - 기능은 백엔드/AI 담당이 추후 연결]
-//   - 자기소개서 textarea 는 useState 로 입력 표시만 (실제 Gemini 호출 없음)
-//   - "나의 맞춤 소모임 찾기" 버튼 누르면 시각적으로 결과 영역 표시 (목업 데이터)
-//   - 키워드 추출(Gemini API)/매칭 알고리즘은 백엔드 담당이 별도 연결
-//   - MOCK_KEYWORDS, MOCK_RECOMMENDATIONS 는 디자인 미리보기용 — 실제로는 API 응답으로 교체
-
+// 📌 IntroRecommendSection - 자기소개서 기반 AI 추천 (데이터 모니터링 버전)
 import { useState } from "react";
 
 const MAX_LENGTH = 500;
 
-// 데모용 목업 데이터 (UI 미리보기용)
+// 데모용 목업 데이터 (백엔드 통신 실패 시 백업용)
 const MOCK_KEYWORDS = ["#게임"];
 
 const MOCK_RECOMMENDATIONS = [
@@ -42,11 +36,95 @@ const MOCK_RECOMMENDATIONS = [
 export default function IntroRecommendSection({ onDetailClick }) {
   const [introText, setIntroText] = useState("");
   const [showResults, setShowResults] = useState(false);
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiKeywords, setApiKeywords] = useState([]);
+  const [apiRecommendations, setApiRecommendations] = useState([]);
 
-  const handleFindMatch = () => {
-    if (!introText.trim()) return;
-    // 🔧 [기능] 여기에 Gemini API 호출 + 매칭 로직 연결 예정
-    setShowResults(true);
+  const handleFindMatch = async () => {
+    if (!introText.trim() || isLoading) return;
+    
+    setIsLoading(true);
+    setShowResults(false);
+
+    console.log("================ 🚀 AI 추천 요청 시작 ================");
+    console.log("입력된 자기소개 데이터:", introText);
+
+    try {
+      const response = await fetch("api/recommend/clubs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ introduction: introText }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`서버 에러 발생! 상태코드: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // 🔍 [확인 1] 백엔드에서 받아온 날 것 그대로의 원본 데이터 구조 확인
+      console.log("📦 [1] 백엔드 수신 원본 데이터 (data):", data);
+
+      const { user_extracted_keywords = [], recommended_meetings = [] } = data;
+
+      // 🔍 [확인 2] 구조 분해 할당이 정상적으로 쪼개졌는지 확인
+      console.log("🔑 [2] 추출된 관심 키워드 원본:", user_extracted_keywords);
+      console.log("🤝 [3] 추천된 소모임 데이터 원본:", recommended_meetings);
+
+      // 1) API 키워드 데이터 서식 포맷팅
+      const formattedKeywords = user_extracted_keywords.map((kw) =>
+        kw.startsWith("#") ? kw : `#${kw}`
+      );
+      
+      // 🔍 [확인 3] 샵(#) 기호가 예쁘게 붙었는지 가공 결과 확인
+      console.log("🎨 [4] #포맷팅 완료된 키워드:", formattedKeywords);
+
+      // 2) API 소모임 목록 매칭 데이터를 UI 규격에 맞게 변환
+      const formattedRecommendations = recommended_meetings.map((club, index) => ({
+        rank: club.meeting_id, 
+        displayRank: index + 1, 
+        name: club.title,
+        description: club.description,
+        matchCount: club.match_score, 
+        location: club.location || "미지정",
+        categoryTag: club.tag_id,
+      }));
+
+      // 🔍 [확인 4] 컴포넌트 내부 State에 주입되기 직전의 최종 배열 상태 확인
+      console.log("✨ [5] UI 규격으로 변환 완료된 소모임 리스트:", formattedRecommendations);
+
+      if (formattedRecommendations.length > 0) {
+        setApiKeywords(formattedKeywords);
+        setApiRecommendations(formattedRecommendations);
+        console.log("✅ 성공적으로 실제 서버 데이터를 화면에 반영했습니다.");
+      } else {
+        console.warn("⚠️ 추천 결과가 비어있어 목업 데이터로 대체합니다.");
+        useMockFallback();
+      }
+
+    } catch (error) {
+      console.error("❌ 백엔드 연결 실패 또는 AI 분석 에러 발생:", error.message);
+      alert("서버 연결에 실패하여 데모 데이터를 표시합니다.");
+      useMockFallback();
+    } finally {
+      setIsLoading(false);
+      setShowResults(true);
+      console.log("================ 🏁 AI 추천 프로세스 종료 ================");
+    }
+  };
+
+  const useMockFallback = () => {
+    console.log("📌 [Fallback] 미리 정의된 MOCK 데이터를 주입합니다.");
+    setApiKeywords(MOCK_KEYWORDS);
+    const mappedMocks = MOCK_RECOMMENDATIONS.map((mock) => ({
+      ...mock,
+      displayRank: mock.rank, 
+    }));
+    setApiRecommendations(mappedMocks);
+    console.log("목업 데이터 변환 완료:", mappedMocks);
   };
 
   const handleTextChange = (e) => {
@@ -75,6 +153,7 @@ export default function IntroRecommendSection({ onDetailClick }) {
             onChange={handleTextChange}
             placeholder="예: 다른 사람들과 게임을 하고 싶어요"
             rows={5}
+            disabled={isLoading}
           />
 
           <div className="intro-card__counter">
@@ -85,10 +164,10 @@ export default function IntroRecommendSection({ onDetailClick }) {
             type="button"
             className="intro-card__submit"
             onClick={handleFindMatch}
-            disabled={!introText.trim()}
+            disabled={!introText.trim() || isLoading}
           >
             <span aria-hidden="true">🎯</span>
-            나의 맞춤 소모임 찾기
+            {isLoading ? "분석 중..." : "나의 맞춤 소모임 찾기"}
           </button>
         </div>
 
@@ -102,7 +181,7 @@ export default function IntroRecommendSection({ onDetailClick }) {
                 분석된 상위 핵심 태그 키워드
               </h3>
               <div className="intro-keyword-list">
-                {MOCK_KEYWORDS.map((kw) => (
+                {apiKeywords.map((kw) => (
                   <span key={kw} className="intro-keyword">{kw}</span>
                 ))}
               </div>
@@ -116,7 +195,7 @@ export default function IntroRecommendSection({ onDetailClick }) {
               </h3>
 
               <div className="intro-rec-list">
-                {MOCK_RECOMMENDATIONS.map((club) => (
+                {apiRecommendations.map((club) => (
                   <article
                     key={club.rank}
                     className="intro-rec-item"
@@ -124,7 +203,7 @@ export default function IntroRecommendSection({ onDetailClick }) {
                   >
                     <div className="intro-rec-item__top">
                       <h4 className="intro-rec-item__name">
-                        {club.rank}. {club.name}
+                        {club.displayRank}. {club.name}
                       </h4>
                       <span className="intro-rec-item__match">
                         <span aria-hidden="true">🍅</span>

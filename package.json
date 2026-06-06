@@ -20,7 +20,9 @@
     "db:init": "npm run db:up && npm run db:seed"
   },
   "dependencies": {
+    "@google/genai": "^2.8.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "pg": "^8.20.0"
   },
