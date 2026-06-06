@@ -65,17 +65,22 @@ export function scoreClubRecommendation({
   const userVectorArray = VECTOR_KEYS.map(
     (key) => Number(activeUserVector[key]) || 0,
   );
+  
   const participantAverageVector =
     club.avg_participant_vector && Array.isArray(club.avg_participant_vector)
       ? club.avg_participant_vector.map(Number)
       : [0, 0, 0, 0, 0, 0];
+      
   const algorithmCategory = resolveAlgorithmCategory(club);
+  
   const tagVector = VECTOR_KEYS.map((key) =>
     key === algorithmCategory ? 10.0 : 0.0,
   );
+  
   const rawCosine = getCosine(userVectorArray, participantAverageVector);
   const rawJaccard = getJaccard(userVectorArray, tagVector);
-  const fallbackScore = Math.round((rawCosine + 1 + rawJaccard * 2) * 25);
+  
+  const fallbackScore = Math.round(((rawCosine + 1) + (rawJaccard * 2)) * 25);
   const hasServerScore = Number.isFinite(serverRecommendation?.finalScore);
 
   return {
