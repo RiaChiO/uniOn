@@ -10,3 +10,7 @@ export const pool = new Pool({
   password: process.env.PGPASSWORD ?? "gnublank4898",
   database: process.env.PGDATABASE ?? "gnumatchclub",
 });
+
+pool.on("error", (error) => {
+  console.error("Unexpected PostgreSQL idle client error:", error.message);
+});

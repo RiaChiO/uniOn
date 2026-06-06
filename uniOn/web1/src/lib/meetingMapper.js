@@ -33,6 +33,8 @@ export function mapMeetingToClub(meeting) {
     joinCondition: meeting.joinCondition || "등록된 조건 없음",
     hostUserId: meeting.hostUserId,
     leaderName: meeting.leaderName,
+    leaderDepartment: meeting.leaderDepartment,
+    leaderGrade: meeting.leaderGrade,
     memberCount: meeting.participantCount,
     tags: (meeting.tags || []).map((tag) => `#${tag}`),
     algorithmCategory: algorithmCategory.id,

@@ -1,33 +1,36 @@
 // Role: API server bootstrap and top-level error boundary.
-import http from "http";
-import { URL } from "url";
-import { handlePreflight, sendJson } from "./server/http/response.js";
-import { handleApiRoute } from "./server/routes/apiRouter.js";
+import express from "express";
+import cors from "cors";
+import { apiRouter } from "./server/routes/apiRouter.js";
 
 const PORT = Number(process.env.PORT ?? 4000);
 
-const server = http.createServer(async (req, res) => {
-  if (!req.url) {
-    sendJson(res, 404, { message: "Not found" });
-    return;
-  }
+const app = express();
 
-  if (handlePreflight(req, res)) {
-    return;
-  }
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+}));
+app.use(express.json());
+app.use(apiRouter);
 
-  const url = new URL(req.url, `http://${req.headers.host}`);
-
-  try {
-    await handleApiRoute(req, res, url.pathname);
-  } catch (error) {
-    sendJson(res, 500, {
-      message: "Internal server error",
-      detail: error.message,
-    });
-  }
+app.use((req, res) => {
+  res.status(404).json({ message: "Not found" });
 });
 
-server.listen(PORT, () => {
+app.use((error, req, res, next) => {
+  if (error instanceof SyntaxError && "body" in error) {
+    res.status(400).json({ message: "Invalid JSON body" });
+    return;
+  }
+
+  res.status(error.statusCode ?? 500).json({
+    message: error.statusCode ? error.message : "Internal server error",
+    ...(!error.statusCode && { detail: error.message }),
+  });
+});
+
+app.listen(PORT, () => {
   console.log(`API server listening on http://localhost:${PORT}`);
 });

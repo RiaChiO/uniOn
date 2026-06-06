@@ -44,9 +44,6 @@ export default function CreatePage({
 
   const removeTag = (index) => setTags((prev) => prev.filter((_, i) => i !== index));
 
-  const selectedTypeLabel     = meetingTypes.find((t) => t.id === type)?.label ?? "유형 선택";
-  const selectedCategoryLabel = CATEGORY_OPTIONS.find((c) => c.id === category)?.label ?? "분야 선택";
-
   return (
     <div className="create-page">
       <Navbar
@@ -58,10 +55,7 @@ export default function CreatePage({
       />
 
       <main className="create-page__main">
-        <div className="create-page__layout">
-
-          {/* 왼쪽 - 폼 */}
-          <div className="create-page__form-col">
+        <div className="create-page__form-col">
             <div className="create-page__header">
               <h1 className="create-page__title">모임 만들기</h1>
               <p className="create-page__subtitle">
@@ -113,25 +107,23 @@ export default function CreatePage({
                 {/* 모임 유형 */}
                 <div className="form-field">
                   <label className="form-field__label">모임 유형 *</label>
-                  <div className="create-type-group">
-                    {meetingTypes.length === 0 && meetingTypesLoading ? (
-                      <p>모임 유형을 불러오는 중입니다.</p>
-                    ) : meetingTypesError ? (
-                      <p>{meetingTypesError}</p>
-                    ) : (
-                      meetingTypes.map((t) => (
-                      <button
-                        key={t.id}
-                        className={`create-type-btn ${type === t.id ? "create-type-btn--active" : ""}`}
-                        onClick={() => setType(t.id)}
-                      >
-                        <span className="create-type-btn__emoji">{t.emoji}</span>
-                        <span className="create-type-btn__label">{t.label}</span>
-                        <span className="create-type-btn__desc">{t.desc}</span>
-                      </button>
-                      ))
-                    )}
-                  </div>
+                  <select
+                    className="form-field__input form-field__select"
+                    value={type}
+                    disabled={meetingTypesLoading || Boolean(meetingTypesError)}
+                    onChange={(e) => setType(e.target.value)}
+                  >
+                    <option value="">
+                      {meetingTypesLoading
+                        ? "모임 유형을 불러오는 중"
+                        : meetingTypesError || "유형 선택"}
+                    </option>
+                    {meetingTypes.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.emoji} {t.label} {t.desc ? `- ${t.desc}` : ""}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* 관심 분야 */}
@@ -257,42 +249,6 @@ export default function CreatePage({
               </div>
             </div>
           </div>
-
-          {/* 오른쪽 - 미리보기 */}
-          <div className="create-page__preview-col">
-            <div className="create-preview">
-              <h3 className="create-preview__title">미리보기</h3>
-              <div className="create-preview__card">
-                <div className="create-preview__thumb" />
-                <div className="create-preview__body">
-                  <div className="create-preview__badges">
-                    <span className="club-detail__badge">{selectedTypeLabel}</span>
-                    <span className="club-detail__badge club-detail__badge--category">{selectedCategoryLabel}</span>
-                  </div>
-                  <div className="create-preview__name">{name || "모임명을 입력하세요"}</div>
-                  <div className="create-preview__desc">{description || "소개를 입력하세요"}</div>
-                  <div className="create-preview__meta">
-                    <span>👥 {maxMembers || 0}명</span>
-                    <span>📍 {location || "장소 미정"}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 안내 */}
-            <div className="create-tip">
-              <h4 className="create-tip__title">💡 개설 후 추가 가능</h4>
-              <ul className="create-tip__list">
-                <li>멤버 가입 승인 / 관리</li>
-                <li>활동 내역 및 사진 추가</li>
-                <li>모집 상태 변경</li>
-                <li>모임 정보 수정</li>
-              </ul>
-              <p className="create-tip__desc">모임 개설 후 상세 페이지의 <br/><strong>모임 관리</strong> 버튼에서 할 수 있어요!</p>
-            </div>
-
-          </div>
-        </div>
       </main>
 
       <Footer />

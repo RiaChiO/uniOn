@@ -59,8 +59,18 @@ function normalizeCustomTags(tags) {
   )];
 }
 
-async function replaceMeetingCustomTags(client, meetingId, tags) {
+function buildMeetingTags(tagId, tags) {
   const normalizedTags = normalizeCustomTags(tags);
+  const normalizedTagId = String(tagId ?? "").replace(/^#/, "").trim();
+
+  if (!normalizedTagId) return normalizedTags;
+
+  const withoutTagId = normalizedTags.filter((tag) => tag !== normalizedTagId);
+  return [normalizedTagId, ...withoutTagId];
+}
+
+async function replaceMeetingCustomTags(client, meetingId, tagId, tags) {
+  const normalizedTags = buildMeetingTags(tagId, tags);
 
   await client.query("DELETE FROM meeting_custom_tags WHERE meeting_id = $1", [meetingId]);
 
@@ -139,6 +149,8 @@ export async function getMeetings() {
       m.join_condition AS "joinCondition",
       m.host_user_id AS "hostUserId",
       host.name AS "leaderName",
+      host.department AS "leaderDepartment",
+      host.grade AS "leaderGrade",
       m.created_at AS "createdAt",
       COALESCE(
         (
@@ -176,7 +188,8 @@ export async function getMeetings() {
     GROUP BY 
       m.meeting_id, m.title, m.meeting_type, mt.label, m.tag_id, m.display_category,
       m.description, m.location, m.meeting_time, m.max_members, m.is_recruiting,
-      m.join_condition, m.host_user_id, host.name, m.created_at, mp_count.participant_count
+      m.join_condition, m.host_user_id, host.name, host.department, host.grade,
+      m.created_at, mp_count.participant_count
     ORDER BY
       NULLIF(regexp_replace(m.meeting_id, '[^0-9]', '', 'g'), '')::INT,
       m.meeting_id
@@ -339,6 +352,8 @@ export async function getMeetingMembers(meetingId) {
     SELECT
       u.user_id AS "userId",
       u.name,
+      u.department,
+      u.grade,
       CASE
         WHEN m.host_user_id = u.user_id THEN '리더'
         ELSE '멤버'
@@ -367,6 +382,8 @@ export async function getMeetingJoinRequests(meetingId) {
     SELECT
       u.user_id AS "userId",
       u.name,
+      u.department,
+      u.grade,
       mjr.requested_at AS "requestedAt"
     FROM meeting_join_requests mjr
     JOIN users u ON u.user_id = mjr.user_id
@@ -586,11 +603,11 @@ export async function createMeeting({
       `,
       [meetingId, hostUserId]
     );
-    const customTags = await replaceMeetingCustomTags(client, meetingId, tags);
+    const customTags = await replaceMeetingCustomTags(client, meetingId, tagId, tags);
 
     const hostResult = await client.query(
       `
-      SELECT name
+      SELECT name, department, grade
       FROM users
       WHERE user_id = $1
       `,
@@ -623,6 +640,8 @@ export async function createMeeting({
       joinCondition,
       hostUserId,
       leaderName: hostResult.rows[0]?.name,
+      leaderDepartment: hostResult.rows[0]?.department,
+      leaderGrade: hostResult.rows[0]?.grade,
     };
   } catch (error) {
     await client.query("ROLLBACK");
@@ -680,6 +699,8 @@ export async function updateMeeting({
         m.join_condition AS "joinCondition",
         m.host_user_id AS "hostUserId",
         host.name AS "leaderName",
+        host.department AS "leaderDepartment",
+        host.grade AS "leaderGrade",
         m.created_at AS "createdAt"
       `,
       [
@@ -705,7 +726,7 @@ export async function updateMeeting({
 
     let customTags = null;
     if (tags != null) {
-      customTags = await replaceMeetingCustomTags(client, meetingId, tags);
+      customTags = await replaceMeetingCustomTags(client, meetingId, tagId, tags);
     }
 
     await client.query("COMMIT");

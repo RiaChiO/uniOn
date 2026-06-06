@@ -25,12 +25,20 @@ function EmptyTabMessage({ children }) {
   return <p className="cd-section-text">{children}</p>;
 }
 
+function formatUserMeta(department, grade) {
+  const parts = [department, grade]
+    .map((value) => String(value ?? "").trim())
+    .filter(Boolean);
+
+  return parts.length > 0 ? parts.join(" ") : "정보 없음";
+}
+
 function mapMember(member) {
   return {
     id: member.userId,
     name: member.name,
     initial: (member.name || "?").slice(0, 1),
-    department: "정보 없음",
+    department: formatUserMeta(member.department, member.grade),
     role: member.role,
   };
 }
@@ -227,6 +235,12 @@ export default function ClubDetailPage({
           matchedClub.leaderName ||
           (isCurrentUserLeader ? user?.name : "") ||
           "등록된 리더 정보 없음";
+        const leaderDepartment =
+          matchedClub.leaderDepartment ||
+          (isCurrentUserLeader ? user?.department : "");
+        const leaderGrade =
+          matchedClub.leaderGrade ||
+          (isCurrentUserLeader ? user?.grade : "");
 
         return {
         ...DEFAULT_DETAIL_INFO,
@@ -238,8 +252,7 @@ export default function ClubDetailPage({
         leader: {
           name: leaderName,
           initial: leaderName.slice(0, 1),
-          department: "정보 없음",
-          grade: "",
+          meta: formatUserMeta(leaderDepartment, leaderGrade),
         },
         relatedClubs: clubs
           .filter(
@@ -478,7 +491,7 @@ export default function ClubDetailPage({
                     {club.leader.name}
                   </div>
                   <div className="club-detail__leader-info">
-                    {club.leader.department} {club.leader.grade}
+                    {club.leader.meta}
                   </div>
                 </div>
               </div>

@@ -107,10 +107,6 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf-8"));
 }
 
-function readJsonIfExists(filePath) {
-  return fs.existsSync(filePath) ? readJson(filePath) : {};
-}
-
 function normalizeVector(vector = {}) {
   return VECTOR_KEYS.map((key) => {
     const value = Number(vector[key] ?? 0);
@@ -133,24 +129,15 @@ function collectReferencedUserIds(meetings) {
 
 function buildSeedData() {
   const dataDir = path.join(backendRoot, "data");
-  const legacyUsers = readJson(path.join(dataDir, "users.json"));
-  const officialUsers = {
-    ...readJson(path.join(dataDir, "official_users.json")),
-    ...readJsonIfExists(path.join(dataDir, "official_extra_users.json")),
-  };
-  const meetings = {
-    ...readJson(path.join(dataDir, "official_meetings.json")),
-    ...readJsonIfExists(path.join(dataDir, "official_extra_meetings.json")),
-  };
-  const users = {};
+  const users = readJson(path.join(dataDir, "official_users.json"));
+  const meetings = readJson(path.join(dataDir, "official_meetings.json"));
+  const referencedUserIds = collectReferencedUserIds(meetings);
 
-  for (const userId of collectReferencedUserIds(meetings)) {
-    if (legacyUsers[userId]) {
-      users[userId] = legacyUsers[userId];
+  for (const userId of referencedUserIds) {
+    if (!users[userId]) {
+      throw new Error(`시드 사용자 데이터가 없습니다: ${userId}`);
     }
   }
-
-  Object.assign(users, officialUsers);
 
   return { users, meetings };
 }

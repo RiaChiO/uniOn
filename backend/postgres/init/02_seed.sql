@@ -1,3 +1,0 @@
--- Initial data is loaded by `npm run db:seed`.
--- Keep this file intentionally empty so Docker initialization does not create
--- a second, partial seed source that can drift from backend/data/*.json.

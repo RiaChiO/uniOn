@@ -11,6 +11,10 @@ function cosineSimilarity(a, b) {
     normB += b[key] * b[key];
   }
 
+  if (normA === 0 || normB === 0) {
+    return 0;
+  }
+
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
@@ -27,7 +31,7 @@ function jaccardSimilarity(a, b) {
     }
   }
 
-  return intersection / union;
+  return union === 0 ? 0 : intersection / union;
 }
 
 function makeTagVector(tagId) {

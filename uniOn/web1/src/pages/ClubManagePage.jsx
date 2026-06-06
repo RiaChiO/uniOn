@@ -41,12 +41,20 @@ function getEmptyActivityForm() {
 
 const TABS = ["기본 정보", "멤버 관리", "활동 관리", "모집 설정"];
 
+function formatUserMeta(department, grade) {
+  const parts = [department, grade]
+    .map((value) => String(value ?? "").trim())
+    .filter(Boolean);
+
+  return parts.length > 0 ? parts.join(" ") : "정보 없음";
+}
+
 function mapJoinRequest(request) {
   return {
     id: request.userId,
     name: request.name,
     initial: (request.name || "?").slice(0, 1),
-    department: "정보 없음",
+    department: formatUserMeta(request.department, request.grade),
   };
 }
 
@@ -55,7 +63,7 @@ function mapMember(member) {
     id: member.userId,
     name: member.name,
     initial: (member.name || "?").slice(0, 1),
-    department: "정보 없음",
+    department: formatUserMeta(member.department, member.grade),
     role: member.role,
   };
 }

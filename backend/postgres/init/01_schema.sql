@@ -144,6 +144,33 @@ CREATE TABLE IF NOT EXISTS recommendations (
 CREATE INDEX IF NOT EXISTS idx_recommendations_user_score
   ON recommendations(user_id, final_score DESC);
 
+CREATE INDEX IF NOT EXISTS idx_meeting_participants_user_meeting
+  ON meeting_participants(user_id, meeting_id);
+
+CREATE INDEX IF NOT EXISTS idx_meetings_host_user
+  ON meetings(host_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_meetings_meeting_type
+  ON meetings(meeting_type);
+
+CREATE INDEX IF NOT EXISTS idx_meetings_tag
+  ON meetings(tag_id);
+
+CREATE INDEX IF NOT EXISTS idx_meeting_join_requests_user_meeting
+  ON meeting_join_requests(user_id, meeting_id);
+
+CREATE INDEX IF NOT EXISTS idx_user_wishlist_meetings_meeting_user
+  ON user_wishlist_meetings(meeting_id, user_id);
+
+CREATE INDEX IF NOT EXISTS idx_user_interest_vectors_trim_user_id
+  ON user_interest_vectors((TRIM(user_id)));
+
+CREATE INDEX IF NOT EXISTS idx_users_numeric_user_id
+  ON users((NULLIF(regexp_replace(user_id, '[^0-9]', '', 'g'), '')::INT), user_id);
+
+CREATE INDEX IF NOT EXISTS idx_meetings_numeric_meeting_id
+  ON meetings((NULLIF(regexp_replace(meeting_id, '[^0-9]', '', 'g'), '')::INT), meeting_id);
+
 DROP TABLE IF EXISTS meeting_participant_vectors;
 DROP TABLE IF EXISTS meeting_tag_vectors;
 DROP TABLE IF EXISTS meeting_tags;

@@ -5,10 +5,7 @@
   "main": "backend/app.js",
   "type": "module",
   "scripts": {
-    "generate": "node backend/logic/generator.js",
-    "recommend": "node backend/logic/export-dashboard-data.js",
-    "start": "npm run generate && npm run recommend",
-    "dashboard": "cd frontend && npm start",
+    "start": "node backend/app.js",
     "dev": "npm --prefix ./uniOn/web1 run dev",
     "dev:test": "npm --prefix ./uniOn/web1 run dev:test",
     "api": "node backend/app.js",
@@ -23,12 +20,13 @@
     "db:init": "npm run db:up && npm run db:seed"
   },
   "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "pg": "^8.20.0"
   },
   "keywords": [
     "recommendation",
-    "firebase",
-    "dashboard"
+    "firebase"
   ],
   "author": "",
   "license": "ISC",

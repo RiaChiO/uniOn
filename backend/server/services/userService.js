@@ -80,13 +80,36 @@ export async function upsertUser({ userId, name, email }) {
     await client.query("BEGIN");
     await ensureUserProfileColumns(client);
 
-    const result = await client.query(
+    const existingResult = await client.query(
+      `
+      SELECT user_id
+      FROM users
+      WHERE email = $1 OR user_id = $2
+      ORDER BY
+        CASE WHEN email = $1 THEN 0 ELSE 1 END,
+        user_id
+      LIMIT 1
+      FOR UPDATE
+      `,
+      [email, userId]
+    );
+
+    const result = existingResult.rowCount > 0
+      ? await client.query(
+        `
+        UPDATE users
+        SET
+          name = $2,
+          email = $3
+        WHERE user_id = $1
+        RETURNING user_id, name, email, department, grade, created_at
+        `,
+        [existingResult.rows[0].user_id, name, email]
+      )
+      : await client.query(
       `
       INSERT INTO users (user_id, name, email, created_at)
       VALUES ($1, $2, $3, NOW())
-      ON CONFLICT (user_id)
-      DO UPDATE SET
-        email = EXCLUDED.email
       RETURNING user_id, name, email, department, grade, created_at
       `,
       [userId, name, email]
@@ -101,7 +124,7 @@ export async function upsertUser({ userId, name, email }) {
       DO NOTHING
       `,
       [
-        userId,
+        result.rows[0].user_id,
         vector.study,
         vector.exercise,
         vector.culture,
