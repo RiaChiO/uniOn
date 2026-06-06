@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
-import SearchSection from "./components/SearchSection";
+import IntroRecommendSection from "./components/IntroRecommendSection";
 import ClubListSection from "./components/ClubListSection";
 import Footer from "./components/Footer";
 import SearchPage from "./pages/SearchPage";
@@ -53,14 +53,8 @@ function MainPage({
           onBrowseClick={onBrowseClick}
           onCreateClick={onCreateClick}
         />
-        <SearchSection
-          meetingTypes={meetingTypes}
-          meetingTypesLoading={meetingTypesLoading}
-          selectedType={selectedType}
-          selectedCategory={selectedCategory}
-          onTypeSelect={setSelectedType}
-          onCategorySelect={setSelectedCategory}
-        />
+        {/* 🔧 [기능] Gemini 자기소개서 키워드 매칭 기반 추천 */}
+        <IntroRecommendSection onDetailClick={onDetailClick} />
         <ClubListSection
           clubs={clubs}
           limit={6}
@@ -270,5 +264,8 @@ export default function App() {
         }
       />
     </Routes>
+  );
+}
+
   );
 }
