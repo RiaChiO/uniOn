@@ -1,4 +1,3 @@
-// Role: recommend meetings from free-form intro text; Gemini can replace local analysis.
 import { GoogleGenAI, Type } from "@google/genai";
 import { pool } from "../db/pool.js";
 import { getMeetings } from "./meetingService.js";
@@ -7,12 +6,14 @@ const MAX_INTRO_LENGTH = 1000;
 const DEFAULT_LIMIT = 6;
 const MAX_LIMIT = 20;
 const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite";
+
 const GEMINI_ANALYSIS_INSTRUCTIONS = [
   "Return ONLY valid JSON. No markdown. No explanation.",
   'Schema: {"keywords":[string],"tagIds":[string],"displayCategories":[string]}.',
   "tagIds must only contain: study, exercise, culture, game, religion, volunteer.",
   "displayCategories should use concise ids such as academic, it, sports, music, art, photo, networking, language, startup, culture, game, religion, volunteer.",
 ];
+
 const GEMINI_RESPONSE_SCHEMA = {
   type: Type.OBJECT,
   properties: {
@@ -37,71 +38,20 @@ const GEMINI_RESPONSE_SCHEMA = {
 };
 
 const CATEGORY_RULES = [
-  {
-    tagId: "game",
-    displayCategory: "game",
-    keywords: ["게임", "롤", "리그오브레전드", "보드게임", "내전", "e스포츠", "온라인"],
-  },
-  {
-    tagId: "study",
-    displayCategory: "it",
-    keywords: ["개발", "코딩", "프로그래밍", "알고리즘", "웹", "앱", "데이터", "ai", "인공지능", "해커톤"],
-  },
-  {
-    tagId: "study",
-    displayCategory: "academic",
-    keywords: ["공부", "스터디", "학습", "자격증", "시험", "전공", "학술", "교육"],
-  },
-  {
-    tagId: "exercise",
-    displayCategory: "sports",
-    keywords: ["운동", "스포츠", "러닝", "축구", "농구", "헬스", "요가", "등산", "탁구", "배드민턴"],
-  },
-  {
-    tagId: "culture",
-    displayCategory: "music",
-    keywords: ["음악", "공연", "밴드", "보컬", "기타", "댄스", "연극", "합창", "무대"],
-  },
-  {
-    tagId: "culture",
-    displayCategory: "art",
-    keywords: ["그림", "미술", "공예", "디자인", "드로잉", "창작", "예술"],
-  },
-  {
-    tagId: "culture",
-    displayCategory: "photo",
-    keywords: ["사진", "영상", "카메라", "촬영", "편집", "필름"],
-  },
-  {
-    tagId: "culture",
-    displayCategory: "networking",
-    keywords: ["친목", "교류", "네트워킹", "발표", "토론", "커뮤니티", "사람"],
-  },
-  {
-    tagId: "study",
-    displayCategory: "language",
-    keywords: ["영어", "일본어", "중국어", "언어", "회화", "국제", "외국어"],
-  },
-  {
-    tagId: "volunteer",
-    displayCategory: "volunteer",
-    keywords: ["봉사", "나눔", "사회", "환경", "플로깅", "지역"],
-  },
-  {
-    tagId: "religion",
-    displayCategory: "religion",
-    keywords: ["종교", "기독", "불교", "가톨릭", "성경", "기도", "선교"],
-  },
+  { tagId: "game", displayCategory: "game", keywords: ["게임", "롤", "리그오브레전드", "보드게임", "내전", "e스포츠", "온라인"] },
+  { tagId: "study", displayCategory: "it", keywords: ["개발", "코딩", "프로그래밍", "알고리즘", "웹", "앱", "데이터", "ai", "인공지능", "해커톤"] },
+  { tagId: "study", displayCategory: "academic", keywords: ["공부", "스터디", "학습", "자격증", "시험", "전공", "학술", "교육"] },
+  { tagId: "exercise", displayCategory: "sports", keywords: ["운동", "스포츠", "러닝", "축구", "농구", "헬스", "요가", "등산", "탁구", "배드민턴"] },
+  { tagId: "culture", displayCategory: "music", keywords: ["음악", "공연", "밴드", "보컬", "기타", "댄스", "연극", "합창", "무대"] },
+  { tagId: "culture", displayCategory: "art", keywords: ["그림", "미술", "공예", "디자인", "드로잉", "창작", "예술"] },
+  { tagId: "culture", displayCategory: "photo", keywords: ["사진", "영상", "카메라", "촬영", "편집", "필름"] },
+  { tagId: "culture", displayCategory: "networking", keywords: ["친목", "교류", "네트워킹", "발표", "토론", "커뮤니티", "사람"] },
+  { tagId: "study", displayCategory: "language", keywords: ["영어", "일본어", "중국어", "언어", "회화", "국제", "외국어"] },
+  { tagId: "volunteer", displayCategory: "volunteer", keywords: ["봉사", "나눔", "사회", "환경", "플로깅", "지역"] },
+  { tagId: "religion", displayCategory: "religion", keywords: ["종교", "기독", "불교", "가톨릭", "성경", "기도", "선교"] },
 ];
 
-const TAG_VECTOR_INDEX = {
-  study: 0,
-  exercise: 1,
-  culture: 2,
-  game: 3,
-  religion: 4,
-  volunteer: 5,
-};
+const TAG_VECTOR_INDEX = { study: 0, exercise: 1, culture: 2, game: 3, religion: 4, volunteer: 5 };
 const EMPTY_TAG_VECTOR = [0, 0, 0, 0, 0, 0];
 let geminiClient = null;
 
@@ -116,10 +66,7 @@ function createHttpError(message, statusCode) {
 }
 
 function normalizeKeyword(keyword) {
-  return String(keyword ?? "")
-    .replace(/^#/, "")
-    .trim()
-    .toLowerCase();
+  return String(keyword ?? "").replace(/^#/, "").trim().toLowerCase();
 }
 
 function unique(values) {
@@ -129,9 +76,7 @@ function unique(values) {
 function normalizeAnalysis(analysis) {
   return {
     keywords: unique((analysis.keywords ?? []).map(normalizeKeyword)).slice(0, 12),
-    tagIds: unique(
-      (analysis.tagIds ?? []).map(normalizeKeyword).filter((tagId) => TAG_VECTOR_INDEX[tagId] != null)
-    ),
+    tagIds: unique((analysis.tagIds ?? []).map(normalizeKeyword).filter((tagId) => TAG_VECTOR_INDEX[tagId] != null)),
     displayCategories: unique((analysis.displayCategories ?? []).map(normalizeKeyword)).slice(0, 8),
   };
 }
@@ -141,42 +86,30 @@ function extractGeminiResponseText(response) {
 }
 
 function parseJsonObject(text) {
-  const trimmed = String(text ?? "")
-    .replace(/```json|```/gi, "")
-    .trim();
+  const trimmed = String(text ?? "").replace(/```json|```/gi, "").trim();
   const startIndex = trimmed.indexOf("{");
   const endIndex = trimmed.lastIndexOf("}");
-
   if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
     throw createHttpError("Gemini 응답을 JSON으로 해석할 수 없습니다.", 502);
   }
-
-  const jsonText = trimmed.slice(startIndex, endIndex + 1);
-
-  return JSON.parse(jsonText);
+  return JSON.parse(trimmed.slice(startIndex, endIndex + 1));
 }
 
 function getGeminiClient() {
   if (!process.env.GEMINI_API_KEY) return null;
-
   if (!geminiClient) {
     geminiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   }
-
   return geminiClient;
 }
 
 function buildGeminiPrompt(introText) {
-  return [
-    ...GEMINI_ANALYSIS_INSTRUCTIONS,
-    `Analyze this intro text for club recommendation:\n${introText}`,
-  ].join(" ");
+  return [...GEMINI_ANALYSIS_INSTRUCTIONS, `Analyze this intro text for club recommendation:\n${introText}`].join(" ");
 }
 
 async function analyzeIntroTextWithGemini(introText) {
   const client = getGeminiClient();
   if (!client) return null;
-
   const model = getGeminiIntroModelName();
   try {
     const response = await client.models.generateContent({
@@ -189,7 +122,6 @@ async function analyzeIntroTextWithGemini(introText) {
         temperature: 0.1,
       },
     });
-
     return normalizeAnalysis(parseJsonObject(extractGeminiResponseText(response)));
   } catch (error) {
     throw createHttpError(error.message || "Gemini 분석 요청에 실패했습니다.", 502);
@@ -203,10 +135,7 @@ function analyzeIntroTextLocally(introText) {
   const displayCategories = [];
 
   for (const rule of CATEGORY_RULES) {
-    const matches = rule.keywords.filter((keyword) =>
-      normalizedText.includes(keyword.toLowerCase())
-    );
-
+    const matches = rule.keywords.filter((keyword) => normalizedText.includes(keyword.toLowerCase()));
     if (matches.length > 0) {
       matchedKeywords.push(...matches);
       tagIds.push(rule.tagId);
@@ -230,24 +159,16 @@ function analyzeIntroTextLocally(introText) {
 export async function analyzeIntroText(introText) {
   const geminiAnalysis = await analyzeIntroTextWithGemini(introText);
   if (geminiAnalysis) return { ...geminiAnalysis, source: "gemini" };
-
   return { ...analyzeIntroTextLocally(introText), source: "local" };
 }
 
 async function getUserVector(userId) {
   if (!userId) return null;
-
   const result = await pool.query(
-    `
-    SELECT study, exercise, culture, game, religion, volunteer
-    FROM user_interest_vectors
-    WHERE user_id = $1
-    `,
+    `SELECT study, exercise, culture, game, religion, volunteer FROM user_interest_vectors WHERE user_id = $1`,
     [userId]
   );
-
   if (result.rowCount === 0) return null;
-
   const row = result.rows[0];
   return [
     Number(row.study) || 0,
@@ -261,14 +182,20 @@ async function getUserVector(userId) {
 
 function cosineSimilarity(left, right) {
   if (!left || !right) return 0;
-
   const dot = left.reduce((sum, value, index) => sum + value * Number(right[index] ?? 0), 0);
   const leftMagnitude = Math.sqrt(left.reduce((sum, value) => sum + value ** 2, 0));
-  const rightMagnitude = Math.sqrt(
-    right.reduce((sum, value) => sum + Number(value ?? 0) ** 2, 0)
-  );
-
+  const rightMagnitude = Math.sqrt(right.reduce((sum, value) => sum + Number(value ?? 0) ** 2, 0));
   return leftMagnitude && rightMagnitude ? dot / (leftMagnitude * rightMagnitude) : 0;
+}
+
+function getJaccard(vA, vB) {
+  let intersection = 0;
+  let union = 0;
+  for (let index = 0; index < vA.length; index += 1) {
+    intersection += Math.min(vA[index], vB[index]);
+    union += Math.max(vA[index], vB[index]);
+  }
+  return union ? intersection / union : 0;
 }
 
 function getMeetingTagVector(tagId) {
@@ -291,21 +218,19 @@ function scoreMeeting(meeting, analysis, userVector) {
     .join(" ")
     .toLowerCase();
 
-  const matchedKeywords = normalizedKeywords.filter((keyword) =>
-    searchableText.includes(keyword)
-  );
-  const tagMatch = analysis.tagIds.includes(meeting.tagId) ? 1 : 0;
-  const categoryMatch = analysis.displayCategories.includes(meeting.displayCategory) ? 1 : 0;
-  const tagVector = getMeetingTagVector(meeting.tagId);
+  const matchedKeywords = normalizedKeywords.filter((keyword) => searchableText.includes(keyword));
 
-  const userVectorScore = userVector
-    ? cosineSimilarity(userVector, meeting.avg_participant_vector ?? tagVector)
-    : 0;
-  const recruitingBoost = meeting.isRecruiting ? 5 : 0;
   const keywordScore = matchedKeywords.length * 20;
-  const categoryScore = tagMatch * 30 + categoryMatch * 15;
-  const vectorScore = Math.round(userVectorScore * 20);
-  const matchScore = Math.min(100, keywordScore + categoryScore + vectorScore + recruitingBoost);
+
+  const userVectorArray = userVector ?? [0, 0, 0, 0, 0, 0];
+  const tagVector = getMeetingTagVector(meeting.tagId);
+  const participantVector = meeting.avg_participant_vector ?? tagVector;
+
+  const rawCosine = cosineSimilarity(userVectorArray, participantVector);
+  const rawJaccard = getJaccard(userVectorArray, tagVector);
+
+  const hybridScore = Math.round(((rawCosine + 1) + (rawJaccard * 2)) * 25);
+  const matchScore = Math.min(100, Math.round(hybridScore * 0.5) + keywordScore);
 
   return {
     meeting,
@@ -322,17 +247,11 @@ function normalizeLimit(limit) {
   return Math.min(MAX_LIMIT, Math.max(1, Number(limit) || DEFAULT_LIMIT));
 }
 
-export async function getIntroRecommendations({
-  introText,
-  userId = null,
-  limit = DEFAULT_LIMIT,
-}) {
+export async function getIntroRecommendations({ introText, userId = null, limit = DEFAULT_LIMIT }) {
   const normalizedIntroText = String(introText ?? "").trim();
-
   if (!normalizedIntroText) {
     throw createHttpError("introText는 필수입니다.", 400);
   }
-
   if (normalizedIntroText.length > MAX_INTRO_LENGTH) {
     throw createHttpError(`introText는 ${MAX_INTRO_LENGTH}자 이하로 입력하세요.`, 400);
   }
