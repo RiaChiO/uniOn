@@ -144,13 +144,6 @@ export default function IntroRecommendSection({ user, onDetailClick }) {
                       <span className="intro-rec-card__rank">
                         {club.rank}위 추천
                       </span>
-                      <span className="intro-rec-item__match">
-                        <span aria-hidden="true">🎯</span>
-                        일치 단어 수: {club.matchCount}개
-                      </span>
-                      <span className="intro-rec-item__match">
-                        매칭 점수: {club.matchScore}점
-                      </span>
                       <span className="intro-rec-item__meta-item">
                         <span aria-hidden="true">🏷️</span>
                         대표 분류 태그:
