@@ -34,6 +34,8 @@ pnpm-debug.log*
 tmp/
 temp/
 *.pid
+run-backend.exe
+run-frontend.exe
 
 # OS / editor files
 .DS_Store
