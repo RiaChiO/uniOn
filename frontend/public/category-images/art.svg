@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Art craft graphic">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c2d12"/>
+      <stop offset=".5" stop-color="#db2777"/>
+      <stop offset="1" stop-color="#fbbf24"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#3f1d2a" flood-opacity=".28"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="210" cy="170" r="220" fill="#fff7ed" opacity=".18"/>
+  <circle cx="1350" cy="760" r="260" fill="#831843" opacity=".22"/>
+  <g filter="url(#shadow)" transform="translate(400 160)">
+    <path d="M430 34c252 0 430 164 430 360 0 166-120 268-276 268h-92c-54 0-76 66-33 99 16 12 10 38-10 40-260 23-449-151-449-378C0 202 182 34 430 34z" fill="#fff7ed"/>
+    <circle cx="270" cy="296" r="66" fill="#ef4444"/>
+    <circle cx="444" cy="218" r="66" fill="#3b82f6"/>
+    <circle cx="606" cy="326" r="66" fill="#22c55e"/>
+    <circle cx="390" cy="474" r="66" fill="#f59e0b"/>
+  </g>
+  <g transform="translate(990 520) rotate(-24)">
+    <rect x="0" y="0" width="410" height="58" rx="29" fill="#111827"/>
+    <path d="M360 0h100l-48 58h-52z" fill="#fde68a"/>
+    <path d="M460 0l54 29-54 29z" fill="#fef3c7"/>
+  </g>
+</svg>

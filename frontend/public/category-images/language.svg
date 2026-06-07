@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Language international graphic">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1d4ed8"/>
+      <stop offset=".54" stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#f472b6"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="24" stdDeviation="22" flood-color="#1e1b4b" flood-opacity=".28"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="800" cy="450" r="300" fill="#eff6ff" opacity=".16"/>
+  <g filter="url(#shadow)">
+    <circle cx="800" cy="450" r="250" fill="#eff6ff"/>
+    <path d="M550 450h500M800 200c92 94 140 178 140 250S892 606 800 700c-92-94-140-178-140-250s48-156 140-250z" fill="none" stroke="#2563eb" stroke-width="18"/>
+    <path d="M800 200v500M594 328h412M594 572h412" stroke="#2563eb" stroke-width="18" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(1010 210)">
+    <rect width="300" height="190" rx="28" fill="#fef3c7"/>
+    <path d="M64 66h170M64 122h106" stroke="#92400e" stroke-width="20" stroke-linecap="round" opacity=".55"/>
+  </g>
+  <g transform="translate(260 520)">
+    <rect width="330" height="210" rx="28" fill="#dbeafe"/>
+    <path d="M72 68h190M72 126h120" stroke="#1d4ed8" stroke-width="20" stroke-linecap="round" opacity=".65"/>
+  </g>
+</svg>

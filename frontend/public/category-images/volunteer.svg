@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Volunteer social graphic">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#065f46"/>
+      <stop offset=".5" stop-color="#0d9488"/>
+      <stop offset="1" stop-color="#fef08a"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#042f2e" flood-opacity=".28"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="260" cy="190" r="180" fill="#ccfbf1" opacity=".18"/>
+  <circle cx="1280" cy="690" r="260" fill="#134e4a" opacity=".18"/>
+  <g filter="url(#shadow)" transform="translate(440 225)">
+    <path d="M360 420C190 300 90 206 90 104 90 44 134 0 194 0c70 0 112 46 166 112C414 46 456 0 526 0c60 0 104 44 104 104 0 102-100 196-270 316z" fill="#f8fafc"/>
+    <path d="M110 350c118 86 212 132 250 132s132-46 250-132" fill="none" stroke="#ccfbf1" stroke-width="70" stroke-linecap="round"/>
+    <path d="M110 350c118 86 212 132 250 132s132-46 250-132" fill="none" stroke="#0f766e" stroke-width="28" stroke-linecap="round"/>
+  </g>
+</svg>

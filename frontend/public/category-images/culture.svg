@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Culture hobby graphic">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f766e"/>
+      <stop offset=".55" stop-color="#14b8a6"/>
+      <stop offset="1" stop-color="#fde68a"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#042f2e" flood-opacity=".24"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <path d="M0 660c210-92 430-112 660-60s450 70 680-28c88-38 174-58 260-63v391H0z" fill="#0f172a" opacity=".16"/>
+  <g filter="url(#shadow)" transform="translate(410 190)">
+    <path d="M120 60h380c66 0 120 54 120 120v240c0 66-54 120-120 120H120C54 540 0 486 0 420V180C0 114 54 60 120 60z" fill="#f8fafc"/>
+    <path d="M94 160h432M94 246h328M94 332h392" stroke="#0f766e" stroke-width="24" stroke-linecap="round" opacity=".45"/>
+    <circle cx="520" cy="430" r="120" fill="#f97316"/>
+    <path d="M454 434l44 44 96-116" fill="none" stroke="#fff7ed" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g transform="translate(980 190)">
+    <path d="M120 0l42 86 95 14-69 67 17 94-85-44-85 44 17-94-69-67 95-14z" fill="#fef3c7"/>
+    <path d="M310 180l30 60 66 10-48 47 12 66-60-32-59 32 11-66-48-47 67-10z" fill="#ccfbf1" opacity=".9"/>
+  </g>
+</svg>

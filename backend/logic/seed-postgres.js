@@ -52,6 +52,32 @@ const DISPLAY_CATEGORY_BY_TAG = {
   volunteer: "volunteer",
 };
 
+const CATEGORY_IMAGE_URLS = {
+  academic: "/category-images/academic.svg",
+  music: "/category-images/music.svg",
+  sports: "/category-images/sports.svg",
+  art: "/category-images/art.svg",
+  it: "/category-images/it.svg",
+  volunteer: "/category-images/volunteer.svg",
+  photo: "/category-images/photo.svg",
+  language: "/category-images/language.svg",
+  networking: "/category-images/networking.svg",
+  startup: "/category-images/startup.svg",
+  culture: "/category-images/culture.svg",
+  game: "/category-images/game.svg",
+  religion: "/category-images/religion.svg",
+};
+
+function getCategoryImageUrl(displayCategory, tagId) {
+  const fallbackCategory = DISPLAY_CATEGORY_BY_TAG[tagId];
+
+  return (
+    CATEGORY_IMAGE_URLS[displayCategory] ??
+    CATEGORY_IMAGE_URLS[fallbackCategory] ??
+    null
+  );
+}
+
 function inferDisplayCategory(meeting, tagId) {
   if (meeting.displayCategory || meeting.category) {
     return meeting.displayCategory ?? meeting.category;
@@ -178,6 +204,11 @@ async function ensureSchema(client) {
       ADD COLUMN IF NOT EXISTS max_members INTEGER,
       ADD COLUMN IF NOT EXISTS is_recruiting BOOLEAN NOT NULL DEFAULT TRUE,
       ADD COLUMN IF NOT EXISTS join_condition TEXT
+  `);
+
+  await client.query(`
+    ALTER TABLE meetings
+      ADD COLUMN IF NOT EXISTS image_url TEXT
   `);
 
   await client.query(`
@@ -330,6 +361,8 @@ async function seedMeetings(client, meetings) {
   for (const [meetingId, meeting] of Object.entries(meetings)) {
     const tagId = meeting.tagId ?? meeting.tags?.[0] ?? null;
     const displayCategory = inferDisplayCategory(meeting, tagId);
+    const imageUrl =
+      meeting.imageUrl ?? getCategoryImageUrl(displayCategory, tagId);
 
     await client.query(
       `
@@ -345,10 +378,11 @@ async function seedMeetings(client, meetings) {
         max_members,
         is_recruiting,
         join_condition,
+        image_url,
         host_user_id,
         created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::timestamptz)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::timestamptz)
       `,
       [
         meetingId,
@@ -362,6 +396,7 @@ async function seedMeetings(client, meetings) {
         meeting.maxMembers ?? null,
         meeting.isRecruiting ?? true,
         meeting.joinCondition ?? null,
+        imageUrl,
         meeting.hostUserId,
         meeting.createdAt,
       ]
