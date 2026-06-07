@@ -22,6 +22,22 @@ export const CATEGORY_LABELS = Object.fromEntries(
   CATEGORY_OPTIONS.map((category) => [category.id, category.label])
 );
 
+export const CATEGORY_IMAGE_URLS = {
+  academic: "/category-images/academic.svg",
+  music: "/category-images/music.svg",
+  sports: "/category-images/sports.svg",
+  art: "/category-images/art.svg",
+  it: "/category-images/it.svg",
+  volunteer: "/category-images/volunteer.svg",
+  photo: "/category-images/photo.svg",
+  language: "/category-images/language.svg",
+  networking: "/category-images/networking.svg",
+  startup: "/category-images/startup.svg",
+  culture: "/category-images/culture.svg",
+  game: "/category-images/game.svg",
+  religion: "/category-images/religion.svg",
+};
+
 export const ALGORITHM_CATEGORY_FALLBACKS = {
   study: { id: "academic", label: "학술/교육" },
   exercise: { id: "sports", label: "운동/스포츠" },

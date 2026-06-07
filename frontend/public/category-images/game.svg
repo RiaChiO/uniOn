@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Game esports graphic">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset=".48" stop-color="#4c1d95"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <filter id="glow"><feDropShadow dx="0" dy="0" stdDeviation="16" flood-color="#22d3ee" flood-opacity=".7"/></filter>
+    <filter id="shadow"><feDropShadow dx="0" dy="28" stdDeviation="24" flood-color="#000" flood-opacity=".35"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <g stroke="#22d3ee" stroke-width="3" opacity=".28">
+    <path d="M0 180h1600M0 360h1600M0 540h1600M0 720h1600"/>
+    <path d="M220 0v900M460 0v900M700 0v900M940 0v900M1180 0v900M1420 0v900"/>
+  </g>
+  <g filter="url(#shadow)" transform="translate(360 270)">
+    <path d="M196 0h488c108 0 196 88 196 196v16c0 96-78 174-174 174-68 0-130-40-158-102l-22-48H354l-22 48c-28 62-90 102-158 102C78 386 0 308 0 212v-16C0 88 88 0 196 0z" fill="#f8fafc"/>
+    <path d="M208 150v-74h58v74h74v58h-74v74h-58v-74h-74v-58z" fill="#111827"/>
+    <circle cx="650" cy="126" r="38" fill="#8b5cf6" filter="url(#glow)"/>
+    <circle cx="748" cy="210" r="38" fill="#06b6d4" filter="url(#glow)"/>
+    <circle cx="650" cy="278" r="38" fill="#ec4899"/>
+    <circle cx="552" cy="210" r="38" fill="#22c55e"/>
+  </g>
+  <path d="M230 640h260l80 90h460l80-90h260" fill="none" stroke="#a78bfa" stroke-width="18" stroke-linecap="round" opacity=".72"/>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Photo video graphic">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset=".55" stop-color="#475569"/>
+      <stop offset="1" stop-color="#f97316"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="26" stdDeviation="24" flood-color="#020617" flood-opacity=".35"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="1230" cy="170" r="170" fill="#fed7aa" opacity=".34"/>
+  <g filter="url(#shadow)" transform="translate(390 250)">
+    <rect width="820" height="430" rx="42" fill="#f8fafc"/>
+    <rect x="76" y="-54" width="220" height="88" rx="24" fill="#e2e8f0"/>
+    <rect x="560" y="54" width="150" height="48" rx="24" fill="#94a3b8"/>
+    <circle cx="410" cy="230" r="142" fill="#0f172a"/>
+    <circle cx="410" cy="230" r="92" fill="#38bdf8"/>
+    <circle cx="410" cy="230" r="42" fill="#e0f2fe"/>
+  </g>
+  <path d="M210 675l190-210 140 150 100-100 190 160z" fill="#fed7aa" opacity=".42"/>
+</svg>

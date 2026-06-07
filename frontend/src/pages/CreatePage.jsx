@@ -77,7 +77,7 @@ export default function CreatePage({
                     <input
                       id="imageInput"
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp"
                       style={{ display: "none" }}
                       onChange={(e) => setImage(e.target.files[0])}
                     />
@@ -86,7 +86,7 @@ export default function CreatePage({
                     ) : (
                       <>
                         <p>🖼️ 클릭하여 이미지 업로드</p>
-                        <p className="create-box__image-hint">JPG, PNG (최대 5MB)</p>
+                        <p className="create-box__image-hint">JPG, PNG, WebP (최대 5MB)</p>
                       </>
                     )}
                   </div>
