@@ -107,6 +107,7 @@ export default function App() {
     handleDeleteMeeting,
     handleJoinRequest,
     handleJoinRequestDecision,
+    handleLeaveMeeting,
     handleRemoveMeetingMember,
     handleSaveMeeting,
     handleToggleMeetingRecruitment,
@@ -198,6 +199,7 @@ export default function App() {
             loading={loading}
             error={loadError}
             onJoin={handleJoinRequest}
+            onLeave={handleLeaveMeeting}
             joiningMeetingId={joiningMeetingId}
             onWishlist={toggleWishlist}
             wishlistMeetingIds={wishlistMeetingIds}

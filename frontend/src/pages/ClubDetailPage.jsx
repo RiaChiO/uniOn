@@ -9,7 +9,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { getMeetingActivities, getMeetingMembers } from "../api/meetings";
+import {
+  getMeetingActivities,
+  getMeetingJoinStatus,
+  getMeetingMembers,
+} from "../api/meetings";
 
 const DEFAULT_DETAIL_INFO = {
   meetingDay: "일정 조율중",
@@ -173,6 +177,7 @@ export default function ClubDetailPage({
   loading = false,
   error = "",
   onJoin,
+  onLeave,
   joiningMeetingId = "",
   onWishlist,
   wishlistMeetingIds = [],
@@ -186,6 +191,11 @@ export default function ClubDetailPage({
   const [membersError, setMembersError] = useState("");
   const [activities, setActivities] = useState([]);
   const [activitiesError, setActivitiesError] = useState("");
+  const [joinStatus, setJoinStatus] = useState({
+    isMember: false,
+    isPending: false,
+  });
+  const [membersReloadKey, setMembersReloadKey] = useState(0);
   const matchedClub = clubs.find(
     (item) => String(item.id) === String(id)
   );
@@ -207,7 +217,7 @@ export default function ClubDetailPage({
     if (id) {
       loadMembers();
     }
-  }, [id]);
+  }, [id, membersReloadKey]);
 
   useEffect(() => {
     async function loadActivities() {
@@ -226,6 +236,27 @@ export default function ClubDetailPage({
       loadActivities();
     }
   }, [id]);
+
+  useEffect(() => {
+    async function loadJoinStatus() {
+      if (!id || !currentUserId) {
+        setJoinStatus({ isMember: false, isPending: false });
+        return;
+      }
+
+      try {
+        const status = await getMeetingJoinStatus(id, currentUserId);
+        setJoinStatus({
+          isMember: Boolean(status.isMember),
+          isPending: Boolean(status.isPending),
+        });
+      } catch (error) {
+        setJoinStatus({ isMember: false, isPending: false });
+      }
+    }
+
+    loadJoinStatus();
+  }, [id, currentUserId, membersReloadKey]);
 
   const club = matchedClub
     ? (() => {
@@ -290,7 +321,22 @@ export default function ClubDetailPage({
     .map((meetingId) => String(meetingId))
     .includes(String(club.id));
   const isWishlistUpdating = String(wishlistUpdatingMeetingId) === String(club.id);
-  const isJoinDisabled = isJoining || !club.isRecruiting;
+  const showJoinOrLeaveButton = !isLeader;
+  const showLeaveButton = showJoinOrLeaveButton && joinStatus.isMember;
+  const isJoinDisabled =
+    isJoining || !club.isRecruiting || joinStatus.isPending || joinStatus.isMember;
+  const joinButtonClassName = joinStatus.isPending
+    ? "btn btn--outline club-detail__join-btn club-detail__join-btn--pending"
+    : "btn btn--primary club-detail__join-btn";
+  const joinButtonLabel = isJoining
+    ? "가입 신청 중..."
+    : joinStatus.isMember
+      ? "가입 완료"
+      : joinStatus.isPending
+        ? "가입 대기 중"
+        : club.isRecruiting
+          ? "가입 신청하기"
+          : "모집 마감";
   const recruitBadgeClass = club.isRecruiting
     ? "club-detail__badge club-detail__badge--recruiting"
     : "club-detail__badge club-detail__badge--closed";
@@ -416,18 +462,47 @@ export default function ClubDetailPage({
           <aside className="club-detail-page__sidebar">
             {/* 액션 버튼 */}
             <div className="club-detail__actions">
-              <button
-                className="btn btn--primary club-detail__join-btn"
-                disabled={isJoinDisabled}
-                // 🔧 [기능] 로그인 확인 후 가입 신청 API 연결
-                onClick={() => onJoin && onJoin(club.id)}
-              >
-                {isJoining
-                  ? "가입 신청 중..."
-                  : club.isRecruiting
-                    ? "가입 신청하기"
-                    : "모집 마감"}
-              </button>
+              {showJoinOrLeaveButton && (
+                showLeaveButton ? (
+                  <button
+                    className="btn club-detail__join-btn club-detail__leave-btn"
+                    onClick={async () => {
+                      if (!onLeave) return;
+
+                      const didLeave = await onLeave(club.id);
+                      if (!didLeave) return;
+
+                      setJoinStatus({ isMember: false, isPending: false });
+                      setMembersReloadKey((key) => key + 1);
+                    }}
+                  >
+                    탈퇴하기
+                  </button>
+                ) : (
+                  <button
+                    className={joinButtonClassName}
+                    disabled={isJoinDisabled}
+                    // 🔧 [기능] 로그인 확인 후 가입 신청 API 연결
+                    onClick={async () => {
+                      if (!onJoin) return;
+
+                      const result = await onJoin(club.id);
+                      if (!result) return;
+
+                      setJoinStatus({
+                        isMember: result.status === "joined",
+                        isPending: result.status === "pending",
+                      });
+
+                      if (result.status === "joined") {
+                        setMembersReloadKey((key) => key + 1);
+                      }
+                    }}
+                  >
+                    {joinButtonLabel}
+                  </button>
+                )
+              )}
               <button
                 className="btn btn--outline club-detail__action-btn"
                 disabled={isWishlistUpdating}

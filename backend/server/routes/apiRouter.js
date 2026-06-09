@@ -532,10 +532,12 @@ apiRouter.post("/api/meetings/:meetingId/join-requests", asyncRoute(async (req, 
   }
 
   try {
-    const request = await createMeetingJoinRequest({ meetingId, userId });
+    const result = await createMeetingJoinRequest({ meetingId, userId });
     res.status(201).json({
-      message: "가입 신청이 접수되었습니다.",
-      request,
+      message: result.status === "joined"
+        ? "모임에 가입되었습니다."
+        : "가입 신청이 접수되었습니다.",
+      ...result,
     });
   } catch (error) {
     sendServiceError(res, error, "가입 신청 처리 중 오류가 발생했습니다.");

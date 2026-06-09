@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:test": "vite --mode test",
+    "dev:test": "cross-env VITE_ALLOW_TEST_LOGIN=true vite --mode test",
     "build": "vite build",
     "preview": "vite preview"
   },

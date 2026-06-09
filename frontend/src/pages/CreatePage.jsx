@@ -32,7 +32,7 @@ export default function CreatePage({
   const [maxMembers,  setMaxMembers]  = useState("");
   const [tags,        setTags]        = useState([]);
   const [tagInput,    setTagInput]    = useState("");
-  const [conditions,  setConditions]  = useState({ approval: false, department: false, grade: false });
+  const [conditions,  setConditions]  = useState({ approval: false });
 
   const handleTagKeyDown = (e) => {
     if (e.key === "Enter" && tagInput.trim()) {
@@ -219,8 +219,6 @@ export default function CreatePage({
                   <div className="create-box__conditions">
                     {[
                       { key: "approval",   label: "승인 필요" },
-                      { key: "department", label: "학과 제한" },
-                      { key: "grade",      label: "학년 제한" },
                     ].map(({ key, label }) => (
                       <label key={key} className="form-field__checkbox-row">
                         <input

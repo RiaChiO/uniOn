@@ -428,60 +428,106 @@ export async function getMeetingJoinStatus({ meetingId, userId }) {
   return result.rows[0];
 }
 
+function requiresJoinApproval(joinCondition) {
+  return String(joinCondition ?? "")
+    .split(",")
+    .map((condition) => condition.trim())
+    .includes("승인 필요");
+}
+
 export async function createMeetingJoinRequest({ meetingId, userId }) {
-  await ensureJoinRequestsTable();
+  const client = await pool.connect();
 
-  const meetingResult = await pool.query(
-    `
-    SELECT is_recruiting AS "isRecruiting"
-    FROM meetings
-    WHERE meeting_id = $1
-    `,
-    [meetingId]
-  );
+  try {
+    await ensureJoinRequestsTable(client);
+    await client.query("BEGIN");
 
-  if (meetingResult.rowCount === 0) {
-    const error = new Error("모임을 찾을 수 없습니다.");
-    error.statusCode = 404;
+    const meetingResult = await client.query(
+      `
+      SELECT
+        is_recruiting AS "isRecruiting",
+        join_condition AS "joinCondition"
+      FROM meetings
+      WHERE meeting_id = $1
+      `,
+      [meetingId]
+    );
+
+    if (meetingResult.rowCount === 0) {
+      const error = new Error("모임을 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (!meetingResult.rows[0].isRecruiting) {
+      const error = new Error("현재 모집이 마감된 모임입니다.");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const existingMember = await client.query(
+      `
+      SELECT 1
+      FROM meeting_participants
+      WHERE meeting_id = $1 AND user_id = $2
+      `,
+      [meetingId, userId]
+    );
+
+    if (existingMember.rowCount > 0) {
+      const error = new Error("이미 가입된 모임입니다.");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    if (requiresJoinApproval(meetingResult.rows[0].joinCondition)) {
+      const result = await client.query(
+        `
+        INSERT INTO meeting_join_requests (meeting_id, user_id, requested_at)
+        VALUES ($1, $2, NOW())
+        ON CONFLICT (meeting_id, user_id)
+        DO UPDATE SET requested_at = meeting_join_requests.requested_at
+        RETURNING
+          meeting_id AS "meetingId",
+          user_id AS "userId",
+          requested_at AS "requestedAt"
+        `,
+        [meetingId, userId]
+      );
+
+      await client.query("COMMIT");
+      return { status: "pending", request: result.rows[0] };
+    }
+
+    await client.query(
+      `
+      DELETE FROM meeting_join_requests
+      WHERE meeting_id = $1 AND user_id = $2
+      `,
+      [meetingId, userId]
+    );
+
+    const result = await client.query(
+      `
+      INSERT INTO meeting_participants (meeting_id, user_id, joined_at)
+      VALUES ($1, $2, NOW())
+      ON CONFLICT (meeting_id, user_id) DO NOTHING
+      RETURNING
+        meeting_id AS "meetingId",
+        user_id AS "userId",
+        joined_at AS "joinedAt"
+      `,
+      [meetingId, userId]
+    );
+
+    await client.query("COMMIT");
+    return { status: "joined", member: result.rows[0] };
+  } catch (error) {
+    await client.query("ROLLBACK");
     throw error;
+  } finally {
+    client.release();
   }
-
-  if (!meetingResult.rows[0].isRecruiting) {
-    const error = new Error("현재 모집이 마감된 모임입니다.");
-    error.statusCode = 409;
-    throw error;
-  }
-
-  const existingMember = await pool.query(
-    `
-    SELECT 1
-    FROM meeting_participants
-    WHERE meeting_id = $1 AND user_id = $2
-    `,
-    [meetingId, userId]
-  );
-
-  if (existingMember.rowCount > 0) {
-    const error = new Error("이미 가입된 모임입니다.");
-    error.statusCode = 409;
-    throw error;
-  }
-
-  const result = await pool.query(
-    `
-    INSERT INTO meeting_join_requests (meeting_id, user_id, requested_at)
-    VALUES ($1, $2, NOW())
-    ON CONFLICT (meeting_id, user_id)
-    DO UPDATE SET requested_at = meeting_join_requests.requested_at
-    RETURNING
-      meeting_id AS "meetingId",
-      user_id AS "userId",
-      requested_at AS "requestedAt"
-    `,
-    [meetingId, userId]
-  );
-
-  return result.rows[0];
 }
 
 export async function approveMeetingJoinRequest({ meetingId, userId }) {

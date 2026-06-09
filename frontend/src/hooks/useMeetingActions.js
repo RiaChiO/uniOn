@@ -46,14 +46,7 @@ export function useMeetingActions({ navigate, setClubs, user }) {
           formData?.maxMembers === "" || formData?.maxMembers == null
             ? null
             : Number(formData.maxMembers),
-        joinCondition:
-          [
-            formData?.conditions?.approval ? "승인 필요" : "",
-            formData?.conditions?.department ? "학과 제한" : "",
-            formData?.conditions?.grade ? "학년 제한" : "",
-          ]
-            .filter(Boolean)
-            .join(", ") || null,
+        joinCondition: formData?.conditions?.approval ? "승인 필요" : null,
         imageUrl,
       });
 
@@ -85,8 +78,21 @@ export function useMeetingActions({ navigate, setClubs, user }) {
       setJoiningMeetingId(meetingId);
       const data = await createMeetingJoinRequest(meetingId, userId);
 
+      if (data.status === "joined") {
+        setClubs((prev) =>
+          prev.map((club) =>
+            String(club.id) === String(meetingId)
+              ? {
+                  ...club,
+                  memberCount: Number(club.memberCount ?? 0) + 1,
+                }
+              : club
+          )
+        );
+      }
+
       window.alert(data.message || "가입 신청이 접수되었습니다.");
-      return true;
+      return data;
     } catch (error) {
       window.alert(error.message || "가입 신청 중 오류가 발생했습니다.");
       return false;
@@ -194,6 +200,38 @@ export function useMeetingActions({ navigate, setClubs, user }) {
     }
   }
 
+  async function handleLeaveMeeting(meetingId) {
+    const userId = user?.id ?? user?.userId;
+
+    if (!userId) {
+      window.alert("로그인 후 탈퇴할 수 있습니다.");
+      return false;
+    }
+
+    if (!window.confirm("이 모임에서 탈퇴하시겠습니까?")) {
+      return false;
+    }
+
+    try {
+      const data = await removeMeetingMember(meetingId, userId);
+      setClubs((prev) =>
+        prev.map((club) =>
+          String(club.id) === String(meetingId)
+            ? {
+                ...club,
+                memberCount: Math.max(0, Number(club.memberCount || 0) - 1),
+              }
+            : club
+        )
+      );
+      window.alert(data.message || "모임에서 탈퇴했습니다.");
+      return true;
+    } catch (error) {
+      window.alert(error.message || "모임 탈퇴 중 오류가 발생했습니다.");
+      return false;
+    }
+  }
+
   async function handleTransferLeader(meetingId, memberId, memberName) {
     if (!window.confirm("이 멤버에게 리더를 위임하시겠습니까?")) {
       return false;
@@ -243,6 +281,7 @@ export function useMeetingActions({ navigate, setClubs, user }) {
     handleDeleteMeeting,
     handleJoinRequest,
     handleJoinRequestDecision,
+    handleLeaveMeeting,
     handleRemoveMeetingMember,
     handleSaveMeeting,
     handleToggleMeetingRecruitment,

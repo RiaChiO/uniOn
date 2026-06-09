@@ -324,6 +324,21 @@ img    { max-width: 100%; display: block; }
 
 .club-detail__actions { display: flex; flex-direction: column; gap: 8px; }
 .club-detail__join-btn { justify-content: center; padding: 14px; font-size: 15px; }
+.club-detail__join-btn--pending,
+.club-detail__join-btn--pending:disabled {
+  background: transparent;
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
+  cursor: default;
+}
+.club-detail__leave-btn {
+  justify-content: center;
+  background: #dc2626;
+  color: #ffffff;
+}
+.club-detail__leave-btn:hover {
+  background: #b91c1c;
+}
 .club-detail__action-btn { justify-content: center; }
 
 .club-detail__sidebar-card { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 20px; display: flex; flex-direction: column; gap: 16px; }
