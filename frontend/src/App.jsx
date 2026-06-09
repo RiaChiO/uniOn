@@ -240,6 +240,7 @@ export default function App() {
             onLogout={handleLogout}
             onEditProfile={() => navigate("/mypage/edit")}
             onClubClick={(id) => navigate(`/clubs/${id}`)}
+            onManageClick={(id) => navigate(`/clubs/${id}/manage`)}
             wishlistCount={wishlistMeetingIds.length}
           />
         }

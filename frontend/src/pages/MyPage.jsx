@@ -5,11 +5,14 @@
 //   - onEditProfile : 프로필 수정 클릭 → 프로필 수정 페이지 이동
 //   - onLogout      : 로그아웃 클릭 → 로그아웃 로직 연결
 //   - onClubClick   : 소모임 클릭 → 소모임 상세 페이지 이동
+//   - onManageClick : 리더의 모임 관리 클릭 → 모임 관리 페이지 이동
+//   - 모임 탈퇴      : DELETE /api/meetings/:meetingId/members/:userId 호출 (멤버 전용, 리더는 비활성)
 
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { getUserMeetings, getUserWishlistMeetings } from "../api/users";
+import { removeMeetingMember } from "../api/meetings";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -33,6 +36,7 @@ export default function MyPage({
   onEditProfile,
   onLogout,
   onClubClick,
+  onManageClick,
   wishlistCount,
 }) {
   const [myClubs, setMyClubs] = useState([]);
@@ -41,6 +45,12 @@ export default function MyPage({
   const [wishlistClubs, setWishlistClubs] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [wishlistError, setWishlistError] = useState("");
+
+  // 🔧 [탈퇴] 모달 상태 및 처리 중 상태
+  const [leaveTarget, setLeaveTarget] = useState(null); // { id, name } 또는 null
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [leaveError, setLeaveError] = useState("");
+
   const displayUser = user ?? {};
 
   useEffect(() => {
@@ -107,6 +117,51 @@ export default function MyPage({
 
     loadWishlistClubs();
   }, [user]);
+
+  // 🔧 [탈퇴] 버튼 클릭 시 확인 모달 열기 (카드 클릭 이벤트는 막음)
+  const handleOpenLeaveModal = (e, club) => {
+    e.stopPropagation();
+    setLeaveError("");
+    setLeaveTarget(club);
+  };
+
+  // 🔧 [관리] 리더의 관리 버튼 클릭 (카드 클릭 이벤트는 막음)
+  const handleManageClick = (e, clubId) => {
+    e.stopPropagation();
+    if (onManageClick) {
+      onManageClick(clubId);
+    } else if (onClubClick) {
+      // onManageClick 미연결 시 상세로라도 이동
+      onClubClick(clubId);
+    }
+  };
+
+  // 🔧 [탈퇴] 모달 닫기
+  const handleCloseLeaveModal = () => {
+    if (isLeaving) return;
+    setLeaveTarget(null);
+    setLeaveError("");
+  };
+
+  // 🔧 [탈퇴] 실제 API 호출
+  const handleConfirmLeave = async () => {
+    const userId = user?.userId ?? user?.id;
+
+    if (!leaveTarget || !userId) return;
+
+    try {
+      setIsLeaving(true);
+      setLeaveError("");
+      await removeMeetingMember(leaveTarget.id, userId);
+      // 성공 시 목록에서 즉시 제거
+      setMyClubs((prev) => prev.filter((c) => c.id !== leaveTarget.id));
+      setLeaveTarget(null);
+    } catch (error) {
+      setLeaveError(error.message || "탈퇴 처리 중 오류가 발생했습니다.");
+    } finally {
+      setIsLeaving(false);
+    }
+  };
 
   const displayedClubs = user ? myClubs : [];
   const displayedWishlistClubs = user ? wishlistClubs : [];
@@ -202,23 +257,56 @@ export default function MyPage({
                 ) : displayedClubs.length === 0 ? (
                   <p>참여 중인 모임이 없습니다.</p>
                 ) : (
-                  displayedClubs.map((club) => (
-                    <div
-                      key={club.id}
-                      className="mypage__club-card"
-                      // 🔧 [기능] 소모임 상세 페이지 이동
-                      onClick={() => onClubClick && onClubClick(club.id)}
-                    >
-                      <div className="mypage__club-thumb">🏠</div>
-                      <div className="mypage__club-info">
-                        <div className="mypage__club-role">{club.role}</div>
-                        <div className="mypage__club-name">{club.name}</div>
-                        <div className="mypage__club-member">
-                          👥 {club.memberCount}명
+                  displayedClubs.map((club) => {
+                    const isLeader = club.role === "리더";
+                    const roleClassName = isLeader
+                      ? "mypage__club-role mypage__club-role--leader"
+                      : "mypage__club-role mypage__club-role--member";
+                    return (
+                      <div
+                        key={club.id}
+                        className="mypage__club-card"
+                        // 🔧 [기능] 소모임 상세 페이지 이동
+                        onClick={() => onClubClick && onClubClick(club.id)}
+                      >
+                        <div className="mypage__club-thumb">🏠</div>
+                        <div className="mypage__club-info">
+                          <div className={roleClassName}>
+                            {isLeader ? "👑 리더" : "멤버"}
+                          </div>
+                          <div className="mypage__club-name">{club.name}</div>
+                          <div className="mypage__club-member">
+                            👥 {club.memberCount}명
+                          </div>
+                        </div>
+                        {/* 🔧 [기능] 역할별 액션 버튼 */}
+                        <div className="mypage__club-actions">
+                          {isLeader ? (
+                            <button
+                              type="button"
+                              className="mypage__club-btn mypage__club-btn--manage"
+                              onClick={(e) => handleManageClick(e, club.id)}
+                            >
+                              ⚙️ 관리
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="mypage__club-btn mypage__club-btn--leave"
+                              onClick={(e) =>
+                                handleOpenLeaveModal(e, {
+                                  id: club.id,
+                                  name: club.name,
+                                })
+                              }
+                            >
+                              🚪 탈퇴
+                            </button>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </section>
@@ -262,6 +350,63 @@ export default function MyPage({
       </main>
 
       <Footer />
+
+      {/* 🔧 [탈퇴] 확인 모달 */}
+      {leaveTarget && (
+        <div
+          className="mypage__modal-overlay"
+          onClick={handleCloseLeaveModal}
+          role="presentation"
+        >
+          <div
+            className="mypage__modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="leave-modal-title"
+          >
+            <button
+              type="button"
+              className="mypage__modal-close"
+              onClick={handleCloseLeaveModal}
+              aria-label="닫기"
+              disabled={isLeaving}
+            >
+              ✕
+            </button>
+            <div className="mypage__modal-icon" aria-hidden="true">🚪</div>
+            <h3 id="leave-modal-title" className="mypage__modal-title">
+              정말 탈퇴하시겠어요?
+            </h3>
+            <p className="mypage__modal-club-name">{leaveTarget.name}</p>
+            <p className="mypage__modal-desc">
+              탈퇴 후 다시 가입하려면<br />
+              가입 신청을 새로 보내야 합니다.
+            </p>
+            {leaveError && (
+              <p className="mypage__modal-error">{leaveError}</p>
+            )}
+            <div className="mypage__modal-actions">
+              <button
+                type="button"
+                className="mypage__modal-btn mypage__modal-btn--cancel"
+                onClick={handleCloseLeaveModal}
+                disabled={isLeaving}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="mypage__modal-btn mypage__modal-btn--leave"
+                onClick={handleConfirmLeave}
+                disabled={isLeaving}
+              >
+                {isLeaving ? "처리 중..." : "탈퇴하기"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

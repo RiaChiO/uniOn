@@ -1026,3 +1026,214 @@ button.intro-card__submit:disabled {
     padding: 20px 18px;
   }
 }
+
+/* ===========================
+   MyPage 모임 카드 액션 + 탈퇴 모달
+=========================== */
+/* 카드 안에 액션 버튼 영역 (탈퇴/관리) */
+.mypage__club-actions {
+  display: flex;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* 역할 뱃지 - 컬러 pill 형태 */
+.mypage__club-role--leader {
+  background: #fef3c7;
+  color: #92400e;
+}
+.mypage__club-role--member {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* 액션 버튼 공통 */
+button.mypage__club-btn {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1.5px solid;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background-color .15s, border-color .15s;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* 탈퇴 버튼 (멤버 전용) */
+button.mypage__club-btn--leave {
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+button.mypage__club-btn--leave:hover {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+}
+
+/* 관리 버튼 (리더 전용) */
+button.mypage__club-btn--manage {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+button.mypage__club-btn--manage:hover {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary-dark);
+}
+
+/* ===========================
+   탈퇴 확인 모달
+=========================== */
+.mypage__modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.mypage__modal {
+  background: #ffffff;
+  border-radius: var(--radius);
+  padding: 32px 28px 24px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  animation: mypage-modal-in .15s ease-out;
+}
+
+@keyframes mypage-modal-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+button.mypage__modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--color-text-sub);
+  padding: 4px 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+}
+button.mypage__modal-close:hover:not(:disabled) {
+  background-color: var(--color-bg-sub);
+  color: var(--color-text);
+}
+button.mypage__modal-close:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mypage__modal-icon {
+  font-size: 40px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.mypage__modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 8px;
+  color: var(--color-text);
+}
+
+.mypage__modal-club-name {
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-primary);
+  margin: 8px 0 12px;
+}
+
+.mypage__modal-desc {
+  font-size: 13px;
+  color: var(--color-text-sub);
+  text-align: center;
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+
+.mypage__modal-error {
+  font-size: 12px;
+  color: #dc2626;
+  text-align: center;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  margin: 0 0 16px;
+}
+
+.mypage__modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+button.mypage__modal-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1.5px solid;
+  line-height: 1;
+  transition: background-color .15s, border-color .15s;
+}
+
+button.mypage__modal-btn--cancel {
+  background: #ffffff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+button.mypage__modal-btn--cancel:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+button.mypage__modal-btn--leave {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+button.mypage__modal-btn--leave:hover:not(:disabled) {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+}
+
+button.mypage__modal-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 640px) {
+  .mypage__modal {
+    padding: 24px 20px 18px;
+  }
+  button.mypage__club-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
