@@ -98,7 +98,7 @@ export default function CreatePage({
                   <input
                     className="form-field__input"
                     type="text"
-                    placeholder="예: GNU 코딩 스터디"
+                    placeholder="예: uniOn 코딩 스터디"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />

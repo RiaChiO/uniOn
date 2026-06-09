@@ -30,9 +30,9 @@ export default function GoogleLoginPage({
 
           {/* 로고 */}
           <div className="login-box__logo">
-            <div className="navbar__logo-badge">경</div>
-            <div className="login-box__logo-title">경상대 소모임</div>
-            <p className="login-box__subtitle">로그인하고 소모임을 시작하세요</p>
+            <div className="navbar__logo-badge">U</div>
+            <div className="login-box__logo-title">uniOn</div>
+            <p className="login-box__subtitle">로그인하고 모임을 시작하세요</p>
           </div>
 
           {/* 구글 로그인 버튼 */}

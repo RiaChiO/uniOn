@@ -72,7 +72,7 @@ export default function IntroRecommendSection({ user, onDetailClick }) {
               Gemini 기반 자기소개서 핵심 키워드 매칭
             </h2>
             <p className="intro-card__subtitle">
-              나의 관심사, 전공 역량 또는 소모임에서 함께 즐기고 싶은 활동 성향을 자유롭게 줄글로 기재하세요.
+              나의 관심사, 전공 역량 또는 모임에서 함께 즐기고 싶은 활동 성향을 자유롭게 줄글로 기재하세요.
             </p>
           </div>
 
@@ -97,7 +97,7 @@ export default function IntroRecommendSection({ user, onDetailClick }) {
             disabled={!introText.trim() || isSubmitting}
           >
             <span aria-hidden="true">🎯</span>
-            {isSubmitting ? "자기소개를 바탕으로 어울리는 소모임을 찾는 중입니다..." : "나의 맞춤 소모임 찾기"}
+            {isSubmitting ? "자기소개를 바탕으로 어울리는 모임을 찾는 중입니다..." : "나의 맞춤 모임 찾기"}
           </button>
         </div>
 
@@ -130,11 +130,11 @@ export default function IntroRecommendSection({ user, onDetailClick }) {
               </div>
             </div>
 
-            {/* 추천 소모임 목록 */}
+            {/* 추천 모임 목록 */}
             <div className="intro-result-card">
               <h3 className="intro-result-card__title">
                 <span aria-hidden="true">🏆</span>
-                추천 매칭된 소모임 목록
+                추천 매칭된 모임 목록
               </h3>
 
               <div className="intro-rec-grid">

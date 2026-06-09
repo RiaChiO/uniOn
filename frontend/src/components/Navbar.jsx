@@ -44,12 +44,12 @@ export default function Navbar({
           >
             <img
               src="/favicon-32x32.png"
-              alt="경상대 소모임 로고"
+              alt="uniOn 로고"
               style={{ width: "40px", height: "40px", borderRadius: "8px" }}
             />
             <div className="navbar__logo-text">
-              <span className="navbar__logo-title">경상대 소모임</span>
-              <span className="navbar__logo-sub">GNU Club Matching</span>
+              <span className="navbar__logo-title">uniOn</span>
+              <span className="navbar__logo-sub">모임 매칭</span>
             </div>
           </Link>
         </div>
@@ -58,7 +58,7 @@ export default function Navbar({
           <input
             className="navbar__search-input"
             type="text"
-            placeholder="소모임을 검색해보세요"
+            placeholder="모임을 검색해보세요"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />

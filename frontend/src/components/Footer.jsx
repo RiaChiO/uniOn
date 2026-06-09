@@ -4,16 +4,16 @@ export default function Footer() {
       <div className="footer__inner">
         <div className="footer__brand">
           <div className="footer__logo">
-            <div className="navbar__logo-badge">경</div>
+            <div className="navbar__logo-badge">U</div>
             <div className="navbar__logo-text">
-              <span className="navbar__logo-title">경상대 소모임</span>
-              <span className="navbar__logo-sub">GNU Club Matching</span>
+              <span className="navbar__logo-title">uniOn</span>
+              <span className="navbar__logo-sub">모임 매칭</span>
             </div>
           </div>
           <p className="footer__tagline">
             경상국립대학교 학생들을 위한
             <br />
-            소모임 매칭 플랫폼
+            모임 매칭 플랫폼
           </p>
         </div>
         <div className="footer__contact">
@@ -25,7 +25,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="footer__bottom">
-        © 2026 경상국립대학교 소모임 매칭. All rights reserved.
+        © 2026 uniOn. All rights reserved.
       </div>
     </footer>
   );

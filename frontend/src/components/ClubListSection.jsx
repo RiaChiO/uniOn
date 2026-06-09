@@ -68,7 +68,7 @@ export default function ClubListSection({
       <div className="club-list-section__inner">
         <div className="club-list-section__header">
           <div>
-            <h2 className="club-list-section__title">인기 소모임</h2>
+            <h2 className="club-list-section__title">인기 모임</h2>
             <p className="club-list-section__subtitle">
               추천 알고리즘이 맞춤 점수를 반영해 먼저 보여드려요
               {recommendationsLoading ? " · 계산 반영 중" : ""}
