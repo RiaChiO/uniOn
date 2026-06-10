@@ -2,57 +2,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { pool } from "../db/pool.js";
 import { getMeetings } from "./meetingService.js";
 
-const MAX_INTRO_LENGTH = 1000;
-const DEFAULT_LIMIT = 6;
-const MAX_LIMIT = 20;
-const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite";
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite";
 
-const GEMINI_ANALYSIS_INSTRUCTIONS = [
-  "Return ONLY valid JSON. No markdown. No explanation.",
-  'Schema: {"keywords":[string],"tagIds":[string],"displayCategories":[string]}.',
-  "tagIds must only contain: study, exercise, culture, game, religion, volunteer.",
-  "displayCategories should use concise ids such as academic, it, sports, music, art, photo, networking, language, startup, culture, game, religion, volunteer.",
-];
-
-const GEMINI_RESPONSE_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    keywords: {
-      type: Type.ARRAY,
-      items: { type: Type.STRING },
-    },
-    tagIds: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.STRING,
-        enum: ["study", "exercise", "culture", "game", "religion", "volunteer"],
-      },
-    },
-    displayCategories: {
-      type: Type.ARRAY,
-      items: { type: Type.STRING },
-    },
-  },
-  required: ["keywords", "tagIds", "displayCategories"],
-  propertyOrdering: ["keywords", "tagIds", "displayCategories"],
-};
-
-const CATEGORY_RULES = [
-  { tagId: "game", displayCategory: "game", keywords: ["게임", "롤", "리그오브레전드", "보드게임", "내전", "e스포츠", "온라인"] },
-  { tagId: "study", displayCategory: "it", keywords: ["개발", "코딩", "프로그래밍", "알고리즘", "웹", "앱", "데이터", "ai", "인공지능", "해커톤"] },
-  { tagId: "study", displayCategory: "academic", keywords: ["공부", "스터디", "학습", "자격증", "시험", "전공", "학술", "교육"] },
-  { tagId: "exercise", displayCategory: "sports", keywords: ["운동", "스포츠", "러닝", "축구", "농구", "헬스", "요가", "등산", "탁구", "배드민턴"] },
-  { tagId: "culture", displayCategory: "music", keywords: ["음악", "공연", "밴드", "보컬", "기타", "댄스", "연극", "합창", "무대"] },
-  { tagId: "culture", displayCategory: "art", keywords: ["그림", "미술", "공예", "디자인", "드로잉", "창작", "예술"] },
-  { tagId: "culture", displayCategory: "photo", keywords: ["사진", "영상", "카메라", "촬영", "편집", "필름"] },
-  { tagId: "culture", displayCategory: "networking", keywords: ["친목", "교류", "네트워킹", "발표", "토론", "커뮤니티", "사람"] },
-  { tagId: "study", displayCategory: "language", keywords: ["영어", "일본어", "중국어", "언어", "회화", "국제", "외국어"] },
-  { tagId: "volunteer", displayCategory: "volunteer", keywords: ["봉사", "나눔", "사회", "환경", "플로깅", "지역"] },
-  { tagId: "religion", displayCategory: "religion", keywords: ["종교", "기독", "불교", "가톨릭", "성경", "기도", "선교"] },
-];
-
-const TAG_VECTOR_INDEX = { study: 0, exercise: 1, culture: 2, game: 3, religion: 4, volunteer: 5 };
-const EMPTY_TAG_VECTOR = [0, 0, 0, 0, 0, 0];
 let geminiClient = null;
 
 export function getGeminiIntroModelName() {
@@ -65,36 +16,6 @@ function createHttpError(message, statusCode) {
   return error;
 }
 
-function normalizeKeyword(keyword) {
-  return String(keyword ?? "").replace(/^#/, "").trim().toLowerCase();
-}
-
-function unique(values) {
-  return [...new Set(values.filter(Boolean))];
-}
-
-function normalizeAnalysis(analysis) {
-  return {
-    keywords: unique((analysis.keywords ?? []).map(normalizeKeyword)).slice(0, 12),
-    tagIds: unique((analysis.tagIds ?? []).map(normalizeKeyword).filter((tagId) => TAG_VECTOR_INDEX[tagId] != null)),
-    displayCategories: unique((analysis.displayCategories ?? []).map(normalizeKeyword)).slice(0, 8),
-  };
-}
-
-function extractGeminiResponseText(response) {
-  return typeof response.text === "string" ? response.text : "";
-}
-
-function parseJsonObject(text) {
-  const trimmed = String(text ?? "").replace(/```json|```/gi, "").trim();
-  const startIndex = trimmed.indexOf("{");
-  const endIndex = trimmed.lastIndexOf("}");
-  if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-    throw createHttpError("Gemini 응답을 JSON으로 해석할 수 없습니다.", 502);
-  }
-  return JSON.parse(trimmed.slice(startIndex, endIndex + 1));
-}
-
 function getGeminiClient() {
   if (!process.env.GEMINI_API_KEY) return null;
   if (!geminiClient) {
@@ -103,187 +24,135 @@ function getGeminiClient() {
   return geminiClient;
 }
 
-function buildGeminiPrompt(introText) {
-  return [...GEMINI_ANALYSIS_INSTRUCTIONS, `Analyze this intro text for club recommendation:\n${introText}`].join(" ");
-}
-
-async function analyzeIntroTextWithGemini(introText) {
-  const client = getGeminiClient();
-  if (!client) return null;
-  const model = getGeminiIntroModelName();
+async function retryWithBackoff(fn, retries = 3, delay = 1500) {
   try {
-    const response = await client.models.generateContent({
-      model,
-      contents: buildGeminiPrompt(introText),
-      config: {
-        responseMimeType: "application/json",
-        responseJsonSchema: GEMINI_RESPONSE_SCHEMA,
-        maxOutputTokens: 800,
-        temperature: 0.1,
-      },
-    });
-    return normalizeAnalysis(parseJsonObject(extractGeminiResponseText(response)));
+    return await fn();
   } catch (error) {
-    throw createHttpError(error.message || "Gemini 분석 요청에 실패했습니다.", 502);
-  }
-}
+    const status = error.status || error.statusCode;
+    const isTemporaryError = status === 503 || status === 429 || 
+                             (error.message && (error.message.includes("503") || error.message.includes("429")));
 
-function analyzeIntroTextLocally(introText) {
-  const normalizedText = introText.toLowerCase();
-  const matchedKeywords = [];
-  const tagIds = [];
-  const displayCategories = [];
-
-  for (const rule of CATEGORY_RULES) {
-    const matches = rule.keywords.filter((keyword) => normalizedText.includes(keyword.toLowerCase()));
-    if (matches.length > 0) {
-      matchedKeywords.push(...matches);
-      tagIds.push(rule.tagId);
-      displayCategories.push(rule.displayCategory);
+    if (retries > 0 && isTemporaryError) {
+      console.warn(`⚠️ Gemini API Error (${status}). Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retryWithBackoff(fn, retries - 1, delay * 2);
     }
+    throw error;
+  }
+}
+
+const GEMINI_RECOMMEND_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    user_extracted_keywords: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+    },
+    recommended_meetings: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          meeting_id: { type: Type.STRING },
+          title: { type: Type.STRING },
+          tag_id: { type: Type.STRING },          
+          display_category: { type: Type.STRING },  
+          description: { type: Type.STRING },
+          match_score: { type: Type.INTEGER },
+          match_reason: { type: Type.STRING }
+        },
+        required: ["meeting_id", "title", "tag_id", "display_category", "description", "match_score", "match_reason"]
+      }
+    }
+  },
+  required: ["user_extracted_keywords", "recommended_meetings"]
+};
+
+export async function getIntroRecommendations({ introText, userId = null, limit }) {
+  const client = getGeminiClient();
+  if (!client) {
+    throw createHttpError("Gemini API 클라이언트 초기화에 실패했습니다.", 500);
   }
 
-  const fallbackKeywords = normalizedText
-    .split(/[\s,.;:!?()[\]{}"'`~|\\/]+/)
-    .map(normalizeKeyword)
-    .filter((word) => word.length >= 2)
-    .slice(0, 8);
-
-  return {
-    keywords: unique(matchedKeywords.length ? matchedKeywords : fallbackKeywords),
-    tagIds: unique(tagIds),
-    displayCategories: unique(displayCategories),
-  };
-}
-
-export async function analyzeIntroText(introText) {
-  const geminiAnalysis = await analyzeIntroTextWithGemini(introText);
-  if (geminiAnalysis) return { ...geminiAnalysis, source: "gemini" };
-  return { ...analyzeIntroTextLocally(introText), source: "local" };
-}
-
-async function getUserVector(userId) {
-  if (!userId) return null;
-  const result = await pool.query(
-    `SELECT study, exercise, culture, game, religion, volunteer FROM user_interest_vectors WHERE user_id = $1`,
-    [userId]
-  );
-  if (result.rowCount === 0) return null;
-  const row = result.rows[0];
-  return [
-    Number(row.study) || 0,
-    Number(row.exercise) || 0,
-    Number(row.culture) || 0,
-    Number(row.game) || 0,
-    Number(row.religion) || 0,
-    Number(row.volunteer) || 0,
-  ];
-}
-
-function cosineSimilarity(left, right) {
-  if (!left || !right) return 0;
-  const dot = left.reduce((sum, value, index) => sum + value * Number(right[index] ?? 0), 0);
-  const leftMagnitude = Math.sqrt(left.reduce((sum, value) => sum + value ** 2, 0));
-  const rightMagnitude = Math.sqrt(right.reduce((sum, value) => sum + Number(value ?? 0) ** 2, 0));
-  return leftMagnitude && rightMagnitude ? dot / (leftMagnitude * rightMagnitude) : 0;
-}
-
-function getJaccard(vA, vB) {
-  let intersection = 0;
-  let union = 0;
-  for (let index = 0; index < vA.length; index += 1) {
-    intersection += Math.min(vA[index], vB[index]);
-    union += Math.max(vA[index], vB[index]);
-  }
-  return union ? intersection / union : 0;
-}
-
-function getMeetingTagVector(tagId) {
-  const tagVector = [...EMPTY_TAG_VECTOR];
-  const tagVectorIndex = TAG_VECTOR_INDEX[tagId];
-  if (tagVectorIndex != null) tagVector[tagVectorIndex] = 10;
-  return tagVector;
-}
-
-function scoreMeeting(meeting, analysis, userVector) {
-  const normalizedKeywords = analysis.keywords.map(normalizeKeyword);
-  const normalizedTags = (meeting.tags ?? []).map(normalizeKeyword);
-  const searchableText = [
-    meeting.title,
-    meeting.description,
-    meeting.tagId,
-    meeting.displayCategory,
-    ...normalizedTags,
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  const matchedKeywords = normalizedKeywords.filter((keyword) => searchableText.includes(keyword));
-
-  const keywordScore = matchedKeywords.length * 20;
-
-  const userVectorArray = userVector ?? [0, 0, 0, 0, 0, 0];
-  const tagVector = getMeetingTagVector(meeting.tagId);
-  const participantVector = meeting.avg_participant_vector ?? tagVector;
-
-  const rawCosine = cosineSimilarity(userVectorArray, participantVector);
-  const rawJaccard = getJaccard(userVectorArray, tagVector);
-
-  const hybridScore = Math.round(((rawCosine + 1) + (rawJaccard * 2)) * 25);
-  const matchScore = Math.min(100, Math.round(hybridScore * 0.5) + keywordScore);
-
-  return {
-    meeting,
-    matchedKeywords,
-    matchCount: matchedKeywords.length,
-    matchScore,
-    matchReason: matchedKeywords.length
-      ? `${matchedKeywords.join(", ")} 키워드가 모임 정보와 일치합니다.`
-      : "자기소개서의 관심 분야와 모임 대분류가 유사합니다.",
-  };
-}
-
-function normalizeLimit(limit) {
-  return Math.min(MAX_LIMIT, Math.max(1, Number(limit) || DEFAULT_LIMIT));
-}
-
-export async function getIntroRecommendations({ introText, userId = null, limit = DEFAULT_LIMIT }) {
-  const normalizedIntroText = String(introText ?? "").trim();
-  if (!normalizedIntroText) {
-    throw createHttpError("introText는 필수입니다.", 400);
-  }
-  if (normalizedIntroText.length > MAX_INTRO_LENGTH) {
-    throw createHttpError(`introText는 ${MAX_INTRO_LENGTH}자 이하로 입력하세요.`, 400);
+  const meetings = await getMeetings();
+  if (!meetings || meetings.length === 0) {
+    return { keywords: ["AI 매칭"], recommendations: [] };
   }
 
-  const safeLimit = normalizeLimit(limit);
-  const [analysis, userVector, meetings] = await Promise.all([
-    analyzeIntroText(normalizedIntroText),
-    getUserVector(userId),
-    getMeetings(),
-  ]);
+  const prompt = `
+    너는 대학생 소모임 추천 시스템의 매칭 분석 엔진이야.
+    사용자의 자기소개 내용을 분석하고, 제공된 소모임 데이터 목록 중에서 의미상 가장 잘 매칭되는 상위 ${limit}개의 소모임을 골라줘.
 
-  const scoredMeetings = meetings
-    .map((meeting) => scoreMeeting(meeting, analysis, userVector))
-    .filter((item) => item.matchScore > 0)
-    .sort((left, right) => {
-      if (right.matchScore !== left.matchScore) return right.matchScore - left.matchScore;
-      return Number(right.meeting.participantCount ?? 0) - Number(left.meeting.participantCount ?? 0);
-    })
-    .slice(0, safeLimit)
-    .map(({ meeting, matchedKeywords, matchCount, matchScore, matchReason }) => ({
-      ...meeting,
-      matchedKeywords,
-      matchCount,
-      matchScore,
-      matchReason,
-    }));
+    ★ 핵심 규칙: 단순 텍스트 일치(LIKE 연산)뿐만 아니라 '의미론적 유사성'을 파악해야 해.
+    - 예: 사용자가 "게임" 또는 "롤 하고 싶다"라고 적으면, 본문에 '게임'이라는 단어가 직접 없더라도 '리그 오브 레전드', '오버워치', 'e스포츠', '보드게임' 소모임을 최우선 매칭해야 함.
+    - 예: 사용자가 "코딩"이라고 적으면 '웹 개발', '알고리즘', '컴퓨터' 관련 모임을 매칭해야 함.
 
-  return {
-    keywords: analysis.keywords.map((keyword) => `#${keyword}`),
-    tagIds: analysis.tagIds,
-    displayCategories: analysis.displayCategories,
-    analysisSource: analysis.source,
-    recommendations: scoredMeetings,
-  };
+    ★ 카테고리 매핑 규칙 (display_category 필드에는 아래 명시된 ID 중 하나만 부여해줘):
+    - [study, exercise, culture, game, religion, volunteer]
+
+    ★ 정렬 규칙:
+    - 매칭률이 가장 높은 모임부터 내림차순(match_score 순)으로 정렬해줘.
+
+    [사용자 입력 내용 (자기소개)]
+    "${introText}"
+
+    [추천 대상 소모임 데이터 리스트]
+    ${JSON.stringify(meetings.map(m => ({
+      meeting_id: m.meeting_id || m.meetingId,
+      title: m.title,
+      tag_id: m.tag_id || m.tagId,
+      description: m.description
+    })), null, 2)}
+  `;
+
+  try {
+    const response = await retryWithBackoff(() => 
+      client.models.generateContent({
+        model: getGeminiIntroModelName(),
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: GEMINI_RECOMMEND_SCHEMA,
+          temperature: 0.2,
+        },
+      })
+    );
+
+    const rawText = response.text;
+    if (!rawText) throw createHttpError("AI로부터 빈 응답을 받았습니다.", 502);
+
+    const startIndex = rawText.indexOf("{");
+    const endIndex = rawText.lastIndexOf("}");
+    if (startIndex === -1 || endIndex === -1) {
+      throw createHttpError("AI 응답 포맷이 유효한 JSON이 아닙니다.", 502);
+    }
+
+    const resultData = JSON.parse(rawText.slice(startIndex, endIndex + 1));
+
+    return {
+      keywords: (resultData.user_extracted_keywords || []).map(k => k.startsWith('#') ? k : `#${k}`),
+      analysisSource: "gemini_context_matching",
+      recommendations: (resultData.recommended_meetings || []).map(rm => {
+        // 💡 DB에서 가져온 원본 모임 데이터 매칭
+        const original = meetings.find(m => (m.meeting_id || m.meetingId) === rm.meeting_id) || {};
+        
+        return {
+          meetingId: rm.meeting_id,
+          title: rm.title,
+          tagId: rm.tag_id,                  
+          displayCategory: rm.display_category, 
+          description: rm.description,
+          matchScore: rm.match_score,
+          matchReason: rm.match_reason,
+          participantCount: original.participant_count || original.participantCount || original.member_count || 0,
+          // 💡 [추가] DB 원본 데이터에서 장소 정보(location) 연동 (없으면 기본값 제공)
+          location: original.location || original.activity_location || "장소 협의 예정"
+        };
+      })
+    };
+
+  } catch (error) {
+    console.error("❌ 최종 의미 기반 AI 추천 파이프라인 실패:", error);
+    throw createHttpError(error.message || "AI 추천 시스템 연산 중 오류가 발생했습니다.", 502);
+  }
 }
