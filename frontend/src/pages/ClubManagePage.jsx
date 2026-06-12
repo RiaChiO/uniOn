@@ -104,10 +104,16 @@ export default function ClubManagePage({
   onTransferLeader,
   onToggleRecruit,
   onGoPublic,
+  onLeaveMeeting,
 }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("기본 정보");
+  // 🔧 [모임 떠나기] 모달 상태
+  const [leaveStep, setLeaveStep] = useState(null); // null | 'choice' | 'transfer' | 'delete'
+  const [transferTargetId, setTransferTargetId] = useState("");
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [leaveError, setLeaveError] = useState("");
   const matchedClub = clubs.find((item) => String(item.id) === String(id));
   const club = matchedClub
     ? {
@@ -417,6 +423,16 @@ export default function ClubManagePage({
               onClick={() => onSave && onSave(club.id, { name, description, location, meetingTime, maxMembers, joinCondition, image, imageUrl: imagePreviewUrl || club.imageUrl || null, tags, tagId: club.tagId, displayCategory: club.displayCategory })}
             >
               변경사항 저장
+            </button>
+            <button
+              className="manage-page__leave-btn"
+              // 🔧 [기능] 모임 떠나기 모달 열기
+              onClick={() => {
+                setLeaveError("");
+                setLeaveStep("choice");
+              }}
+            >
+              🚪 모임 떠나기
             </button>
             <button
               className="manage-page__delete-btn"
