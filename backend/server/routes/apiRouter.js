@@ -17,8 +17,10 @@ import {
   updateMeeting,
   updateMeetingActivity,
   deleteMeeting,
+  leaveMeeting,
   removeMeetingMember,
   transferMeetingLeadership,
+  transferMeetingLeadershipAndLeave,
   updateMeetingRecruitment,
 } from "../services/meetingService.js";
 import {
@@ -29,7 +31,14 @@ import { getRecommendationsByUserId } from "../services/recommendationService.js
 import { getIntroRecommendations } from "../services/introRecommendationService.js";
 import { createMeetingImageUploadSignature } from "../services/cloudinaryUploadService.js";
 import {
+  getUnreadNotificationCount,
+  getUserNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from "../services/notificationService.js";
+import {
   addUserWishlistMeeting,
+  completeUserOnboarding,
   getUserInterestVector,
   getUserWishlistMeetings,
   getUsers,
@@ -72,6 +81,55 @@ apiRouter.get("/api/users", asyncRoute(async (req, res) => {
   res.status(200).json(users);
 }));
 
+apiRouter.get("/api/users/:userId/notifications", asyncRoute(async (req, res) => {
+  const { userId } = req.params;
+  const unreadOnly = String(req.query.unreadOnly ?? "").toLowerCase() === "true";
+  const audience = ["leader", "member"].includes(req.query.audience)
+    ? req.query.audience
+    : null;
+  const limit = req.query.limit;
+  const offset = req.query.offset;
+
+  const notifications = await getUserNotifications({
+    userId,
+    audience,
+    unreadOnly,
+    limit,
+    offset,
+  });
+
+  res.status(200).json(notifications);
+}));
+
+apiRouter.get("/api/users/:userId/notifications/unread-count", asyncRoute(async (req, res) => {
+  const { userId } = req.params;
+  const count = await getUnreadNotificationCount(userId);
+  res.status(200).json({ count });
+}));
+
+apiRouter.patch("/api/users/:userId/notifications/read-all", asyncRoute(async (req, res) => {
+  const { userId } = req.params;
+  const updatedCount = await markAllNotificationsRead(userId);
+  res.status(200).json({
+    message: "모든 알림을 읽음 처리했습니다.",
+    updatedCount,
+  });
+}));
+
+apiRouter.patch("/api/users/:userId/notifications/:notificationId/read", asyncRoute(async (req, res) => {
+  const { userId, notificationId } = req.params;
+
+  try {
+    const notification = await markNotificationRead({ userId, notificationId });
+    res.status(200).json({
+      message: "알림을 읽음 처리했습니다.",
+      notification,
+    });
+  } catch (error) {
+    sendServiceError(res, error, "알림 읽음 처리 중 오류가 발생했습니다.");
+  }
+}));
+
 apiRouter.post("/api/users/sync", asyncRoute(async (req, res) => {
   const body = req.body ?? {};
   const userId = String(body.userId ?? "").trim();
@@ -101,6 +159,7 @@ apiRouter.post("/api/users/sync", asyncRoute(async (req, res) => {
       email: user.email,
       department: user.department,
       grade: user.grade,
+      onboardingCompleted: user.onboarding_completed,
       createdAt: user.created_at,
     },
   });
@@ -142,11 +201,26 @@ apiRouter.patch("/api/users/:userId/profile", asyncRoute(async (req, res) => {
         email: user.email,
         department: user.department,
         grade: user.grade,
+        onboardingCompleted: user.onboarding_completed,
         createdAt: user.created_at,
       },
     });
   } catch (error) {
     sendServiceError(res, error, "프로필 저장 중 오류가 발생했습니다.");
+  }
+}));
+
+apiRouter.patch("/api/users/:userId/onboarding", asyncRoute(async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await completeUserOnboarding(userId);
+    res.status(200).json({
+      message: "온보딩 상태가 저장되었습니다.",
+      user,
+    });
+  } catch (error) {
+    sendServiceError(res, error, "온보딩 상태 저장 중 오류가 발생했습니다.");
   }
 }));
 
@@ -390,6 +464,24 @@ apiRouter.delete("/api/meetings/:meetingId/members/:userId", asyncRoute(async (r
   }
 }));
 
+apiRouter.delete("/api/users/:userId/meetings/:meetingId", asyncRoute(async (req, res) => {
+  const { userId, meetingId } = req.params;
+
+  if (!meetingId || !userId) {
+    res.status(400).json({
+      message: "meetingId와 userId는 필수입니다.",
+    });
+    return;
+  }
+
+  try {
+    await leaveMeeting({ meetingId, userId });
+    res.status(200).json({ message: "모임에서 탈퇴했습니다." });
+  } catch (error) {
+    sendServiceError(res, error, "모임 탈퇴 중 오류가 발생했습니다.");
+  }
+}));
+
 apiRouter.get("/api/meetings/:meetingId/activities", asyncRoute(async (req, res) => {
   const { meetingId } = req.params;
 
@@ -620,6 +712,32 @@ apiRouter.patch("/api/meetings/:meetingId/leader", asyncRoute(async (req, res) =
     res.status(200).json({ message: "리더를 위임했습니다." });
   } catch (error) {
     sendServiceError(res, error, "리더 위임 중 오류가 발생했습니다.");
+  }
+}));
+
+apiRouter.post("/api/meetings/:meetingId/leader/transfer-and-leave", asyncRoute(async (req, res) => {
+  const { meetingId } = req.params;
+  const currentLeaderUserId = String(req.body?.currentLeaderUserId ?? "").trim();
+  const newLeaderUserId = String(req.body?.newLeaderUserId ?? "").trim();
+
+  if (!meetingId || !currentLeaderUserId || !newLeaderUserId) {
+    res.status(400).json({
+      message: "meetingId, currentLeaderUserId, newLeaderUserId는 필수입니다.",
+    });
+    return;
+  }
+
+  try {
+    await transferMeetingLeadershipAndLeave({
+      meetingId,
+      currentLeaderUserId,
+      newLeaderUserId,
+    });
+    res.status(200).json({
+      message: "리더를 위임하고 모임에서 탈퇴했습니다.",
+    });
+  } catch (error) {
+    sendServiceError(res, error, "리더 위임 및 탈퇴 중 오류가 발생했습니다.");
   }
 }));
 

@@ -95,6 +95,7 @@ password: gnublank4898
 | `GET` | `/api/health` | 서버 및 DB 연결 상태 |
 | `GET` | `/api/users` | 사용자 목록 |
 | `POST` | `/api/users/sync` | Firebase 로그인 사용자를 DB에 upsert |
+| `PATCH` | `/api/users/:userId/onboarding` | 온보딩 완료 또는 건너뜀 상태 저장 |
 | `GET` | `/api/users/:userId/meetings` | 참여 중인 모임 |
 | `GET` | `/api/users/vectors/:userId` | 사용자 관심 벡터 |
 
@@ -117,12 +118,13 @@ password: gnublank4898
 | `GET` | `/api/meeting-types` | 모임 유형 목록 |
 | `PATCH` | `/api/meetings/:meetingId/recruitment` | 모집 상태 변경 |
 | `PATCH` | `/api/meetings/:meetingId/leader` | 리더 위임 |
+| `POST` | `/api/meetings/:meetingId/leader/transfer-and-leave` | 리더 위임과 기존 리더 탈퇴를 함께 처리 |
 
 모임 생성 요청 예시:
 
 ```json
 {
-  "title": "GNU 코딩 스터디",
+  "title": "uniOn 코딩 스터디",
   "meetingType": "small-group",
   "tagId": "study",
   "displayCategory": "it",
@@ -140,7 +142,8 @@ password: gnublank4898
 | Method | Endpoint | 설명 |
 | --- | --- | --- |
 | `GET` | `/api/meetings/:meetingId/members` | 참여 멤버 |
-| `DELETE` | `/api/meetings/:meetingId/members/:userId` | 멤버 내보내기 |
+| `DELETE` | `/api/meetings/:meetingId/members/:userId` | 리더의 멤버 강퇴 |
+| `DELETE` | `/api/users/:userId/meetings/:meetingId` | 회원의 모임 자진 탈퇴 |
 | `GET` | `/api/meetings/:meetingId/join-requests` | 가입 대기 목록 |
 | `POST` | `/api/meetings/:meetingId/join-requests` | 가입 신청 |
 | `PATCH` | `/api/meetings/:meetingId/join-requests/:userId` | 신청 승인 또는 거절 |
@@ -156,6 +159,26 @@ password: gnublank4898
 ```json
 { "action": "reject" }
 ```
+
+### 알림
+
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| `GET` | `/api/users/:userId/notifications` | 알림 목록 |
+| `GET` | `/api/users/:userId/notifications?unreadOnly=true` | 읽지 않은 알림 목록 |
+| `GET` | `/api/users/:userId/notifications/unread-count` | 읽지 않은 알림 개수 |
+| `PATCH` | `/api/users/:userId/notifications/:notificationId/read` | 개별 알림 읽음 처리 |
+| `PATCH` | `/api/users/:userId/notifications/read-all` | 전체 알림 읽음 처리 |
+
+알림 유형:
+
+- `join_request`: 리더에게 전달되는 가입 승인 대기 알림
+- `member_joined`: 승인 없이 즉시 가입한 회원 알림
+- `join_approved`: 회원에게 전달되는 가입 승인 알림
+- `join_rejected`: 회원에게 전달되는 가입 거절 알림
+- `member_left`: 회원의 자진 탈퇴 기록
+- `member_removed`: 회원에게 전달되는 강퇴 알림
+- `leader_transferred`: 새 리더에게 전달되는 리더 위임 알림
 
 ### 활동 내역
 
@@ -187,5 +210,5 @@ password: gnublank4898
 ## 참고 사항
 
 - 프론트엔드는 반드시 API를 통해 데이터에 접근합니다.
-- `meeting_activities`, `meeting_join_requests`, `display_category`는 기존 DB에서도 관련 API 호출 시 필요한 구조가 생성/보완됩니다.
+- `meeting_activities`, `meeting_join_requests`, `notifications`, `display_category`는 기존 DB에서도 관련 API 호출 시 필요한 구조가 생성/보완됩니다.
 - Firebase 인증 도메인은 프론트 호스트인 `localhost`를 허용해야 합니다.

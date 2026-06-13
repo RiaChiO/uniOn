@@ -11,8 +11,15 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import NotificationCard from "../components/NotificationCard";
 import { getUserMeetings, getUserWishlistMeetings } from "../api/users";
-import { removeMeetingMember } from "../api/meetings";
+import { leaveMeeting } from "../api/meetings";
+import {
+  getUnreadNotificationCount,
+  getUserNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from "../api/notifications";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -45,6 +52,11 @@ export default function MyPage({
   const [wishlistClubs, setWishlistClubs] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [wishlistError, setWishlistError] = useState("");
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState("");
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [notificationsUpdating, setNotificationsUpdating] = useState(false);
 
   // 🔧 [탈퇴] 모달 상태 및 처리 중 상태
   const [leaveTarget, setLeaveTarget] = useState(null); // { id, name } 또는 null
@@ -83,6 +95,38 @@ export default function MyPage({
     }
 
     loadMyClubs();
+  }, [user]);
+
+  useEffect(() => {
+    const userId = user?.userId ?? user?.id;
+
+    if (!userId) {
+      setNotifications([]);
+      setUnreadNotificationCount(0);
+      return;
+    }
+
+    async function loadNotifications() {
+      try {
+        setNotificationsLoading(true);
+        setNotificationsError("");
+
+        const [leaderItems, memberItems, unreadResult] = await Promise.all([
+          getUserNotifications(userId, { limit: 8, audience: "leader" }),
+          getUserNotifications(userId, { limit: 8, audience: "member" }),
+          getUnreadNotificationCount(userId),
+        ]);
+
+        setNotifications([...leaderItems, ...memberItems]);
+        setUnreadNotificationCount(Number(unreadResult.count) || 0);
+      } catch (error) {
+        setNotificationsError(error.message);
+      } finally {
+        setNotificationsLoading(false);
+      }
+    }
+
+    loadNotifications();
   }, [user]);
 
   useEffect(() => {
@@ -152,7 +196,7 @@ export default function MyPage({
     try {
       setIsLeaving(true);
       setLeaveError("");
-      await removeMeetingMember(leaveTarget.id, userId);
+      await leaveMeeting(leaveTarget.id, userId);
       // 성공 시 목록에서 즉시 제거
       setMyClubs((prev) => prev.filter((c) => c.id !== leaveTarget.id));
       setLeaveTarget(null);
@@ -163,8 +207,59 @@ export default function MyPage({
     }
   };
 
+  const handleNotificationClick = async (notification) => {
+    const userId = user?.userId ?? user?.id;
+    if (!userId) return;
+
+    if (!notification.isRead) {
+      try {
+        await markNotificationRead(userId, notification.notificationId);
+        setNotifications((prev) =>
+          prev.map((item) =>
+            item.notificationId === notification.notificationId
+              ? { ...item, isRead: true }
+              : item
+          )
+        );
+        setUnreadNotificationCount((count) => Math.max(0, count - 1));
+      } catch (error) {
+        setNotificationsError(error.message);
+        return;
+      }
+    }
+
+    if (notification.meetingId && onClubClick) {
+      onClubClick(notification.meetingId);
+    }
+  };
+
+  const handleMarkAllNotificationsRead = async () => {
+    const userId = user?.userId ?? user?.id;
+    if (!userId || unreadNotificationCount === 0) return;
+
+    try {
+      setNotificationsUpdating(true);
+      setNotificationsError("");
+      await markAllNotificationsRead(userId);
+      setNotifications((prev) =>
+        prev.map((notification) => ({ ...notification, isRead: true }))
+      );
+      setUnreadNotificationCount(0);
+    } catch (error) {
+      setNotificationsError(error.message);
+    } finally {
+      setNotificationsUpdating(false);
+    }
+  };
+
   const displayedClubs = user ? myClubs : [];
   const displayedWishlistClubs = user ? wishlistClubs : [];
+  const leaderNotifications = notifications.filter(
+    (notification) => notification.audience === "leader"
+  );
+  const memberNotifications = notifications.filter(
+    (notification) => notification.audience !== "leader"
+  );
   const displayedDepartment = displayUser.department ?? "학과 정보 없음";
   const displayedEmail = displayUser.email ?? "로그인이 필요합니다";
   const displayedGrade = displayUser.grade ?? "학년 정보 없음";
@@ -246,6 +341,50 @@ export default function MyPage({
 
           {/* 메인 콘텐츠 */}
           <div className="mypage__content">
+            <div className="mypage__notification-overview">
+              <div className="mypage__section-header">
+                <div>
+                  <h3 className="mypage__section-title mypage__section-title--inline">
+                    알림
+                  </h3>
+                  {unreadNotificationCount > 0 && (
+                    <span className="mypage__notification-count">
+                      {unreadNotificationCount}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="mypage__notification-read-all"
+                  disabled={
+                    notificationsUpdating || unreadNotificationCount === 0
+                  }
+                  onClick={handleMarkAllNotificationsRead}
+                >
+                  {notificationsUpdating ? "처리 중..." : "모두 읽음"}
+                </button>
+              </div>
+            </div>
+
+            <div className="mypage__notification-grid">
+              <NotificationCard
+                title="리더 알림"
+                description="가입 신청과 회원 변동을 확인합니다."
+                notifications={leaderNotifications}
+                isLoading={notificationsLoading}
+                error={notificationsError}
+                onNotificationClick={handleNotificationClick}
+              />
+              <NotificationCard
+                title="회원 알림"
+                description="가입 결과와 내 활동 변경을 확인합니다."
+                notifications={memberNotifications}
+                isLoading={notificationsLoading}
+                error={notificationsError}
+                onNotificationClick={handleNotificationClick}
+              />
+            </div>
+
             {/* 참여 중인 소모임 */}
             <section className="mypage__section">
               <h3 className="mypage__section-title">참여 중인 모임</h3>
@@ -328,7 +467,21 @@ export default function MyPage({
                       className="mypage__club-card"
                       onClick={() => onClubClick && onClubClick(club.id)}
                     >
-                      <div className="mypage__club-thumb">♡</div>
+                      <div className="mypage__club-thumb mypage__club-thumb--wishlist">
+                        <svg
+                          aria-hidden="true"
+                          width="22"
+                          height="22"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />
+                        </svg>
+                      </div>
                       <div className="mypage__club-info">
                         <div className="mypage__club-role">
                           {club.typeLabel || "관심 모임"}

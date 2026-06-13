@@ -16,7 +16,17 @@ async function ensureUserProfileColumns(client = pool) {
   await client.query(`
     ALTER TABLE users
       ADD COLUMN IF NOT EXISTS department TEXT,
-      ADD COLUMN IF NOT EXISTS grade TEXT
+      ADD COLUMN IF NOT EXISTS grade TEXT,
+      ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE
+  `);
+
+  await client.query(`
+    UPDATE users
+    SET onboarding_completed = TRUE
+    WHERE onboarding_completed = FALSE
+      AND NULLIF(TRIM(name), '') IS NOT NULL
+      AND NULLIF(TRIM(department), '') IS NOT NULL
+      AND NULLIF(TRIM(grade), '') IS NOT NULL
   `);
 }
 
@@ -25,7 +35,7 @@ export async function getUsers() {
 
   const result = await pool.query(
     `
-    SELECT user_id, name, email, department, grade, created_at
+    SELECT user_id, name, email, department, grade, onboarding_completed, created_at
     FROM users
     ORDER BY
       NULLIF(regexp_replace(user_id, '[^0-9]', '', 'g'), '')::INT,
@@ -102,7 +112,7 @@ export async function upsertUser({ userId, name, email }) {
           name = $2,
           email = $3
         WHERE user_id = $1
-        RETURNING user_id, name, email, department, grade, created_at
+        RETURNING user_id, name, email, department, grade, onboarding_completed, created_at
         `,
         [existingResult.rows[0].user_id, name, email]
       )
@@ -110,7 +120,7 @@ export async function upsertUser({ userId, name, email }) {
       `
       INSERT INTO users (user_id, name, email, created_at)
       VALUES ($1, $2, $3, NOW())
-      RETURNING user_id, name, email, department, grade, created_at
+      RETURNING user_id, name, email, department, grade, onboarding_completed, created_at
       `,
       [userId, name, email]
     );
@@ -204,9 +214,10 @@ export async function updateUserProfile({ userId, name, department, grade }) {
     SET
       name = $2,
       department = NULLIF($3, ''),
-      grade = NULLIF($4, '')
+      grade = NULLIF($4, ''),
+      onboarding_completed = TRUE
     WHERE TRIM(user_id) = TRIM($1)
-    RETURNING user_id, name, email, department, grade, created_at
+    RETURNING user_id, name, email, department, grade, onboarding_completed, created_at
     `,
     [userId, name, department, grade]
   );
@@ -218,6 +229,31 @@ export async function updateUserProfile({ userId, name, department, grade }) {
   }
 
   return result.rows[0];
+}
+
+export async function completeUserOnboarding(userId) {
+  await ensureUserProfileColumns();
+
+  const result = await pool.query(
+    `
+    UPDATE users
+    SET onboarding_completed = TRUE
+    WHERE TRIM(user_id) = TRIM($1)
+    RETURNING user_id, onboarding_completed
+    `,
+    [userId]
+  );
+
+  if (result.rowCount === 0) {
+    const error = new Error("사용자 정보를 찾을 수 없습니다.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    userId: result.rows[0].user_id,
+    onboardingCompleted: result.rows[0].onboarding_completed,
+  };
 }
 
 export async function getUserWishlistMeetings(userId) {

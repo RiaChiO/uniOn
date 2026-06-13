@@ -176,6 +176,16 @@ export function removeMeetingMember(meetingId, userId) {
   );
 }
 
+export function leaveMeeting(meetingId, userId) {
+  return requestJson(
+    `/api/users/${encodeURIComponent(userId)}/meetings/${encodeURIComponent(meetingId)}`,
+    {
+      method: "DELETE",
+    },
+    "모임 탈퇴에 실패했습니다."
+  );
+}
+
 export function transferMeetingLeadership(meetingId, newLeaderUserId) {
   return requestJson(
     `/api/meetings/${encodeURIComponent(meetingId)}/leader`,
@@ -187,6 +197,24 @@ export function transferMeetingLeadership(meetingId, newLeaderUserId) {
       body: JSON.stringify({ newLeaderUserId }),
     },
     "리더 위임에 실패했습니다."
+  );
+}
+
+export function transferMeetingLeadershipAndLeave(
+  meetingId,
+  currentLeaderUserId,
+  newLeaderUserId
+) {
+  return requestJson(
+    `/api/meetings/${encodeURIComponent(meetingId)}/leader/transfer-and-leave`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ currentLeaderUserId, newLeaderUserId }),
+    },
+    "리더 위임 및 탈퇴에 실패했습니다."
   );
 }
 

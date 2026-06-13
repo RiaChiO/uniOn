@@ -228,17 +228,40 @@ img    { max-width: 100%; display: block; }
 .mypage__content { flex: 1; display: flex; flex-direction: column; gap: 24px; }
 .mypage__section { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 28px; }
 .mypage__section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+.mypage__section-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.mypage__section-header > div { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mypage__section-title--inline { margin-bottom: 0; }
+.mypage__notification-overview { padding: 0 4px; }
+.mypage__notification-overview .mypage__section-header { margin-bottom: 0; }
+.mypage__notification-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.mypage__notification-card { min-width: 0; }
+.mypage__notification-card-header { margin-bottom: 20px; }
+.mypage__notification-card-title-row { display: flex; align-items: center; gap: 8px; }
+.mypage__notification-card-description { margin-top: 6px; color: var(--color-text-sub); font-size: 13px; line-height: 1.5; }
+.mypage__notification-count { min-width: 22px; height: 22px; padding: 0 7px; border-radius: var(--radius-full); background: #dc2626; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+button.mypage__notification-read-all { color: var(--color-primary); font-size: 13px; font-weight: 600; padding: 6px 0; flex-shrink: 0; }
+button.mypage__notification-read-all:hover:not(:disabled) { color: var(--color-primary-dark); }
+button.mypage__notification-read-all:disabled { color: var(--color-text-sub); cursor: default; opacity: .55; }
 .mypage__club-list { display: flex; flex-direction: column; gap: 12px; }
 .mypage__club-card { display: flex; align-items: center; gap: 16px; padding: 16px; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm); cursor: pointer; transition: border-color .2s; }
 .mypage__club-card:hover { border-color: var(--color-primary); }
-.mypage__club-thumb { font-size: 32px; }
+.mypage__club-thumb { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 32px; }
+.mypage__club-thumb--wishlist { border-radius: 50%; background: #fff1f2; color: #e11d48; }
 .mypage__club-role { font-size: 11px; font-weight: 600; color: var(--color-primary); background: var(--color-primary-light); padding: 3px 8px; border-radius: var(--radius-full); display: inline-block; margin-bottom: 4px; }
 .mypage__club-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
 .mypage__club-member { font-size: 13px; color: var(--color-text-sub); }
 .mypage__notification-list { display: flex; flex-direction: column; gap: 12px; }
-.mypage__notification-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--color-bg-sub); border-radius: var(--radius-sm); }
-.mypage__notification-msg { font-size: 14px; }
-.mypage__notification-date { font-size: 12px; color: var(--color-text-sub); flex-shrink: 0; margin-left: 16px; }
+button.mypage__notification-item { width: 100%; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto 8px; align-items: center; gap: 12px; padding: 14px 16px; background: var(--color-bg-sub); border: 1px solid transparent; border-radius: var(--radius-sm); text-align: left; }
+button.mypage__notification-item:hover { border-color: var(--color-border); }
+button.mypage__notification-item--unread { background: var(--color-primary-light); border-color: #bfdbfe; }
+.mypage__notification-icon { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--color-bg); font-size: 17px; }
+.mypage__notification-content { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mypage__notification-title { font-size: 14px; font-weight: 700; color: var(--color-text); }
+.mypage__notification-msg { font-size: 13px; color: var(--color-text-sub); line-height: 1.5; overflow-wrap: anywhere; }
+.mypage__notification-date { font-size: 12px; color: var(--color-text-sub); white-space: nowrap; }
+.mypage__notification-unread { width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary); }
+.mypage__notification-error { font-size: 13px; color: #dc2626; }
+.mypage__empty-text { font-size: 14px; color: var(--color-text-sub); }
 
 /* ===========================
    Create Page
@@ -339,7 +362,7 @@ img    { max-width: 100%; display: block; }
 .club-detail__leave-btn:hover {
   background: #b91c1c;
 }
-.club-detail__action-btn { justify-content: center; }
+.club-detail__action-btn { justify-content: center; gap: 8px; }
 
 .club-detail__sidebar-card { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 20px; display: flex; flex-direction: column; gap: 16px; }
 .club-detail__sidebar-title { font-size: 15px; font-weight: 700; }
@@ -377,6 +400,14 @@ img    { max-width: 100%; display: block; }
   .club-list-section__grid { grid-template-columns: 1fr; }
   .footer__inner { grid-template-columns: 1fr; gap: 40px; }
   .filter-group__options { flex-direction: column; }
+  .mypage__main { padding: 24px 16px; }
+  .mypage__layout { flex-direction: column; }
+  .mypage__sidebar { width: 100%; }
+  .mypage__section { padding: 20px 16px; }
+  .mypage__notification-grid { grid-template-columns: 1fr; }
+  button.mypage__notification-item { grid-template-columns: 36px minmax(0, 1fr) 8px; }
+  .mypage__notification-date { grid-column: 2; white-space: normal; }
+  .mypage__notification-unread { grid-column: 3; grid-row: 1 / span 2; }
 }
 
 /* 탭 공통 */

@@ -1,5 +1,6 @@
 // Role: query and mutate meeting-related data.
 import { pool } from "../db/pool.js";
+import { createNotification } from "./notificationService.js";
 
 async function ensureJoinRequestsTable(client = pool) {
   await client.query(`
@@ -446,7 +447,9 @@ export async function createMeetingJoinRequest({ meetingId, userId }) {
       `
       SELECT
         is_recruiting AS "isRecruiting",
-        join_condition AS "joinCondition"
+        join_condition AS "joinCondition",
+        title,
+        host_user_id AS "hostUserId"
       FROM meetings
       WHERE meeting_id = $1
       `,
@@ -459,7 +462,18 @@ export async function createMeetingJoinRequest({ meetingId, userId }) {
       throw error;
     }
 
-    if (!meetingResult.rows[0].isRecruiting) {
+    const userResult = await client.query(
+      `
+      SELECT name
+      FROM users
+      WHERE user_id = $1
+      `,
+      [userId]
+    );
+    const userName = userResult.rows[0]?.name || "회원";
+    const meeting = meetingResult.rows[0];
+
+    if (!meeting.isRecruiting) {
       const error = new Error("현재 모집이 마감된 모임입니다.");
       error.statusCode = 409;
       throw error;
@@ -480,13 +494,13 @@ export async function createMeetingJoinRequest({ meetingId, userId }) {
       throw error;
     }
 
-    if (requiresJoinApproval(meetingResult.rows[0].joinCondition)) {
+    if (requiresJoinApproval(meeting.joinCondition)) {
       const result = await client.query(
         `
         INSERT INTO meeting_join_requests (meeting_id, user_id, requested_at)
         VALUES ($1, $2, NOW())
         ON CONFLICT (meeting_id, user_id)
-        DO UPDATE SET requested_at = meeting_join_requests.requested_at
+        DO NOTHING
         RETURNING
           meeting_id AS "meetingId",
           user_id AS "userId",
@@ -495,8 +509,36 @@ export async function createMeetingJoinRequest({ meetingId, userId }) {
         [meetingId, userId]
       );
 
+      const request = result.rows[0] ?? (
+        await client.query(
+          `
+          SELECT
+            meeting_id AS "meetingId",
+            user_id AS "userId",
+            requested_at AS "requestedAt"
+          FROM meeting_join_requests
+          WHERE meeting_id = $1 AND user_id = $2
+          `,
+          [meetingId, userId]
+        )
+      ).rows[0];
+
+      if (result.rowCount > 0) {
+        await createNotification({
+          client,
+          recipientUserId: meeting.hostUserId,
+          audience: "leader",
+          type: "join_request",
+          meetingId,
+          actorUserId: userId,
+          title: "새 가입 신청",
+          message: `${userName}님이 ${meeting.title} 모임에 가입을 신청했습니다.`,
+          metadata: { applicantUserId: userId },
+        });
+      }
+
       await client.query("COMMIT");
-      return { status: "pending", request: result.rows[0] };
+      return { status: "pending", request };
     }
 
     await client.query(
@@ -520,6 +562,18 @@ export async function createMeetingJoinRequest({ meetingId, userId }) {
       [meetingId, userId]
     );
 
+    await createNotification({
+      client,
+      recipientUserId: meeting.hostUserId,
+      audience: "leader",
+      type: "member_joined",
+      meetingId,
+      actorUserId: userId,
+      title: "새 회원 가입",
+      message: `${userName}님이 ${meeting.title} 모임에 가입했습니다.`,
+      metadata: { memberUserId: userId },
+    });
+
     await client.query("COMMIT");
     return { status: "joined", member: result.rows[0] };
   } catch (error) {
@@ -536,6 +590,23 @@ export async function approveMeetingJoinRequest({ meetingId, userId }) {
   try {
     await ensureJoinRequestsTable(client);
     await client.query("BEGIN");
+
+    const meetingResult = await client.query(
+      `
+      SELECT
+        title,
+        host_user_id AS "hostUserId"
+      FROM meetings
+      WHERE meeting_id = $1
+      `,
+      [meetingId]
+    );
+
+    if (meetingResult.rowCount === 0) {
+      const error = new Error("모임을 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
 
     const request = await client.query(
       `
@@ -561,6 +632,18 @@ export async function approveMeetingJoinRequest({ meetingId, userId }) {
       [meetingId, userId]
     );
 
+    const meeting = meetingResult.rows[0];
+    await createNotification({
+      client,
+      recipientUserId: userId,
+      audience: "member",
+      type: "join_approved",
+      meetingId,
+      actorUserId: meeting.hostUserId,
+      title: "가입 승인",
+      message: `${meeting.title} 모임 가입이 승인되었습니다.`,
+    });
+
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK");
@@ -571,20 +654,61 @@ export async function approveMeetingJoinRequest({ meetingId, userId }) {
 }
 
 export async function rejectMeetingJoinRequest({ meetingId, userId }) {
-  await ensureJoinRequestsTable();
+  const client = await pool.connect();
 
-  const result = await pool.query(
-    `
-    DELETE FROM meeting_join_requests
-    WHERE meeting_id = $1 AND user_id = $2
-    `,
-    [meetingId, userId]
-  );
+  try {
+    await ensureJoinRequestsTable(client);
+    await client.query("BEGIN");
 
-  if (result.rowCount === 0) {
-    const error = new Error("가입 신청을 찾을 수 없습니다.");
-    error.statusCode = 404;
+    const meetingResult = await client.query(
+      `
+      SELECT
+        title,
+        host_user_id AS "hostUserId"
+      FROM meetings
+      WHERE meeting_id = $1
+      `,
+      [meetingId]
+    );
+
+    if (meetingResult.rowCount === 0) {
+      const error = new Error("모임을 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const result = await client.query(
+      `
+      DELETE FROM meeting_join_requests
+      WHERE meeting_id = $1 AND user_id = $2
+      `,
+      [meetingId, userId]
+    );
+
+    if (result.rowCount === 0) {
+      const error = new Error("가입 신청을 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const meeting = meetingResult.rows[0];
+    await createNotification({
+      client,
+      recipientUserId: userId,
+      audience: "member",
+      type: "join_rejected",
+      meetingId,
+      actorUserId: meeting.hostUserId,
+      title: "가입 신청 결과",
+      message: `${meeting.title} 모임 가입 신청이 거절되었습니다.`,
+    });
+
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
     throw error;
+  } finally {
+    client.release();
   }
 }
 
@@ -828,39 +952,153 @@ export async function deleteMeeting(meetingId) {
 }
 
 export async function removeMeetingMember({ meetingId, userId }) {
-  const meetingResult = await pool.query(
-    `
-    SELECT host_user_id AS "hostUserId"
-    FROM meetings
-    WHERE meeting_id = $1
-    `,
-    [meetingId]
-  );
+  const client = await pool.connect();
 
-  if (meetingResult.rowCount === 0) {
-    const error = new Error("모임을 찾을 수 없습니다.");
-    error.statusCode = 404;
+  try {
+    await client.query("BEGIN");
+
+    const meetingResult = await client.query(
+      `
+      SELECT
+        title,
+        host_user_id AS "hostUserId"
+      FROM meetings
+      WHERE meeting_id = $1
+      `,
+      [meetingId]
+    );
+
+    if (meetingResult.rowCount === 0) {
+      const error = new Error("모임을 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const meeting = meetingResult.rows[0];
+    if (meeting.hostUserId === userId) {
+      const error = new Error("리더는 내보낼 수 없습니다.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const result = await client.query(
+      `
+      DELETE FROM meeting_participants
+      WHERE meeting_id = $1 AND user_id = $2
+      `,
+      [meetingId, userId]
+    );
+
+    if (result.rowCount === 0) {
+      const error = new Error("해당 멤버를 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    await createNotification({
+      client,
+      recipientUserId: userId,
+      audience: "member",
+      type: "member_removed",
+      meetingId,
+      actorUserId: meeting.hostUserId,
+      title: "모임 강퇴",
+      message: `${meeting.title} 모임에서 강퇴되었습니다.`,
+    });
+
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
     throw error;
+  } finally {
+    client.release();
   }
+}
 
-  if (meetingResult.rows[0].hostUserId === userId) {
-    const error = new Error("리더는 내보낼 수 없습니다.");
-    error.statusCode = 400;
+export async function leaveMeeting({ meetingId, userId }) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const meetingResult = await client.query(
+      `
+      SELECT
+        title,
+        host_user_id AS "hostUserId"
+      FROM meetings
+      WHERE meeting_id = $1
+      `,
+      [meetingId]
+    );
+
+    if (meetingResult.rowCount === 0) {
+      const error = new Error("모임을 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const meeting = meetingResult.rows[0];
+    if (meeting.hostUserId === userId) {
+      const error = new Error("리더는 모임을 탈퇴할 수 없습니다.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const memberResult = await client.query(
+      `
+      SELECT name
+      FROM users
+      WHERE user_id = $1
+      `,
+      [userId]
+    );
+
+    const memberName = memberResult.rows[0]?.name ?? "회원";
+
+    const result = await client.query(
+      `
+      DELETE FROM meeting_participants
+      WHERE meeting_id = $1 AND user_id = $2
+      `,
+      [meetingId, userId]
+    );
+
+    if (result.rowCount === 0) {
+      const error = new Error("가입된 모임이 아닙니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    await createNotification({
+      client,
+      recipientUserId: userId,
+      audience: "member",
+      type: "member_left",
+      meetingId,
+      actorUserId: userId,
+      title: "모임 탈퇴",
+      message: `${meeting.title} 모임에서 탈퇴했습니다.`,
+    });
+
+    await createNotification({
+      client,
+      recipientUserId: meeting.hostUserId,
+      audience: "leader",
+      type: "member_left",
+      meetingId,
+      actorUserId: userId,
+      title: "회원 탈퇴",
+      message: `${memberName}님이 ${meeting.title} 모임에서 탈퇴했습니다.`,
+      metadata: { memberUserId: userId },
+    });
+
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
     throw error;
-  }
-
-  const result = await pool.query(
-    `
-    DELETE FROM meeting_participants
-    WHERE meeting_id = $1 AND user_id = $2
-    `,
-    [meetingId, userId]
-  );
-
-  if (result.rowCount === 0) {
-    const error = new Error("해당 멤버를 찾을 수 없습니다.");
-    error.statusCode = 404;
-    throw error;
+  } finally {
+    client.release();
   }
 }
 
@@ -912,6 +1150,112 @@ export async function transferMeetingLeadership({ meetingId, newLeaderUserId }) 
 
     await client.query("COMMIT");
     return updateResult.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function transferMeetingLeadershipAndLeave({
+  meetingId,
+  currentLeaderUserId,
+  newLeaderUserId,
+}) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const meetingResult = await client.query(
+      `
+      SELECT
+        title,
+        host_user_id AS "hostUserId"
+      FROM meetings
+      WHERE meeting_id = $1
+      FOR UPDATE
+      `,
+      [meetingId]
+    );
+
+    if (meetingResult.rowCount === 0) {
+      const error = new Error("모임을 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const meeting = meetingResult.rows[0];
+    if (meeting.hostUserId !== currentLeaderUserId) {
+      const error = new Error("현재 모임 리더만 위임 후 탈퇴할 수 있습니다.");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (currentLeaderUserId === newLeaderUserId) {
+      const error = new Error("다른 멤버에게 리더를 위임해야 합니다.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const newLeaderResult = await client.query(
+      `
+      SELECT 1
+      FROM meeting_participants
+      WHERE meeting_id = $1 AND user_id = $2
+      `,
+      [meetingId, newLeaderUserId]
+    );
+
+    if (newLeaderResult.rowCount === 0) {
+      const error = new Error("리더로 위임할 멤버를 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    await client.query(
+      `
+      UPDATE meetings
+      SET host_user_id = $2
+      WHERE meeting_id = $1
+      `,
+      [meetingId, newLeaderUserId]
+    );
+
+    await client.query(
+      `
+      DELETE FROM meeting_participants
+      WHERE meeting_id = $1 AND user_id = $2
+      `,
+      [meetingId, currentLeaderUserId]
+    );
+
+    await createNotification({
+      client,
+      recipientUserId: currentLeaderUserId,
+      audience: "member",
+      type: "member_left",
+      meetingId,
+      actorUserId: currentLeaderUserId,
+      title: "리더 위임 및 탈퇴",
+      message: `${meeting.title} 모임의 리더를 위임하고 탈퇴했습니다.`,
+      metadata: { newLeaderUserId },
+    });
+
+    await createNotification({
+      client,
+      recipientUserId: newLeaderUserId,
+      audience: "leader",
+      type: "leader_transferred",
+      meetingId,
+      actorUserId: currentLeaderUserId,
+      title: "모임 리더 위임",
+      message: `${meeting.title} 모임의 새 리더가 되었습니다.`,
+      metadata: { previousLeaderUserId: currentLeaderUserId },
+    });
+
+    await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;

@@ -180,7 +180,8 @@ async function ensureSchema(client) {
   await client.query(`
     ALTER TABLE users
       ADD COLUMN IF NOT EXISTS department TEXT,
-      ADD COLUMN IF NOT EXISTS grade TEXT
+      ADD COLUMN IF NOT EXISTS grade TEXT,
+      ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE
   `);
 
   await client.query(`
@@ -265,6 +266,34 @@ async function ensureSchema(client) {
     )
   `);
 
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      notification_id BIGSERIAL PRIMARY KEY,
+      recipient_user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+      audience TEXT NOT NULL DEFAULT 'member'
+        CHECK (audience IN ('leader', 'member')),
+      type TEXT NOT NULL,
+      meeting_id TEXT REFERENCES meetings(meeting_id) ON DELETE SET NULL,
+      actor_user_id TEXT REFERENCES users(user_id) ON DELETE SET NULL,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+      is_read BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      read_at TIMESTAMPTZ
+    )
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_notifications_recipient_unread_created
+    ON notifications(recipient_user_id, is_read, created_at DESC, notification_id DESC)
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_notifications_recipient_audience_created
+    ON notifications(recipient_user_id, audience, created_at DESC, notification_id DESC)
+  `);
+
   await client.query("DROP TABLE IF EXISTS meeting_participant_vectors");
   await client.query("DROP TABLE IF EXISTS meeting_tag_vectors");
   await client.query("DROP TABLE IF EXISTS meeting_tags");
@@ -275,6 +304,7 @@ async function clearSeedData(client) {
   await client.query(`
     TRUNCATE TABLE
       recommendations,
+      notifications,
       user_wishlist_meetings,
       meeting_activities,
       meeting_join_requests,
@@ -326,8 +356,16 @@ async function seedUsers(client, users) {
   for (const [userId, user] of Object.entries(users)) {
     await client.query(
       `
-      INSERT INTO users(user_id, name, email, department, grade, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6::timestamptz)
+      INSERT INTO users(
+        user_id,
+        name,
+        email,
+        department,
+        grade,
+        onboarding_completed,
+        created_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7::timestamptz)
       `,
       [
         userId,
@@ -335,6 +373,7 @@ async function seedUsers(client, users) {
         user.email,
         user.department ?? null,
         user.grade ?? null,
+        Boolean(user.department && user.grade),
         user.createdAt,
       ]
     );

@@ -8,7 +8,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { updateUserProfile } from "../api/users";
+import {
+  completeUserOnboarding,
+  updateUserProfile,
+} from "../api/users";
 
 export default function WelcomePage({
   searchQuery,
@@ -33,11 +36,7 @@ export default function WelcomePage({
       navigate("/login", { replace: true });
       return;
     }
-    // 이미 모든 정보가 채워진 사용자는 메인으로
-    const hasName = (user?.name ?? "").trim().length > 0;
-    const hasDept = (user?.department ?? "").trim().length > 0;
-    const hasGrade = String(user?.grade ?? "").trim().length > 0;
-    if (hasName && hasDept && hasGrade) {
+    if (user?.onboardingCompleted) {
       navigate("/", { replace: true });
     }
   }, [authLoading, isLoggedIn, user, navigate]);
@@ -61,9 +60,7 @@ export default function WelcomePage({
         department: department.trim(),
         grade,
       });
-      if (onUserUpdate) {
-        onUserUpdate(updated);
-      }
+      onUserUpdate?.(updated.user);
       navigate("/", { replace: true });
     } catch (error) {
       setErrorMessage(
@@ -74,8 +71,20 @@ export default function WelcomePage({
     }
   };
 
-  const handleSkip = () => {
-    navigate("/", { replace: true });
+  const handleSkip = async () => {
+    if (!userId) return;
+
+    try {
+      setIsSaving(true);
+      setErrorMessage("");
+      const result = await completeUserOnboarding(userId);
+      onUserUpdate?.(result.user);
+      navigate("/", { replace: true });
+    } catch (error) {
+      setErrorMessage(error.message || "온보딩 상태 저장 중 오류가 발생했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

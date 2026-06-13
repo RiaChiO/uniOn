@@ -509,11 +509,26 @@ export default function ClubDetailPage({
                 // 🔧 [기능] 관심 목록 API 연결
                 onClick={() => onWishlist && onWishlist(club.id)}
               >
-                {isWishlistUpdating
-                  ? "처리 중..."
-                  : isWishlisted
-                    ? "♥ 관심 목록에서 제거"
-                    : "♡ 관심 목록 추가"}
+                {isWishlistUpdating ? (
+                  "처리 중..."
+                ) : (
+                  <>
+                    <svg
+                      aria-hidden="true"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill={isWishlisted ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />
+                    </svg>
+                    {isWishlisted ? "관심 목록에서 제거" : "관심 목록 추가"}
+                  </>
+                )}
               </button>
               {/* 🔧 [기능] 로그인한 유저가 리더인 경우에만 표시 */}
               {!authLoading && isLoggedIn && isLeader && (

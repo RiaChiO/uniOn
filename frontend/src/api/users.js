@@ -36,6 +36,16 @@ export function updateUserProfile(userId, { name, department, grade }) {
   );
 }
 
+export function completeUserOnboarding(userId) {
+  return requestJson(
+    `/api/users/${encodeURIComponent(userId)}/onboarding`,
+    {
+      method: "PATCH",
+    },
+    "온보딩 상태 저장에 실패했습니다."
+  );
+}
+
 export function updateUserInterestVector(userId, vector) {
   return requestJson(
     `/api/users/vectors/${encodeURIComponent(userId.trim())}`,

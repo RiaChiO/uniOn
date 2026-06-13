@@ -3,8 +3,10 @@ import {
   createMeeting,
   createMeetingJoinRequest,
   deleteMeeting,
+  leaveMeeting,
   removeMeetingMember,
   transferMeetingLeadership,
+  transferMeetingLeadershipAndLeave,
   updateMeeting,
   updateMeetingJoinRequest,
   updateMeetingRecruitment,
@@ -213,7 +215,7 @@ export function useMeetingActions({ navigate, setClubs, user }) {
     }
 
     try {
-      const data = await removeMeetingMember(meetingId, userId);
+      const data = await leaveMeeting(meetingId, userId);
       setClubs((prev) =>
         prev.map((club) =>
           String(club.id) === String(meetingId)
@@ -228,6 +230,45 @@ export function useMeetingActions({ navigate, setClubs, user }) {
       return true;
     } catch (error) {
       window.alert(error.message || "모임 탈퇴 중 오류가 발생했습니다.");
+      return false;
+    }
+  }
+
+  async function handleTransferLeadershipAndLeave(
+    meetingId,
+    newLeaderUserId,
+    newLeaderName
+  ) {
+    const currentLeaderUserId = user?.id ?? user?.userId;
+
+    if (!currentLeaderUserId) {
+      window.alert("로그인 정보를 확인할 수 없습니다.");
+      return false;
+    }
+
+    try {
+      const data = await transferMeetingLeadershipAndLeave(
+        meetingId,
+        currentLeaderUserId,
+        newLeaderUserId
+      );
+      setClubs((prev) =>
+        prev.map((club) =>
+          String(club.id) === String(meetingId)
+            ? {
+                ...club,
+                hostUserId: newLeaderUserId,
+                leaderName: newLeaderName || club.leaderName,
+                memberCount: Math.max(0, Number(club.memberCount || 0) - 1),
+              }
+            : club
+        )
+      );
+      window.alert(data.message || "리더를 위임하고 모임에서 탈퇴했습니다.");
+      navigate("/mypage");
+      return true;
+    } catch (error) {
+      window.alert(error.message || "리더 위임 및 탈퇴 중 오류가 발생했습니다.");
       return false;
     }
   }
@@ -286,6 +327,7 @@ export function useMeetingActions({ navigate, setClubs, user }) {
     handleSaveMeeting,
     handleToggleMeetingRecruitment,
     handleTransferLeader,
+    handleTransferLeadershipAndLeave,
     joiningMeetingId,
   };
 }

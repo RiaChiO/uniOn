@@ -29,6 +29,7 @@ async function syncFirebaseUser(firebaseUser) {
     email: data.user.email,
     department: data.user.department,
     grade: data.user.grade,
+    onboardingCompleted: data.user.onboardingCompleted,
     createdAt: data.user.createdAt,
   };
 }

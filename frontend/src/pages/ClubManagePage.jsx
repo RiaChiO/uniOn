@@ -104,7 +104,7 @@ export default function ClubManagePage({
   onTransferLeader,
   onToggleRecruit,
   onGoPublic,
-  onLeaveMeeting,
+  onTransferLeadershipAndLeave,
 }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -288,6 +288,49 @@ export default function ClubManagePage({
         return member;
       })
     );
+  };
+
+  const transferableMembers = members.filter((member) => member.role !== "리더");
+
+  const closeLeaveModal = () => {
+    if (isLeaving) return;
+    setLeaveStep(null);
+    setTransferTargetId("");
+    setLeaveError("");
+  };
+
+  const handleTransferAndLeave = async () => {
+    if (!transferTargetId) {
+      setLeaveError("리더를 위임할 멤버를 선택하세요.");
+      return;
+    }
+
+    const targetMember = transferableMembers.find(
+      (member) => String(member.id) === String(transferTargetId)
+    );
+
+    try {
+      setIsLeaving(true);
+      setLeaveError("");
+      const completed = await onTransferLeadershipAndLeave?.(
+        club.id,
+        transferTargetId,
+        targetMember?.name
+      );
+
+      if (!completed) {
+        setLeaveError("리더 위임 및 탈퇴를 완료하지 못했습니다.");
+      }
+    } catch (error) {
+      setLeaveError(error.message || "리더 위임 및 탈퇴 중 오류가 발생했습니다.");
+    } finally {
+      setIsLeaving(false);
+    }
+  };
+
+  const handleDeleteFromLeaveModal = () => {
+    setLeaveStep(null);
+    onDelete?.(club.id);
   };
 
   const handleActivityFormChange = (field, value) => {
@@ -842,6 +885,179 @@ export default function ClubManagePage({
       </main>
 
       <Footer />
+
+      {leaveStep && (
+        <div
+          className="manage-page__modal-overlay"
+          role="presentation"
+          onClick={closeLeaveModal}
+        >
+          <div
+            className="manage-page__modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="manage-leave-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="manage-page__modal-close"
+              aria-label="닫기"
+              disabled={isLeaving}
+              onClick={closeLeaveModal}
+            >
+              ✕
+            </button>
+
+            <div className="manage-page__modal-icon" aria-hidden="true">🚪</div>
+            <h2 id="manage-leave-modal-title" className="manage-page__modal-title">
+              모임 떠나기
+            </h2>
+            <p className="manage-page__modal-club">{club.name}</p>
+
+            {leaveStep === "choice" && (
+              <>
+                <p className="manage-page__modal-warn">
+                  리더는 바로 탈퇴할 수 없습니다. 다른 멤버에게 리더를
+                  위임하거나 모임을 삭제해야 합니다.
+                </p>
+                <div className="manage-page__modal-opts">
+                  {transferableMembers.length > 0 ? (
+                    <button
+                      type="button"
+                      className="manage-page__modal-opt"
+                      onClick={() => setLeaveStep("transfer")}
+                    >
+                      <span className="manage-page__modal-opt-icon">👑</span>
+                      <span className="manage-page__modal-opt-body">
+                        <span className="manage-page__modal-opt-t">
+                          리더 위임 후 탈퇴
+                        </span>
+                        <span className="manage-page__modal-opt-d">
+                          다른 멤버를 새 리더로 지정하고 모임에서 나갑니다.
+                        </span>
+                      </span>
+                    </button>
+                  ) : (
+                    <p className="manage-page__modal-empty">
+                      리더를 위임할 다른 멤버가 없습니다.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    className="manage-page__modal-opt"
+                    onClick={() => setLeaveStep("delete")}
+                  >
+                    <span className="manage-page__modal-opt-icon">🗑</span>
+                    <span className="manage-page__modal-opt-body">
+                      <span className="manage-page__modal-opt-t">모임 삭제</span>
+                      <span className="manage-page__modal-opt-d">
+                        모임과 관련 데이터를 삭제합니다.
+                      </span>
+                    </span>
+                  </button>
+                </div>
+                <div className="manage-page__modal-actions">
+                  <button
+                    type="button"
+                    className="manage-page__modal-btn manage-page__modal-btn--cancel"
+                    onClick={closeLeaveModal}
+                  >
+                    취소
+                  </button>
+                </div>
+              </>
+            )}
+
+            {leaveStep === "transfer" && (
+              <>
+                <p className="manage-page__modal-warn">
+                  새 리더를 선택하면 위임과 현재 리더의 탈퇴가 함께 처리됩니다.
+                </p>
+                <div className="manage-page__modal-members">
+                  {transferableMembers.map((member) => (
+                    <label
+                      key={member.id}
+                      className={`manage-page__modal-member ${
+                        String(transferTargetId) === String(member.id)
+                          ? "is-selected"
+                          : ""
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="transferLeader"
+                        value={member.id}
+                        checked={String(transferTargetId) === String(member.id)}
+                        onChange={(event) => {
+                          setTransferTargetId(event.target.value);
+                          setLeaveError("");
+                        }}
+                      />
+                      <span className="manage-page__modal-member-avatar">
+                        {member.initial}
+                      </span>
+                      <span className="manage-page__modal-member-info">
+                        <span className="manage-page__modal-member-name">
+                          {member.name}
+                        </span>
+                        <span className="manage-page__modal-member-dept">
+                          {member.department}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                {leaveError && (
+                  <p className="manage-page__modal-error">{leaveError}</p>
+                )}
+                <div className="manage-page__modal-actions">
+                  <button
+                    type="button"
+                    className="manage-page__modal-btn manage-page__modal-btn--cancel"
+                    disabled={isLeaving}
+                    onClick={() => setLeaveStep("choice")}
+                  >
+                    이전
+                  </button>
+                  <button
+                    type="button"
+                    className="manage-page__modal-btn manage-page__modal-btn--leave"
+                    disabled={!transferTargetId || isLeaving}
+                    onClick={handleTransferAndLeave}
+                  >
+                    {isLeaving ? "처리 중..." : "위임 후 탈퇴"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {leaveStep === "delete" && (
+              <>
+                <p className="manage-page__modal-warn">
+                  모임을 삭제하면 멤버, 가입 신청, 활동 내역을 복구할 수 없습니다.
+                </p>
+                <div className="manage-page__modal-actions">
+                  <button
+                    type="button"
+                    className="manage-page__modal-btn manage-page__modal-btn--cancel"
+                    onClick={() => setLeaveStep("choice")}
+                  >
+                    이전
+                  </button>
+                  <button
+                    type="button"
+                    className="manage-page__modal-btn manage-page__modal-btn--leave"
+                    onClick={handleDeleteFromLeaveModal}
+                  >
+                    모임 삭제
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

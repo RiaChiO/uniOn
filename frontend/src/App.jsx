@@ -116,6 +116,7 @@ export default function App() {
     handleSaveMeeting,
     handleToggleMeetingRecruitment,
     handleTransferLeader,
+    handleTransferLeadershipAndLeave,
     joiningMeetingId,
   } = useMeetingActions({ navigate, setClubs, user });
 
@@ -131,8 +132,11 @@ export default function App() {
     const hasName = String(user?.name ?? "").trim().length > 0;
     const hasDept = String(user?.department ?? "").trim().length > 0;
     const hasGrade = String(user?.grade ?? "").trim().length > 0;
+    const needsOnboarding =
+      user?.onboardingCompleted === false ||
+      (user?.onboardingCompleted == null && (!hasName || !hasDept || !hasGrade));
 
-    if (!hasName || !hasDept || !hasGrade) {
+    if (needsOnboarding) {
       navigate("/welcome", { replace: true });
     }
   }, [authLoading, isLoggedIn, user, navigate]);
@@ -261,7 +265,7 @@ export default function App() {
             onTransferLeader={handleTransferLeader}
             onToggleRecruit={handleToggleMeetingRecruitment}
             onGoPublic={(id) => navigate(`/clubs/${id}`)}
-            onLeaveMeeting={handleLeaveMeeting}
+            onTransferLeadershipAndLeave={handleTransferLeadershipAndLeave}
           />
         }
       />

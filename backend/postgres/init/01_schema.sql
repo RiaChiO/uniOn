@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   department TEXT,
   grade TEXT,
+  onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL
 );
 
@@ -133,6 +134,22 @@ CREATE TABLE IF NOT EXISTS user_wishlist_meetings (
   PRIMARY KEY (user_id, meeting_id)
 );
 
+CREATE TABLE IF NOT EXISTS notifications (
+  notification_id BIGSERIAL PRIMARY KEY,
+  recipient_user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  audience TEXT NOT NULL DEFAULT 'member'
+    CHECK (audience IN ('leader', 'member')),
+  type TEXT NOT NULL,
+  meeting_id TEXT REFERENCES meetings(meeting_id) ON DELETE SET NULL,
+  actor_user_id TEXT REFERENCES users(user_id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  read_at TIMESTAMPTZ
+);
+
 CREATE TABLE IF NOT EXISTS recommendations (
   user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   meeting_id TEXT NOT NULL REFERENCES meetings(meeting_id) ON DELETE CASCADE,
@@ -164,6 +181,12 @@ CREATE INDEX IF NOT EXISTS idx_meeting_join_requests_user_meeting
 
 CREATE INDEX IF NOT EXISTS idx_user_wishlist_meetings_meeting_user
   ON user_wishlist_meetings(meeting_id, user_id);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient_unread_created
+  ON notifications(recipient_user_id, is_read, created_at DESC, notification_id DESC);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient_audience_created
+  ON notifications(recipient_user_id, audience, created_at DESC, notification_id DESC);
 
 CREATE INDEX IF NOT EXISTS idx_user_interest_vectors_trim_user_id
   ON user_interest_vectors((TRIM(user_id)));
