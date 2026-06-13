@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
@@ -12,6 +12,7 @@ import GoogleLoginPage from "./pages/GoogleLoginPage";
 import ClubDetailPage from "./pages/ClubDetailPage";
 import ClubManagePage from "./pages/ClubManagePage";
 import ProfileEditPage from "./pages/ProfileEditPage";
+import WelcomePage from "./pages/WelcomePage";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useMeetingActions } from "./hooks/useMeetingActions";
 import { useMeetingCatalog } from "./hooks/useMeetingCatalog";
@@ -45,6 +46,9 @@ function MainPage({
         isLoggedIn={isLoggedIn}
         user={user}
         onLoginClick={onLoginClick}
+        searchClubs={clubs}
+        onSearchSelect={onDetailClick}
+        onSearchViewAll={onViewAll}
       />
       <main>
         <HeroSection
@@ -115,6 +119,24 @@ export default function App() {
     joiningMeetingId,
   } = useMeetingActions({ navigate, setClubs, user });
 
+  // 🔧 [신규 사용자 감지] name·department·grade 중 하나라도 비면 /welcome 으로
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isLoggedIn) return;
+    if (!user) return;
+    // 이미 welcome 페이지면 다시 redirect 하지 않음
+    if (window.location.pathname === "/welcome") return;
+    if (window.location.pathname === "/login") return;
+
+    const hasName = String(user?.name ?? "").trim().length > 0;
+    const hasDept = String(user?.department ?? "").trim().length > 0;
+    const hasGrade = String(user?.grade ?? "").trim().length > 0;
+
+    if (!hasName || !hasDept || !hasGrade) {
+      navigate("/welcome", { replace: true });
+    }
+  }, [authLoading, isLoggedIn, user, navigate]);
+
   async function handleGoogleLogin() {
     try {
       await loginWithGoogle();
@@ -137,6 +159,10 @@ export default function App() {
     user,
     onLoginClick: () => navigate("/login"),
     onUserUpdate: updateUser,
+    // 🔧 [검색 드롭다운] 모든 페이지의 Navbar에서 동일하게 동작
+    searchClubs: clubs,
+    onSearchSelect: (id) => navigate(`/clubs/${id}`),
+    onSearchViewAll: () => navigate("/search"),
   };
 
   return (
@@ -168,6 +194,11 @@ export default function App() {
             onGoogleLogin={handleGoogleLogin}
           />
         }
+      />
+
+      <Route
+        path="/welcome"
+        element={<WelcomePage {...commonProps} />}
       />
 
       <Route
@@ -230,6 +261,7 @@ export default function App() {
             onTransferLeader={handleTransferLeader}
             onToggleRecruit={handleToggleMeetingRecruitment}
             onGoPublic={(id) => navigate(`/clubs/${id}`)}
+            onLeaveMeeting={handleLeaveMeeting}
           />
         }
       />
