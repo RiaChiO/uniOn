@@ -46,6 +46,16 @@ export function completeUserOnboarding(userId) {
   );
 }
 
+export function deleteUserAccount(userId) {
+  return requestJson(
+    `/api/users/${encodeURIComponent(userId)}`,
+    {
+      method: "DELETE",
+    },
+    "회원 탈퇴에 실패했습니다."
+  );
+}
+
 export function updateUserInterestVector(userId, vector) {
   return requestJson(
     `/api/users/vectors/${encodeURIComponent(userId.trim())}`,

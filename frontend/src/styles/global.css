@@ -726,6 +726,63 @@ button.btn-action:disabled {
   opacity: .65;
 }
 
+.profile-edit-page__danger {
+  margin-top: 24px;
+  padding: 20px 22px;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.profile-edit-page__danger-title {
+  margin: 0 0 5px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #991b1b;
+}
+.profile-edit-page__danger-description {
+  margin: 0;
+  color: var(--color-text-sub);
+  font-size: 12px;
+  line-height: 1.6;
+}
+button.profile-edit-page__delete-btn {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border: 1.5px solid #dc2626;
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 700;
+}
+button.profile-edit-page__delete-btn:hover {
+  background: #fef2f2;
+}
+.profile-edit-page__delete-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 560px) {
+  .profile-edit-page__danger {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  button.profile-edit-page__delete-btn {
+    width: 100%;
+  }
+}
+
 .btn-action__icon { font-size: 16px; line-height: 1; }
 
 /* 다크 모드에서도 동일하게 보이도록 */

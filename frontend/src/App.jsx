@@ -286,7 +286,12 @@ export default function App() {
 
       <Route
         path="/mypage/edit"
-        element={<ProfileEditPage {...commonProps} />}
+        element={
+          <ProfileEditPage
+            {...commonProps}
+            onAccountDeleted={handleLogout}
+          />
+        }
       />
 
       <Route

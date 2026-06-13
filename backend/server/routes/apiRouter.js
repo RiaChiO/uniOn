@@ -39,6 +39,7 @@ import {
 import {
   addUserWishlistMeeting,
   completeUserOnboarding,
+  deleteUserAccount,
   getUserInterestVector,
   getUserWishlistMeetings,
   getUsers,
@@ -221,6 +222,19 @@ apiRouter.patch("/api/users/:userId/onboarding", asyncRoute(async (req, res) => 
     });
   } catch (error) {
     sendServiceError(res, error, "온보딩 상태 저장 중 오류가 발생했습니다.");
+  }
+}));
+
+apiRouter.delete("/api/users/:userId", asyncRoute(async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    await deleteUserAccount(userId);
+    res.status(200).json({
+      message: "회원 정보가 삭제되었습니다.",
+    });
+  } catch (error) {
+    sendServiceError(res, error, "회원 탈퇴 중 오류가 발생했습니다.");
   }
 }));
 

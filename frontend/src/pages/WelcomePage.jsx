@@ -13,6 +13,11 @@ import {
   updateUserProfile,
 } from "../api/users";
 
+function normalizeGrade(value) {
+  const grade = String(value ?? "").trim();
+  return /^[1-4]$/.test(grade) ? `${grade}학년` : grade;
+}
+
 export default function WelcomePage({
   searchQuery,
   onSearchChange,
@@ -25,7 +30,7 @@ export default function WelcomePage({
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name ?? "");
   const [department, setDepartment] = useState(user?.department ?? "");
-  const [grade, setGrade] = useState(user?.grade ?? "");
+  const [grade, setGrade] = useState(normalizeGrade(user?.grade));
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -147,10 +152,10 @@ export default function WelcomePage({
                 required
               >
                 <option value="">학년 선택</option>
-                <option value="1">1학년</option>
-                <option value="2">2학년</option>
-                <option value="3">3학년</option>
-                <option value="4">4학년</option>
+                <option value="1학년">1학년</option>
+                <option value="2학년">2학년</option>
+                <option value="3학년">3학년</option>
+                <option value="4학년">4학년</option>
               </select>
               <p className="welcome-page__help">
                 관심 분야 설정은 마이페이지에서 가능해요

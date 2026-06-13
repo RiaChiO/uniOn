@@ -22,12 +22,23 @@ async function ensureUserProfileColumns(client = pool) {
 
   await client.query(`
     UPDATE users
+    SET grade = grade || '학년'
+    WHERE TRIM(grade) IN ('1', '2', '3', '4')
+  `);
+
+  await client.query(`
+    UPDATE users
     SET onboarding_completed = TRUE
     WHERE onboarding_completed = FALSE
       AND NULLIF(TRIM(name), '') IS NOT NULL
       AND NULLIF(TRIM(department), '') IS NOT NULL
       AND NULLIF(TRIM(grade), '') IS NOT NULL
   `);
+}
+
+function normalizeGrade(value) {
+  const grade = String(value ?? "").trim();
+  return /^[1-4]$/.test(grade) ? `${grade}학년` : grade;
 }
 
 export async function getUsers() {
@@ -207,6 +218,7 @@ export async function updateUserInterestVector({ userId, vector }) {
 
 export async function updateUserProfile({ userId, name, department, grade }) {
   await ensureUserProfileColumns();
+  const normalizedGrade = normalizeGrade(grade);
 
   const result = await pool.query(
     `
@@ -219,7 +231,7 @@ export async function updateUserProfile({ userId, name, department, grade }) {
     WHERE TRIM(user_id) = TRIM($1)
     RETURNING user_id, name, email, department, grade, onboarding_completed, created_at
     `,
-    [userId, name, department, grade]
+    [userId, name, department, normalizedGrade]
   );
 
   if (result.rows.length === 0) {
@@ -254,6 +266,70 @@ export async function completeUserOnboarding(userId) {
     userId: result.rows[0].user_id,
     onboardingCompleted: result.rows[0].onboarding_completed,
   };
+}
+
+export async function deleteUserAccount(userId) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const userResult = await client.query(
+      `
+      SELECT user_id
+      FROM users
+      WHERE TRIM(user_id) = TRIM($1)
+      FOR UPDATE
+      `,
+      [userId]
+    );
+
+    if (userResult.rowCount === 0) {
+      const error = new Error("사용자 정보를 찾을 수 없습니다.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const hostedMeetingsResult = await client.query(
+      `
+      SELECT COUNT(*)::INT AS count
+      FROM meetings
+      WHERE host_user_id = $1
+      `,
+      [userResult.rows[0].user_id]
+    );
+
+    if (hostedMeetingsResult.rows[0].count > 0) {
+      const error = new Error(
+        "운영 중인 모임이 있습니다. 리더를 위임하거나 모임을 삭제한 뒤 탈퇴해 주세요."
+      );
+      error.statusCode = 409;
+      throw error;
+    }
+
+    await client.query(
+      `
+      DELETE FROM meeting_participants
+      WHERE user_id = $1
+      `,
+      [userResult.rows[0].user_id]
+    );
+
+    await client.query(
+      `
+      DELETE FROM users
+      WHERE user_id = $1
+      `,
+      [userResult.rows[0].user_id]
+    );
+
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function getUserWishlistMeetings(userId) {

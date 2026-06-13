@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {
+  deleteUserAccount,
   getUserInterestVectors,
   updateUserInterestVector,
   updateUserProfile,
@@ -138,6 +139,7 @@ export default function ProfileEditPage({
   user,
   onLoginClick,
   onUserUpdate,
+  onAccountDeleted,
 }) {
   const navigate = useNavigate();
   const currentUserId = user?.userId ?? user?.id;
@@ -149,6 +151,9 @@ export default function ProfileEditPage({
   const [loadingInterests, setLoadingInterests] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [initialInterests, setInitialInterests] = useState(DEFAULT_INTERESTS);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   // 슬라이더 시각적 상태 (0~10)
   const [interests, setInterests] = useState(DEFAULT_INTERESTS);
 
@@ -258,6 +263,27 @@ export default function ProfileEditPage({
       setProfileError(error.message);
     } finally {
       setSavingProfile(false);
+    }
+  }
+
+  function closeDeleteModal() {
+    if (deletingAccount) return;
+    setShowDeleteModal(false);
+    setDeleteError("");
+  }
+
+  async function handleDeleteAccount() {
+    if (!currentUserId) return;
+
+    try {
+      setDeletingAccount(true);
+      setDeleteError("");
+      await deleteUserAccount(currentUserId);
+      await onAccountDeleted?.();
+    } catch (error) {
+      setDeleteError(error.message || "회원 탈퇴 중 오류가 발생했습니다.");
+    } finally {
+      setDeletingAccount(false);
     }
   }
 
@@ -411,10 +437,106 @@ export default function ProfileEditPage({
               {savingProfile ? "저장 중..." : "저장하기"}
             </button>
           </div>
+
+          <section className="profile-edit-page__danger">
+            <div>
+              <h2 className="profile-edit-page__danger-title">회원 탈퇴</h2>
+              <p className="profile-edit-page__danger-description">
+                프로필과 관심 정보, 참여 기록이 삭제되며 복구할 수 없습니다.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="profile-edit-page__delete-btn"
+              onClick={() => {
+                setDeleteError("");
+                setShowDeleteModal(true);
+              }}
+            >
+              탈퇴하기
+            </button>
+          </section>
         </div>
       </main>
 
       <Footer />
+
+      {showDeleteModal && (
+        <div
+          className="manage-page__modal-overlay"
+          role="presentation"
+          onClick={closeDeleteModal}
+        >
+          <div
+            className="manage-page__modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-delete-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="manage-page__modal-close"
+              aria-label="닫기"
+              disabled={deletingAccount}
+              onClick={closeDeleteModal}
+            >
+              <IconX />
+            </button>
+
+            <div className="profile-edit-page__delete-icon" aria-hidden="true">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 6h18" />
+                <path d="M8 6V4h8v2" />
+                <path d="M19 6l-1 14H6L5 6" />
+                <path d="M10 11v5M14 11v5" />
+              </svg>
+            </div>
+            <h2
+              id="profile-delete-modal-title"
+              className="manage-page__modal-title"
+            >
+              정말 탈퇴하시겠습니까?
+            </h2>
+            <p className="manage-page__modal-warn">
+              회원 정보와 관심 데이터, 참여 기록이 영구 삭제됩니다. 운영 중인
+              모임이 있다면 리더 위임 또는 모임 삭제 후 탈퇴할 수 있습니다.
+            </p>
+
+            {deleteError && (
+              <p className="manage-page__modal-error">{deleteError}</p>
+            )}
+
+            <div className="manage-page__modal-actions">
+              <button
+                type="button"
+                className="manage-page__modal-btn manage-page__modal-btn--cancel"
+                disabled={deletingAccount}
+                onClick={closeDeleteModal}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="manage-page__modal-btn manage-page__modal-btn--leave"
+                disabled={deletingAccount}
+                onClick={handleDeleteAccount}
+              >
+                {deletingAccount ? "탈퇴 처리 중..." : "탈퇴하기"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
