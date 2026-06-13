@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import SearchDropdown from "./SearchDropdown";
 
 export default function Navbar({
   searchQuery,
@@ -7,18 +8,21 @@ export default function Navbar({
   isLoggedIn,
   user,
   onLoginClick,
+  // 🔧 [추가] 검색 드롭다운 props
+  searchClubs = [],
+  onSearchSelect,
+  onSearchViewAll,
 }) {
   const navigate = useNavigate();
   const [isDark, setIsDark] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // 처음 로드 시 적용
   useEffect(() => {
     const saved = localStorage.getItem("theme") || "light";
     document.documentElement.setAttribute("data-theme", saved);
     setIsDark(saved === "dark");
   }, []);
 
-  // 로컬스토리지에 저장
   const toggleDark = () => {
     const next = !isDark;
     setIsDark(next);
@@ -27,6 +31,28 @@ export default function Navbar({
       next ? "dark" : "light",
     );
     localStorage.setItem("theme", next ? "dark" : "light");
+  };
+
+  // 🔧 [검색 드롭다운] 검색어 있으면 열림, 비면 닫힘
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    onSearchChange(value);
+    setIsSearchOpen(value.trim().length > 0);
+  };
+
+  const handleSearchFocus = () => {
+    if (searchQuery && searchQuery.trim().length > 0) {
+      setIsSearchOpen(true);
+    }
+  };
+
+  // 🔧 [검색 드롭다운] Enter 시 전체 결과 페이지로
+  const handleSearchKey = (e) => {
+    if (e.key === "Enter" && searchQuery && searchQuery.trim().length > 0) {
+      e.preventDefault();
+      onSearchViewAll?.(searchQuery);
+      setIsSearchOpen(false);
+    }
   };
 
   return (
@@ -60,8 +86,20 @@ export default function Navbar({
             type="text"
             placeholder="모임을 검색해보세요"
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={handleSearchChange}
+            onFocus={handleSearchFocus}
+            onKeyDown={handleSearchKey}
           />
+          {/* 🔧 [드롭다운] 입력 시에만 표시 */}
+          {isSearchOpen && (
+            <SearchDropdown
+              searchQuery={searchQuery}
+              clubs={searchClubs}
+              onClose={() => setIsSearchOpen(false)}
+              onSelectClub={onSearchSelect}
+              onViewAll={onSearchViewAll}
+            />
+          )}
         </div>
         <nav className="navbar__nav">
           <Link to="/search" className="navbar__nav-link">
